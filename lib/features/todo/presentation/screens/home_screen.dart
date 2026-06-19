@@ -51,6 +51,77 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return mantras[dayOfYear % mantras.length];
   }
 
+  void _confirmAccountDeletion(BuildContext context, WidgetRef ref, StateSetter setModalState) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF071423),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            side: const BorderSide(color: AppColors.glassBorder, width: 0.5),
+          ),
+          title: Text(
+            'Delete Account',
+            style: AppTypography.titleLarge(color: AppColors.error),
+          ),
+          content: Text(
+            'Are you sure you want to permanently delete your account and all associated tasks? This action is immediate and cannot be undone.',
+            style: AppTypography.bodyMedium(color: AppColors.textPrimary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                'Cancel',
+                style: AppTypography.bodyMedium(color: AppColors.textSecondary),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext); // Close dialog
+                Navigator.pop(context); // Close profile bottom sheet
+                
+                try {
+                  await ref.read(authProvider.notifier).deleteAccount();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Your account has been deleted.',
+                          style: AppTypography.bodyMedium(color: Colors.white),
+                        ),
+                        backgroundColor: AppColors.error,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Failed to delete account: ${e.toString().replaceFirst('Exception: ', '')}',
+                          style: AppTypography.bodyMedium(color: Colors.white),
+                        ),
+                        backgroundColor: AppColors.error,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: Text(
+                'Delete',
+                style: AppTypography.bodyMedium(color: AppColors.error).copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showAddTask() {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
@@ -286,6 +357,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ),
                         ],
+                      ),
+
+                      const SizedBox(height: AppSpacing.md),
+
+                      // Delete Account option
+                      Center(
+                        child: TextButton(
+                          onPressed: loading 
+                              ? null 
+                              : () => _confirmAccountDeletion(context, ref, setModalState),
+                          child: Text(
+                            'Delete Account',
+                            style: AppTypography.caption(
+                              color: AppColors.error.withValues(alpha: 0.8),
+                            ).copyWith(
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),

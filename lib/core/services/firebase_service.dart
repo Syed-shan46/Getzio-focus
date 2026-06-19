@@ -106,6 +106,14 @@ class FirebaseService {
   /// Sign out
   static Future<void> signOut() async => await _auth.signOut();
 
+  /// Delete current user account from Firebase
+  static Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.delete();
+    }
+  }
+
   /// Resend OTP
   static Future<String> resendOTP({required String phoneNumber}) =>
       sendOTP(phoneNumber: phoneNumber);

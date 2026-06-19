@@ -111,6 +111,29 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
     }
   }
 
+  Future<void> deleteAccount() async {
+    state = const AsyncValue.loading();
+    try {
+      // 1. Call backend to delete profile
+      await _repo.deleteAccount();
+
+      // 2. Call Firebase to delete user profile
+      try {
+        await FirebaseService.deleteAccount();
+      } catch (_) {}
+
+      // 3. Clear local storage cache
+      await _hiveDb.clearAuth();
+      await _hiveDb.clearTodos();
+      await _hiveDb.clearSyncQueue();
+
+      state = const AsyncValue.data(null);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+      rethrow;
+    }
+  }
+
   Future<void> updateName(String name) async {
     final currentUser = state.value;
     if (currentUser == null) return;

@@ -9,4 +9,5 @@ abstract class AuthRepository {
     String? idToken,
   });
   Future<AuthUserModel> updateProfile(String name);
+  Future<void> deleteAccount();
 }
