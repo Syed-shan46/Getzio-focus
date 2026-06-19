@@ -135,11 +135,11 @@ class LegalDocumentScreen extends StatelessWidget {
       
       _sectionTitle('5. Account & Data Deletion'),
       _bodyText('Under App Store requirements, you have the absolute right to delete your account and all associated personal data from Firebase and our local caches.'),
-      _bodyText('To request complete deletion, please email shihadpalakkad@gmail.com with your registered phone number. Your data will be permanently wiped within 48 hours.'),
+      _bodyText('To request complete deletion, please email getzio.official@gmail.com with your registered phone number. Your data will be permanently wiped within 48 hours.'),
       
       _sectionTitle('6. Contact Us'),
       _bodyText('If you have questions regarding this policy, contact us at:'),
-      _bodyText('Email: shihadpalakkad@gmail.com'),
+      _bodyText('Email: getzio.official@gmail.com'),
       const SizedBox(height: AppSpacing.lg),
     ];
   }
@@ -180,7 +180,7 @@ class LegalDocumentScreen extends StatelessWidget {
       
       _sectionTitle('7. Contact Us'),
       _bodyText('For questions regarding these Terms, contact us at:'),
-      _bodyText('Email: shihadpalakkad@gmail.com'),
+      _bodyText('Email: getzio.official@gmail.com'),
       const SizedBox(height: AppSpacing.lg),
     ];
   }

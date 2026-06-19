@@ -29,4 +29,4 @@ Copy this URL and paste it into **App Store Connect** under:
 * **Authentication Data**: Explicitly states how the phone number is collected and validated securely via Firebase Authentication.
 * **Task Data Caching**: Highlights that user task information is processed and securely cached locally on the device (Hive DB).
 * **Data Deletion Link**: Contains a prominent `mailto:` action so reviewers and users can instantly submit account & data deletion requests (mandatory under App Store guidelines).
-* **Contact Information**: Provides direct contact details (`shihadpalakkad@gmail.com`).
+* **Contact Information**: Provides direct contact details (`getzio.official@gmail.com`).
