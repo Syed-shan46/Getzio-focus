@@ -2,21 +2,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../../core/storage/hive_database.dart';
 import '../../../../core/services/firebase_service.dart';
+import '../../../todo/presentation/providers/todo_providers.dart';
 import '../../domain/models/auth_user_model.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import 'dart:developer';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final dio = ref.watch(dioClientProvider);
   return AuthRepositoryImpl(dio);
 });
 
+final syncLoadingProvider = StateProvider<bool>((ref) => false);
+
 class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
   final AuthRepository _repo;
   final HiveDatabase _hiveDb;
+  final Ref _ref;
   String? _verificationId;
 
-  AuthNotifier(this._repo, this._hiveDb) : super(const AsyncValue.loading()) {
+  AuthNotifier(this._repo, this._hiveDb, this._ref) : super(const AsyncValue.loading()) {
     _init();
   }
 
@@ -54,6 +59,47 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
     }
   }
 
+  Future<void> _syncLocalDataToServer() async {
+    log('[Sync] Preparing to synchronize local preferences...');
+    // 1. Simulate data migration of onboarding preferences to backend endpoints
+    await Future.delayed(const Duration(seconds: 2));
+    
+    // 2. Trigger real sync of offline todo queue
+    try {
+      await _ref.read(todoRepositoryProvider).syncOfflineData();
+      log('[Sync] Offline todos sync completed successfully.');
+    } catch (e) {
+      log('[Sync] Offline todos sync failed: $e');
+    }
+  }
+
+  Future<void> simulateSocialLogin(String provider) async {
+    state = const AsyncValue.loading();
+    _ref.read(syncLoadingProvider.notifier).state = true;
+    
+    // Simulate loading for realistic UX
+    await Future.delayed(const Duration(milliseconds: 1500));
+    
+    final mockUser = AuthUserModel(
+      id: 'mock_social_${provider.toLowerCase()}_id',
+      mobile: '+919999999999',
+      name: '$provider User',
+      role: 'customer',
+      token: 'mock_jwt_token_for_${provider.toLowerCase()}',
+    );
+
+    await _hiveDb.saveAuthToken(mockUser.token);
+    await _hiveDb.saveUserId(mockUser.id);
+    await _hiveDb.saveUserPhone(mockUser.mobile);
+    await _hiveDb.saveUserName(mockUser.name);
+
+    // Sync local Hive preferences/data
+    await _syncLocalDataToServer();
+
+    state = AsyncValue.data(mockUser);
+    _ref.read(syncLoadingProvider.notifier).state = false;
+  }
+
   Future<void> verifyOtp(String mobile, String otp) async {
     try {
       if (_verificationId == null) {
@@ -73,6 +119,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
       final uid = result['uid']!;
       final idToken = result['idToken'];
 
+      // Enable sync loading overlay
+      _ref.read(syncLoadingProvider.notifier).state = true;
+
       // 2. Handshake with backend to login/register and retrieve JWT token
       final user = await _repo.firebaseAuth(
         mobile: mobile,
@@ -86,9 +135,14 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
       await _hiveDb.saveUserPhone(user.mobile);
       await _hiveDb.saveUserName(user.name);
 
+      // Sync local Hive preferences/data
+      await _syncLocalDataToServer();
+
       state = AsyncValue.data(user);
     } catch (e) {
       rethrow;
+    } finally {
+      _ref.read(syncLoadingProvider.notifier).state = false;
     }
   }
 
@@ -156,5 +210,5 @@ final authProvider =
     StateNotifierProvider<AuthNotifier, AsyncValue<AuthUserModel?>>((ref) {
   final repo = ref.watch(authRepositoryProvider);
   final hiveDb = ref.watch(hiveDatabaseProvider);
-  return AuthNotifier(repo, hiveDb);
+  return AuthNotifier(repo, hiveDb, ref);
 });

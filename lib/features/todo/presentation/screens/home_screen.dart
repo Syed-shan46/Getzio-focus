@@ -9,6 +9,7 @@ import '../widgets/glass_progress_ring.dart';
 import '../widgets/glass_fab.dart';
 import '../widgets/task_card.dart';
 import '../widgets/add_task_bottom_sheet.dart';
+import '../widgets/floor_glass_panel.dart';
 import '../widgets/empty_state.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/domain/models/auth_user_model.dart';
@@ -445,6 +446,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
+          // ── 3D Floor Glass Panels ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: FloorGlassPanel(
+                completedTasks: stats.completed,
+                totalTasks: stats.total,
+                streakDays: stats.total > 0 ? stats.completed : 0,
+              ),
+            ),
+          ),
+
           // ── Section Title ──
           SliverToBoxAdapter(
             child: Padding(
@@ -466,7 +479,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  return TaskCard(todo: todos[index], index: index);
+                  final total = todos.length;
+                  final centerIndex = (total - 1) / 2.0;
+                  final distFromCenter = (index - centerIndex).abs();
+                  final maxDist = centerIndex > 0 ? centerIndex : 1.0;
+                  final scale = 1.0 - (distFromCenter / maxDist) * 0.04;
+
+                  return Transform(
+                    transform: Matrix4.identity()
+                      ..setEntry(3, 2, 0.0008)
+                      ..scale(scale, scale),
+                    alignment: Alignment.topCenter,
+                    child: TaskCard(todo: todos[index], index: index),
+                  );
                 }, childCount: todos.length),
               ),
             ),

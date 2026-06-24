@@ -4,14 +4,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/storage/hive_database.dart';
 import 'core/theme/app_theme.dart';
-import 'features/todo/presentation/screens/home_screen.dart';
-import 'features/auth/presentation/screens/phone_login_screen.dart';
-import 'features/auth/presentation/screens/onboarding_screen.dart';
-import 'features/auth/presentation/providers/auth_providers.dart';
+import 'features/os_dashboard/presentation/screens/os_dashboard_screen.dart';
+import 'features/onboarding/presentation/screens/onboarding_flow_screen.dart';
 import 'core/services/firebase_service.dart';
 import 'shared/providers/app_providers.dart';
 
 final onboardingCompletedProvider = StateProvider<bool>((ref) {
+  throw UnimplementedError();
+});
+
+final setupCompletedProvider = StateProvider<bool>((ref) {
   throw UnimplementedError();
 });
 
@@ -47,12 +49,14 @@ void main() async {
   }
 
   final onboardingCompleted = hiveDb.isOnboardingCompleted();
+  final setupCompleted = hiveDb.isSetupCompleted();
 
   runApp(
     ProviderScope(
       overrides: [
         hiveDatabaseProvider.overrideWithValue(hiveDb),
         onboardingCompletedProvider.overrideWith((ref) => onboardingCompleted),
+        setupCompletedProvider.overrideWith((ref) => setupCompleted),
       ],
       child: const TodoApp(),
     ),
@@ -64,35 +68,17 @@ class TodoApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-    final onboardingCompleted = ref.watch(onboardingCompletedProvider);
+    final setupCompleted = ref.watch(setupCompletedProvider);
 
     return MaterialApp(
       title: 'Getzio Focus',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
       darkTheme: AppTheme.darkTheme,
-      home: !onboardingCompleted
-          ? const OnboardingScreen()
-          : authState.when(
-              data: (user) => user != null ? const HomeScreen() : const PhoneLoginScreen(),
-              loading: () => const Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.accentBlue,
-                    strokeWidth: 2,
-                  ),
-                ),
-              ),
-              error: (err, _) => Scaffold(
-                body: Center(
-                  child: Text(
-                    'Error loading auth state: $err',
-                    style: AppTypography.bodyMedium(color: AppColors.error),
-                  ),
-                ),
-              ),
-            ),
+      home: !setupCompleted
+          ? const OnboardingFlowScreen()
+          : const OSDashboardScreen(),
     );
   }
 }
+

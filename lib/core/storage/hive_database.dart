@@ -115,10 +115,147 @@ class HiveDatabase {
     return _settingsBox.get('onboarding_completed', defaultValue: false) as bool;
   }
 
+  Future<void> saveSetupCompleted(bool completed) async {
+    await _settingsBox.put('focus_setup_completed', completed);
+  }
+
+  bool isSetupCompleted() {
+    return _settingsBox.get('focus_setup_completed', defaultValue: false) as bool;
+  }
+
   Future<void> clearAuth() async {
     await _settingsBox.delete('auth_token');
     await _settingsBox.delete('user_id');
     await _settingsBox.delete('user_name');
     await _settingsBox.delete('user_phone');
+  }
+
+  // ─── Getzio Focus Onboarding & Dashboard ──────────────────────────────
+
+  Future<void> saveSelectedIdentity(String identity) async {
+    await _settingsBox.put('focus_selected_identity', identity);
+  }
+
+  String? getSelectedIdentity() {
+    return _settingsBox.get('focus_selected_identity') as String?;
+  }
+
+  Future<void> saveSelectedGoal(String goal) async {
+    await _settingsBox.put('focus_selected_goal', goal);
+  }
+
+  String? getSelectedGoal() {
+    return _settingsBox.get('focus_selected_goal') as String?;
+  }
+
+  Future<void> saveWakeUpTime(String time) async {
+    await _settingsBox.put('focus_wake_up_time', time);
+  }
+
+  String? getWakeUpTime() {
+    return _settingsBox.get('focus_wake_up_time') as String?;
+  }
+
+  Future<void> saveSelectedHabits(List<Map<String, dynamic>> habits) async {
+    await _settingsBox.put('focus_selected_habits', habits);
+  }
+
+  List<Map<String, dynamic>> getSelectedHabits() {
+    final list = _settingsBox.get('focus_selected_habits') as List?;
+    if (list == null) return [];
+    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  Future<void> saveSelectedAffirmations(List<Map<String, dynamic>> affirmations) async {
+    await _settingsBox.put('focus_selected_affirmations', affirmations);
+  }
+
+  List<Map<String, dynamic>> getSelectedAffirmations() {
+    final list = _settingsBox.get('focus_selected_affirmations') as List?;
+    if (list == null) return [];
+    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  Future<void> saveUserStatistics(Map<String, dynamic> stats) async {
+    await _settingsBox.put('focus_user_statistics', stats);
+  }
+
+  Map<String, dynamic>? getUserStatistics() {
+    final map = _settingsBox.get('focus_user_statistics') as Map?;
+    if (map == null) return null;
+    return Map<String, dynamic>.from(map);
+  }
+
+  // Habit completion logs formatted as: { "yyyy-MM-dd": [ "habitId1", "habitId2" ] }
+  Future<void> saveHabitLogs(Map<String, dynamic> logs) async {
+    await _settingsBox.put('focus_habit_logs', logs);
+  }
+
+  Map<String, dynamic> getHabitLogs() {
+    final map = _settingsBox.get('focus_habit_logs') as Map?;
+    if (map == null) return {};
+    return Map<String, dynamic>.from(map);
+  }
+
+  Future<void> saveWorkspaceSettings(Map<String, dynamic> settings) async {
+    await _settingsBox.put('focus_workspace_settings', settings);
+  }
+
+  Map<String, dynamic> getWorkspaceSettings() {
+    final map = _settingsBox.get('focus_workspace_settings') as Map?;
+    if (map == null) return {};
+    return Map<String, dynamic>.from(map);
+  }
+
+  // ─── Premium Onboarding v2 ─────────────────────────────────────────────
+
+  Future<void> saveSelectedLifeAreas(List<String> areas) async {
+    await _settingsBox.put('focus_life_areas', areas);
+  }
+
+  List<String> getSelectedLifeAreas() {
+    final list = _settingsBox.get('focus_life_areas') as List?;
+    if (list == null) return [];
+    return List<String>.from(list);
+  }
+
+  Future<void> saveSelectedGoals(List<Map<String, dynamic>> goals) async {
+    await _settingsBox.put('focus_selected_goals', goals);
+  }
+
+  List<Map<String, dynamic>> getSelectedGoals() {
+    final list = _settingsBox.get('focus_selected_goals') as List?;
+    if (list == null) return [];
+    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  Future<void> saveReadingPreferences(Map<String, dynamic> prefs) async {
+    await _settingsBox.put('focus_reading_prefs', prefs);
+  }
+
+  Map<String, dynamic>? getReadingPreferences() {
+    final map = _settingsBox.get('focus_reading_prefs') as Map?;
+    if (map == null) return null;
+    return Map<String, dynamic>.from(map);
+  }
+
+  Future<void> saveHealthPreferences(Map<String, dynamic> prefs) async {
+    await _settingsBox.put('focus_health_prefs', prefs);
+  }
+
+  Map<String, dynamic>? getHealthPreferences() {
+    final map = _settingsBox.get('focus_health_prefs') as Map?;
+    if (map == null) return null;
+    return Map<String, dynamic>.from(map);
+  }
+
+  Future<void> saveFinancePreferences(Map<String, dynamic> prefs) async {
+    await _settingsBox.put('focus_finance_prefs', prefs);
+  }
+
+  Map<String, dynamic>? getFinancePreferences() {
+    final map = _settingsBox.get('focus_finance_prefs') as Map?;
+    if (map == null) return null;
+    return Map<String, dynamic>.from(map);
   }
 }

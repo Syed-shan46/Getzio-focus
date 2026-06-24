@@ -23,11 +23,19 @@ dependencies:
   firebase_core: ^3.8.1
   firebase_auth: ^5.3.3
   url_launcher: ^6.3.2
+  # Vision Room dependencies
+  audioplayers: ^6.1.0
+  confetti: ^0.7.0
+  percent_indicator: ^4.2.3
+  fl_chart: ^0.69.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  build_runner: ^2.4.13
+  hive_generator: ^2.0.1
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.4.0
 
