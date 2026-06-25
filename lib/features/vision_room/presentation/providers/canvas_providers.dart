@@ -1,25 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/storage/hive_database.dart';
+import '../../../../shared/providers/app_providers.dart';
 import '../../domain/models/canvas_state.dart';
 import '../../domain/models/vision_item.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/domain/models/auth_user_model.dart';
 
 class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
+  final HiveDatabase _hiveDb;
+  final Ref _ref;
   final List<CanvasState> _undoStack = [];
   final List<CanvasState> _redoStack = [];
 
-  CanvasHistoryNotifier(super.state);
+  CanvasHistoryNotifier(this._hiveDb, this._ref) : super(CanvasState(items: [])) {
+    _loadInitialItems();
+
+    // Listen to authentication state changes to reload vision items
+    _ref.listen<AsyncValue<AuthUserModel?>>(authProvider, (previous, next) {
+      if (next.hasValue) {
+        debugPrint('[CanvasHistoryNotifier] Auth state changed, reloading initial items...');
+        _loadInitialItems();
+      }
+    });
+  }
+
+  void _loadInitialItems() {
+    final cached = _hiveDb.getVisionItems();
+    final items = cached.map((json) => VisionItem.fromJson(json)).toList();
+    state = CanvasState(items: items);
+  }
 
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
+
+  void _saveState() {
+    final serializedItems = state.items.map((i) => i.toJson()).toList();
+    _hiveDb.saveVisionItems(serializedItems);
+
+    // Sync to backend if logged in
+    final hasToken = _hiveDb.getAuthToken() != null;
+    if (hasToken) {
+      try {
+        final dio = _ref.read(dioClientProvider);
+        dio.post(
+          '/api/focus/vision-room',
+          data: {
+            'items': serializedItems,
+          },
+        ).then((_) {
+          debugPrint('[CanvasSync] Synced vision items to server successfully');
+        }).catchError((e) {
+          debugPrint('[CanvasSync] Failed to sync vision items: $e');
+        });
+      } catch (e) {
+        debugPrint('[CanvasSync] Error syncing vision items: $e');
+      }
+    }
+  }
 
   void commitState(CanvasState newState) {
     if (state != newState) {
       _undoStack.add(state);
       _redoStack.clear();
       state = newState;
-      
-      // Limit history to 50 items to save memory if necessary, but "unlimited" is requested
-      // If we experience memory issues with 200+ objects, we might restrict this.
+      _saveState();
     }
   }
 
@@ -27,6 +72,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     if (_undoStack.isNotEmpty) {
       _redoStack.add(state);
       state = _undoStack.removeLast();
+      _saveState();
     }
   }
 
@@ -34,6 +80,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     if (_redoStack.isNotEmpty) {
       _undoStack.add(state);
       state = _redoStack.removeLast();
+      _saveState();
     }
   }
 
@@ -173,6 +220,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
 }
 
 final canvasStateProvider = StateNotifierProvider<CanvasHistoryNotifier, CanvasState>((ref) {
-  final notifier = CanvasHistoryNotifier(CanvasState(items: []));
+  final hiveDb = ref.watch(hiveDatabaseProvider);
+  final notifier = CanvasHistoryNotifier(hiveDb, ref);
   return notifier;
 });

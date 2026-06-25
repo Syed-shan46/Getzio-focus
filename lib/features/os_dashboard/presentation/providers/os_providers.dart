@@ -1,8 +1,10 @@
+import 'dart:developer';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/storage/hive_database.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../onboarding/domain/models/onboarding_models.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 
 // State definition for the OS dashboard
 class OSState {
@@ -29,6 +31,7 @@ class OSState {
   final String ambientMode;
   final bool rainMode;
   final List<String> selectedLifeAreas;
+  final List<String> recoveryTasks;
 
   OSState({
     this.disciplineScore = 0.0,
@@ -52,6 +55,7 @@ class OSState {
     this.ambientMode = 'Auto',
     this.rainMode = false,
     this.selectedLifeAreas = const [],
+    this.recoveryTasks = const [],
   });
 
   OSState copyWith({
@@ -76,6 +80,7 @@ class OSState {
     String? ambientMode,
     bool? rainMode,
     List<String>? selectedLifeAreas,
+    List<String>? recoveryTasks,
   }) {
     return OSState(
       disciplineScore: disciplineScore ?? this.disciplineScore,
@@ -99,6 +104,7 @@ class OSState {
       ambientMode: ambientMode ?? this.ambientMode,
       rainMode: rainMode ?? this.rainMode,
       selectedLifeAreas: selectedLifeAreas ?? this.selectedLifeAreas,
+      recoveryTasks: recoveryTasks ?? this.recoveryTasks,
     );
   }
 }
@@ -106,9 +112,23 @@ class OSState {
 // State Notifier
 class OSStateNotifier extends StateNotifier<OSState> {
   final HiveDatabase _hiveDb;
+  final Ref _ref;
 
-  OSStateNotifier(this._hiveDb) : super(OSState()) {
+  OSStateNotifier(this._hiveDb, this._ref) : super(OSState()) {
     _loadInitialData();
+    Future.microtask(() => fetchTodaySession());
+
+    // Listen to authentication state changes to reload data and sync sessions
+    _ref.listen<AsyncValue<AuthUserModel?>>(authProvider, (previous, next) {
+      if (next.hasValue && next.value != null) {
+        log('[OSStateNotifier] User logged in, reloading initial data and fetching session...');
+        _loadInitialData();
+        fetchTodaySession();
+      } else if (next.hasValue && next.value == null) {
+        log('[OSStateNotifier] User logged out, resetting initial data...');
+        _loadInitialData();
+      }
+    });
   }
 
   void _loadInitialData() {
@@ -248,6 +268,26 @@ class OSStateNotifier extends StateNotifier<OSState> {
       showCelebrationBanner: showCelebration,
     );
 
+    final hasToken = _hiveDb.getAuthToken() != null;
+    if (hasToken) {
+      try {
+        final dio = _ref.read(dioClientProvider);
+        dio.post(
+          '/api/focus/habits/check',
+          data: {
+            'habitId': habitId,
+            'completed': isAdd,
+          },
+        ).then((_) {
+          log('[OSStateNotifier] Checked habit $habitId (completed: $isAdd) on server');
+        }).catchError((e) {
+          log('[OSStateNotifier] Failed to check habit on server: $e');
+        });
+      } catch (e) {
+        log('[OSStateNotifier] Failed to check habit on server: $e');
+      }
+    }
+
     // Auto reset celebration banner after 4 seconds
     if (showCelebration) {
       Future.delayed(const Duration(seconds: 4), () {
@@ -284,6 +324,52 @@ class OSStateNotifier extends StateNotifier<OSState> {
       completedHabitIdsToday: newCompleted,
       disciplineScore: newScore,
     );
+
+    // Sync to backend if logged in
+    final hasToken = _hiveDb.getAuthToken() != null;
+    if (hasToken) {
+      try {
+        final dio = _ref.read(dioClientProvider);
+        final lifeAreas = _hiveDb.getSelectedLifeAreas();
+        final selectedAffirmations = _hiveDb.getSelectedAffirmations();
+        final readingPrefs = _hiveDb.getReadingPreferences() ?? {};
+        final healthPrefs = _hiveDb.getHealthPreferences() ?? {};
+        final financePrefs = _hiveDb.getFinancePreferences() ?? {};
+        
+        final onboardingPayload = {
+          'identity': _hiveDb.getSelectedIdentity() ?? '🚀 Entrepreneur',
+          'lifeAreas': lifeAreas,
+          'selectedHabits': newHabits.map((h) => {
+            'id': h.id,
+            'title': h.title,
+            'category': h.category,
+          }).toList(),
+          'readingPreferences': {
+            'categories': readingPrefs['categories'] ?? [],
+            'targetBooks': readingPrefs['bookTarget'] ?? 10,
+            'pagesPerDay': readingPrefs['dailyReadingMinutes'] ?? 20,
+          },
+          'financePreferences': {
+            'targetAmount': financePrefs['monthlySavings'] ?? 0,
+            'monthlySavingsTarget': financePrefs['monthlySavings'] ?? 0,
+          },
+          'healthPreferences': {
+            'waterTarget': healthPrefs['waterTarget'] ?? 2000,
+            'sleepTarget': healthPrefs['sleepTarget'] ?? 8,
+            'exerciseTarget': healthPrefs['exerciseTarget'] ?? 30,
+          },
+          'affirmations': selectedAffirmations.map((a) => a['text'] as String).toList(),
+          'workspaceTheme': _hiveDb.getWorkspaceSettings(),
+        };
+        dio.post('/api/focus/onboarding', data: onboardingPayload).then((_) {
+          log('[OSStateNotifier] Synced onboarding preferences with updated habits');
+        }).catchError((e) {
+          log('[OSStateNotifier] Failed to sync onboarding habits: $e');
+        });
+      } catch (e) {
+        log('[OSStateNotifier] Error syncing habits list: $e');
+      }
+    }
   }
 
   Future<void> updateWorkspaceSettings({
@@ -307,18 +393,114 @@ class OSStateNotifier extends StateNotifier<OSState> {
       rainMode: newRain,
     );
 
-    await _hiveDb.saveWorkspaceSettings({
+    final updatedSettings = {
       'woodTexture': newWood,
       'wallColor': newWall,
       'plantType': newPlant,
       'ambientMode': newAmbient,
       'rainMode': newRain,
-    });
+    };
+
+    await _hiveDb.saveWorkspaceSettings(updatedSettings);
+
+    // Sync to backend if logged in
+    final hasToken = _hiveDb.getAuthToken() != null;
+    if (hasToken) {
+      try {
+        final dio = _ref.read(dioClientProvider);
+        final lifeAreas = _hiveDb.getSelectedLifeAreas();
+        final selectedHabits = state.selectedHabits.map((h) => {
+          'id': h.id,
+          'title': h.title,
+          'category': h.category,
+        }).toList();
+        final selectedAffirmations = _hiveDb.getSelectedAffirmations();
+        final readingPrefs = _hiveDb.getReadingPreferences() ?? {};
+        final healthPrefs = _hiveDb.getHealthPreferences() ?? {};
+        final financePrefs = _hiveDb.getFinancePreferences() ?? {};
+        
+        final onboardingPayload = {
+          'identity': _hiveDb.getSelectedIdentity() ?? '🚀 Entrepreneur',
+          'lifeAreas': lifeAreas,
+          'selectedHabits': selectedHabits,
+          'readingPreferences': {
+            'categories': readingPrefs['categories'] ?? [],
+            'targetBooks': readingPrefs['bookTarget'] ?? 10,
+            'pagesPerDay': readingPrefs['dailyReadingMinutes'] ?? 20,
+          },
+          'financePreferences': {
+            'targetAmount': financePrefs['monthlySavings'] ?? 0,
+            'monthlySavingsTarget': financePrefs['monthlySavings'] ?? 0,
+          },
+          'healthPreferences': {
+            'waterTarget': healthPrefs['waterTarget'] ?? 2000,
+            'sleepTarget': healthPrefs['sleepTarget'] ?? 8,
+            'exerciseTarget': healthPrefs['exerciseTarget'] ?? 30,
+          },
+          'affirmations': selectedAffirmations.map((a) => a['text'] as String).toList(),
+          'workspaceTheme': updatedSettings,
+        };
+        dio.post('/api/focus/onboarding', data: onboardingPayload).then((_) {
+          log('[OSStateNotifier] Synced onboarding preferences with updated workspace settings');
+        }).catchError((e) {
+          log('[OSStateNotifier] Failed to sync onboarding workspace settings: $e');
+        });
+      } catch (e) {
+        log('[OSStateNotifier] Error syncing workspace settings: $e');
+      }
+    }
+  }
+
+  Future<void> fetchTodaySession() async {
+    final hasToken = _hiveDb.getAuthToken() != null;
+    if (!hasToken) return;
+
+    try {
+      final dio = _ref.read(dioClientProvider);
+      final response = await dio.get('/api/focus/habits/today');
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data['data'];
+        if (data != null) {
+          final session = data['session'] as Map<String, dynamic>?;
+          if (session != null) {
+            final int xp = session['dailyXP'] ?? state.xp;
+            final habitsList = session['habits'] as List?;
+            final List<String> completedToday = [];
+            final List<String> recovery = [];
+            if (habitsList != null) {
+              for (var h in habitsList) {
+                if (h['completed'] == true) {
+                  completedToday.add(h['habitId'].toString());
+                } else {
+                  final recTask = h['recoveryTask'] as String?;
+                  if (recTask != null && recTask.isNotEmpty) {
+                    recovery.add(recTask);
+                  }
+                }
+              }
+            }
+
+            final newScore = state.selectedHabits.isEmpty
+                ? 0.0
+                : (completedToday.length / state.selectedHabits.length) * 100.0;
+
+            state = state.copyWith(
+              xp: xp,
+              completedHabitIdsToday: completedToday,
+              disciplineScore: newScore,
+              recoveryTasks: recovery,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      log('[OSStateNotifier] Failed to fetch today session: $e');
+    }
   }
 }
 
 // Providers
 final osStateProvider = StateNotifierProvider<OSStateNotifier, OSState>((ref) {
   final hiveDb = ref.watch(hiveDatabaseProvider);
-  return OSStateNotifier(hiveDb);
+  return OSStateNotifier(hiveDb, ref);
 });

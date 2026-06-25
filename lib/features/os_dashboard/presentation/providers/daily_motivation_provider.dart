@@ -4,6 +4,9 @@ import '../../../../core/storage/hive_database.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../onboarding/domain/models/onboarding_models.dart';
 import 'os_providers.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/domain/models/auth_user_model.dart';
+import 'dart:developer' as dev;
 
 class MindsetExercise {
   final String id;
@@ -104,6 +107,14 @@ class MotivationNotifier extends StateNotifier<MotivationState> {
 
   MotivationNotifier(this._hiveDb, this._ref) : super(MotivationState()) {
     _loadInitialData();
+
+    // Listen to authentication state changes to reload data and sync
+    _ref.listen<AsyncValue<AuthUserModel?>>(authProvider, (previous, next) {
+      if (next.hasValue) {
+        dev.log('[MotivationNotifier] Auth state changed, reloading initial affirmations...');
+        _loadInitialData();
+      }
+    });
   }
 
   void _loadInitialData() {
@@ -183,6 +194,52 @@ class MotivationNotifier extends StateNotifier<MotivationState> {
   Future<void> _saveAffirmationsToHive(List<DailyAffirmation> list) async {
     final mapped = list.map((a) => a.toMap()).toList();
     await _hiveDb.saveSelectedAffirmations(mapped);
+
+    // Sync to backend if logged in
+    final hasToken = _hiveDb.getAuthToken() != null;
+    if (hasToken) {
+      try {
+        final dio = _ref.read(dioClientProvider);
+        final lifeAreas = _hiveDb.getSelectedLifeAreas();
+        final selectedHabits = _hiveDb.getSelectedHabits();
+        final readingPrefs = _hiveDb.getReadingPreferences() ?? {};
+        final healthPrefs = _hiveDb.getHealthPreferences() ?? {};
+        final financePrefs = _hiveDb.getFinancePreferences() ?? {};
+        
+        final onboardingPayload = {
+          'identity': _hiveDb.getSelectedIdentity() ?? '🚀 Entrepreneur',
+          'lifeAreas': lifeAreas,
+          'selectedHabits': selectedHabits.map((h) => {
+            'id': h['id'] ?? h['_id'],
+            'title': h['title'],
+            'category': h['category'] ?? 'General',
+          }).toList(),
+          'readingPreferences': {
+            'categories': readingPrefs['categories'] ?? [],
+            'targetBooks': readingPrefs['bookTarget'] ?? 10,
+            'pagesPerDay': readingPrefs['dailyReadingMinutes'] ?? 20,
+          },
+          'financePreferences': {
+            'targetAmount': financePrefs['monthlySavings'] ?? 0,
+            'monthlySavingsTarget': financePrefs['monthlySavings'] ?? 0,
+          },
+          'healthPreferences': {
+            'waterTarget': healthPrefs['waterTarget'] ?? 2000,
+            'sleepTarget': healthPrefs['sleepTarget'] ?? 8,
+            'exerciseTarget': healthPrefs['exerciseTarget'] ?? 30,
+          },
+          'affirmations': list.map((a) => a.text).toList(),
+          'workspaceTheme': _hiveDb.getWorkspaceSettings(),
+        };
+        dio.post('/api/focus/onboarding', data: onboardingPayload).then((_) {
+          dev.log('[MotivationSync] Synced affirmations to server successfully');
+        }).catchError((e) {
+          dev.log('[MotivationSync] Failed to sync affirmations: $e');
+        });
+      } catch (e) {
+        dev.log('[MotivationSync] Error syncing affirmations: $e');
+      }
+    }
   }
 
   // --- Affirmation Actions ---

@@ -120,4 +120,46 @@ class VisionItem extends HiveObject {
       metadata: metadata ?? this.metadata,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type,
+        'content': content,
+        'x': x,
+        'y': y,
+        'width': width,
+        'height': height,
+        'rotation': rotation,
+        'colorValue': colorValue,
+        'isPinned': isPinned,
+        'emoji': emoji,
+        'countdownDate': countdownDate?.toIso8601String(),
+        'secondaryContent': secondaryContent,
+        'zIndex': zIndex,
+        'attachmentType': attachmentType,
+        'attachmentStyle': attachmentStyle,
+        'materialStyle': materialStyle,
+        'metadata': metadata,
+      };
+
+  factory VisionItem.fromJson(Map<String, dynamic> json) => VisionItem(
+        id: json['id'] ?? '',
+        type: json['type'] ?? '',
+        content: json['content'] ?? '',
+        x: (json['x'] as num?)?.toDouble() ?? 0.0,
+        y: (json['y'] as num?)?.toDouble() ?? 0.0,
+        width: (json['width'] as num?)?.toDouble() ?? 180.0,
+        height: (json['height'] as num?)?.toDouble() ?? 120.0,
+        rotation: (json['rotation'] as num?)?.toDouble() ?? 0.0,
+        colorValue: json['colorValue'] ?? 0xFF1E1B4B,
+        isPinned: json['isPinned'] ?? false,
+        emoji: json['emoji'],
+        countdownDate: json['countdownDate'] != null ? DateTime.parse(json['countdownDate']) : null,
+        secondaryContent: json['secondaryContent'],
+        zIndex: json['zIndex'] ?? 0,
+        attachmentType: json['attachmentType'] ?? 'pin',
+        attachmentStyle: json['attachmentStyle'] ?? 'redPin',
+        materialStyle: json['materialStyle'] ?? 'default',
+        metadata: json['metadata'],
+      );
 }

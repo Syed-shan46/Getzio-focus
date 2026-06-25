@@ -6,6 +6,7 @@ import 'core/storage/hive_database.dart';
 import 'core/theme/app_theme.dart';
 import 'features/os_dashboard/presentation/screens/os_dashboard_screen.dart';
 import 'features/onboarding/presentation/screens/onboarding_flow_screen.dart';
+import 'features/auth/presentation/providers/auth_providers.dart';
 import 'core/services/firebase_service.dart';
 import 'shared/providers/app_providers.dart';
 
@@ -69,15 +70,17 @@ class TodoApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final setupCompleted = ref.watch(setupCompletedProvider);
+    final authState = ref.watch(authProvider);
+    final isLoggedIn = authState.hasValue && authState.value != null;
 
     return MaterialApp(
       title: 'Getzio Focus',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
       darkTheme: AppTheme.darkTheme,
-      home: !setupCompleted
-          ? const OnboardingFlowScreen()
-          : const OSDashboardScreen(),
+      home: (setupCompleted || isLoggedIn)
+          ? const OSDashboardScreen()
+          : const OnboardingFlowScreen(),
     );
   }
 }

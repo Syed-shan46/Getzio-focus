@@ -123,6 +123,24 @@ class HiveDatabase {
     return _settingsBox.get('focus_setup_completed', defaultValue: false) as bool;
   }
 
+  Future<void> saveSyncStatus({
+    required String userId,
+    required String lastSyncTime,
+    required bool syncCompleted,
+  }) async {
+    await _settingsBox.put('sync_user_id', userId);
+    await _settingsBox.put('sync_last_time', lastSyncTime);
+    await _settingsBox.put('sync_completed', syncCompleted);
+  }
+
+  bool isSyncCompleted() {
+    return _settingsBox.get('sync_completed', defaultValue: false) as bool;
+  }
+
+  String? getLastSyncTime() {
+    return _settingsBox.get('sync_last_time') as String?;
+  }
+
   Future<void> clearAuth() async {
     await _settingsBox.delete('auth_token');
     await _settingsBox.delete('user_id');
@@ -257,5 +275,17 @@ class HiveDatabase {
     final map = _settingsBox.get('focus_finance_prefs') as Map?;
     if (map == null) return null;
     return Map<String, dynamic>.from(map);
+  }
+
+  // ─── Vision Items Persistence ──────────────────────────────────────────
+
+  Future<void> saveVisionItems(List<Map<String, dynamic>> items) async {
+    await _settingsBox.put('focus_vision_items', items);
+  }
+
+  List<Map<String, dynamic>> getVisionItems() {
+    final list = _settingsBox.get('focus_vision_items') as List?;
+    if (list == null) return [];
+    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
   }
 }

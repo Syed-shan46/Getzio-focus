@@ -4,8 +4,14 @@ import '../../../../core/theme/app_theme.dart';
 class RoomNavDots extends StatelessWidget {
   final PageController controller;
   final List<String> names;
+  final ValueChanged<int>? onDotTapped;
 
-  const RoomNavDots({super.key, required this.controller, required this.names});
+  const RoomNavDots({
+    super.key,
+    required this.controller,
+    required this.names,
+    this.onDotTapped,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +32,15 @@ class RoomNavDots extends StatelessWidget {
 
               return GestureDetector(
                 onTap: () {
-                  controller.animateToPage(
-                    index,
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeOutCubic,
-                  );
+                  if (onDotTapped != null) {
+                    onDotTapped!(index);
+                  } else {
+                    controller.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOutCubic,
+                    );
+                  }
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),

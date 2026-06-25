@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/screens/phone_login_screen.dart';
 
 /// Premium welcome screen with animated pulsating logo and tagline.
 class WelcomeScreen extends StatefulWidget {
@@ -167,6 +168,45 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       'Begin Setup',
                       style: AppTypography.titleMedium(color: Colors.black)
                           .copyWith(fontWeight: FontWeight.w700, fontSize: 16),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Login button
+              FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: _fadeController,
+                  curve: const Interval(0.7, 1.0, curve: Curves.easeOut),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PhoneLoginScreen(),
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white.withValues(alpha: 0.6),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.15),
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      'I have an account — Login',
+                      style: AppTypography.bodyMedium(
+                        color: Colors.white.withValues(alpha: 0.6),
+                      ),
                     ),
                   ),
                 ),

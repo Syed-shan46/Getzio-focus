@@ -61,10 +61,230 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
 
   Future<void> _syncLocalDataToServer() async {
     log('[Sync] Preparing to synchronize local preferences...');
-    // 1. Simulate data migration of onboarding preferences to backend endpoints
-    await Future.delayed(const Duration(seconds: 2));
+    final dio = _ref.read(dioClientProvider);
     
-    // 2. Trigger real sync of offline todo queue
+    // Gather all local data from Hive
+    final lifeAreas = _hiveDb.getSelectedLifeAreas();
+    final selectedGoals = _hiveDb.getSelectedGoals();
+    final wakeUpTime = _hiveDb.getWakeUpTime() ?? '6:00 AM';
+    final selectedHabits = _hiveDb.getSelectedHabits();
+    final selectedAffirmations = _hiveDb.getSelectedAffirmations();
+    final userStatistics = _hiveDb.getUserStatistics() ?? {};
+    final habitLogs = _hiveDb.getHabitLogs();
+    final workspaceSettings = _hiveDb.getWorkspaceSettings();
+    final readingPrefs = _hiveDb.getReadingPreferences() ?? {};
+    final healthPrefs = _hiveDb.getHealthPreferences() ?? {};
+    final financePrefs = _hiveDb.getFinancePreferences() ?? {};
+    final visionItems = _hiveDb.getVisionItems();
+
+    // Ensure all items have a localId and a default syncStatus
+    final updatedGoals = selectedGoals.map((g) {
+      final map = Map<String, dynamic>.from(g);
+      map['localId'] ??= map['id'] ?? map['_id'] ?? 'goal_${DateTime.now().microsecondsSinceEpoch}_${g.hashCode}';
+      map['syncStatus'] ??= 'pending';
+      return map;
+    }).toList();
+    await _hiveDb.saveSelectedGoals(updatedGoals);
+
+    final updatedHabits = selectedHabits.map((h) {
+      final map = Map<String, dynamic>.from(h);
+      map['localId'] ??= map['id'] ?? map['_id'] ?? 'habit_${DateTime.now().microsecondsSinceEpoch}_${h.hashCode}';
+      map['syncStatus'] ??= 'pending';
+      return map;
+    }).toList();
+    await _hiveDb.saveSelectedHabits(updatedHabits);
+
+    final updatedAffirmations = selectedAffirmations.map((a) {
+      final map = Map<String, dynamic>.from(a);
+      map['localId'] ??= map['id'] ?? map['_id'] ?? 'affirmation_${DateTime.now().microsecondsSinceEpoch}_${a.hashCode}';
+      map['syncStatus'] ??= 'pending';
+      return map;
+    }).toList();
+    await _hiveDb.saveSelectedAffirmations(updatedAffirmations);
+
+    final updatedVisionItems = visionItems.map((v) {
+      final map = Map<String, dynamic>.from(v);
+      map['localId'] ??= map['id'] ?? map['_id'] ?? 'vision_${DateTime.now().microsecondsSinceEpoch}_${v.hashCode}';
+      map['syncStatus'] ??= 'pending';
+      return map;
+    }).toList();
+    await _hiveDb.saveVisionItems(updatedVisionItems);
+
+    // 1. Sync onboarding preferences to /api/focus/onboarding
+    try {
+      final onboardingPayload = {
+        'identity': _hiveDb.getSelectedIdentity() ?? '🚀 Entrepreneur',
+        'lifeAreas': lifeAreas,
+        'selectedHabits': updatedHabits.map((h) => {
+          'localId': h['localId'],
+          'id': h['id'] ?? h['_id'],
+          'title': h['title'],
+          'category': h['category'] ?? 'General',
+        }).toList(),
+        'readingPreferences': {
+          'categories': readingPrefs['categories'] ?? [],
+          'targetBooks': readingPrefs['bookTarget'] ?? 10,
+          'pagesPerDay': readingPrefs['dailyReadingMinutes'] ?? 20,
+        },
+        'financePreferences': {
+          'targetAmount': financePrefs['monthlySavings'] ?? 0,
+          'monthlySavingsTarget': financePrefs['monthlySavings'] ?? 0,
+        },
+        'healthPreferences': {
+          'waterTarget': healthPrefs['waterTarget'] ?? 2000,
+          'sleepTarget': healthPrefs['sleepTarget'] ?? 8,
+          'exerciseTarget': healthPrefs['exerciseTarget'] ?? 30,
+        },
+        'affirmations': updatedAffirmations.map((a) => a['text'] as String).toList(),
+        'workspaceTheme': workspaceSettings['theme'] ?? 'default',
+      };
+      
+      final response = await dio.post('/api/focus/onboarding', data: onboardingPayload);
+      log('[Sync] Onboarding sync completed successfully: ${response.statusCode}');
+    } catch (e) {
+      log('[Sync] Onboarding sync failed: $e');
+    }
+
+    // 2. Sync progress and vision board items to /api/focus/sync
+    try {
+      // Structure habitLogs map into array for backend format
+      final List<Map<String, dynamic>> logsList = [];
+      habitLogs.forEach((dateStr, habitsList) {
+        if (habitsList is List) {
+          for (var habitId in habitsList) {
+            logsList.add({
+              'localId': 'log_${dateStr}_$habitId',
+              'habitId': habitId,
+              'completed': true,
+              'date': dateStr,
+              'completedTime': DateTime.now().toIso8601String()
+            });
+          }
+        }
+      });
+
+      final syncPayload = {
+        'profile': {
+          'identity': _hiveDb.getSelectedIdentity(),
+          'lifeAreas': lifeAreas,
+          'workspaceTheme': workspaceSettings['theme'] ?? 'default'
+        },
+        'habits': updatedHabits.map((h) => {
+          'localId': h['localId'],
+          'habitId': h['id'] ?? h['_id'],
+          'title': h['title'],
+          'category': h['category'] ?? 'General',
+          'enabled': h['enabled'] ?? true,
+          'dailyTarget': h['frequency'] == 'Daily' ? '1 time' : '3 times',
+          'xpReward': h['xpReward'] ?? 10,
+        }).toList(),
+        'goals': updatedGoals.map((g) => {
+          'localId': g['localId'],
+          'title': g['title'] ?? 'Goal',
+          'category': g['category'] ?? 'General',
+          'target': g['target'] ?? 100,
+          'currentProgress': g['currentProgress'] ?? 0,
+          'status': (g['status'] == 'completed') ? 'completed' : 'in-progress',
+          'deadline': g['deadline'] ?? DateTime.now().add(const Duration(days: 30)).toIso8601String(),
+          'priority': g['priority'] ?? 'medium',
+        }).toList(),
+        'reading': {
+          'dailyTargetPages': readingPrefs['dailyReadingMinutes'] ?? 20,
+          'goalBooks': readingPrefs['bookTarget'] ?? 12,
+        },
+        'finance': {
+          'targetAmount': financePrefs['monthlySavings'] ?? 10000,
+          'monthlySavingsTarget': financePrefs['monthlySavings'] ?? 10000,
+        },
+        'health': {
+          'waterGoal': healthPrefs['waterTarget'] ?? 2000,
+          'sleepGoal': healthPrefs['sleepTarget'] ?? 8,
+          'exerciseGoal': healthPrefs['exerciseTarget'] ?? 30,
+        },
+        'affirmations': updatedAffirmations.map((a) => {
+          'localId': a['localId'],
+          'title': a['text'] ?? 'Affirmation',
+          'author': a['author'] ?? 'Anonymous',
+          'category': a['category'] ?? 'General',
+          'favorite': a['isPinned'] ?? false,
+        }).toList(),
+        'visionRoom': {
+          'items': updatedVisionItems,
+        },
+        'habitLogs': logsList,
+        'workspaceSettings': workspaceSettings['theme'] ?? 'default'
+      };
+
+      final response = await dio.post('/api/focus/sync', data: syncPayload);
+      log('[Sync] Core progress and vision room items sync completed: ${response.statusCode}');
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data['success'] == true && data['localIdToServerIdMap'] != null) {
+          final mapping = data['localIdToServerIdMap'] as Map<String, dynamic>;
+
+          // Sync local ID goals mapping
+          if (mapping['goals'] != null) {
+            final goalMap = mapping['goals'] as Map<String, dynamic>;
+            final goalsToSave = _hiveDb.getSelectedGoals();
+            final mapped = goalsToSave.map((g) {
+              final map = Map<String, dynamic>.from(g);
+              final locId = map['localId'];
+              if (locId != null && goalMap.containsKey(locId)) {
+                map['serverId'] = goalMap[locId];
+                map['syncStatus'] = 'synced';
+              }
+              return map;
+            }).toList();
+            await _hiveDb.saveSelectedGoals(mapped);
+          }
+
+          // Sync local ID habits mapping
+          if (mapping['habits'] != null) {
+            final habitMap = mapping['habits'] as Map<String, dynamic>;
+            final habitsToSave = _hiveDb.getSelectedHabits();
+            final mapped = habitsToSave.map((h) {
+              final map = Map<String, dynamic>.from(h);
+              final locId = map['localId'];
+              if (locId != null && habitMap.containsKey(locId)) {
+                map['serverId'] = habitMap[locId];
+                map['syncStatus'] = 'synced';
+              }
+              return map;
+            }).toList();
+            await _hiveDb.saveSelectedHabits(mapped);
+          }
+
+          // Sync local ID affirmations mapping
+          if (mapping['affirmations'] != null) {
+            final affMap = mapping['affirmations'] as Map<String, dynamic>;
+            final affirmationsToSave = _hiveDb.getSelectedAffirmations();
+            final mapped = affirmationsToSave.map((a) {
+              final map = Map<String, dynamic>.from(a);
+              final locId = map['localId'];
+              if (locId != null && affMap.containsKey(locId)) {
+                map['serverId'] = affMap[locId];
+                map['syncStatus'] = 'synced';
+              }
+              return map;
+            }).toList();
+            await _hiveDb.saveSelectedAffirmations(mapped);
+          }
+
+          // Save final sync status parameters
+          await _hiveDb.saveSyncStatus(
+            userId: _hiveDb.getUserId() ?? 'unknown',
+            lastSyncTime: DateTime.now().toIso8601String(),
+            syncCompleted: true,
+          );
+          log('[Sync] All local collections marked as synced.');
+        }
+      }
+    } catch (e) {
+      log('[Sync] Core sync failed: $e');
+    }
+
+    // 3. Trigger real sync of offline todo queue
     try {
       await _ref.read(todoRepositoryProvider).syncOfflineData();
       log('[Sync] Offline todos sync completed successfully.');

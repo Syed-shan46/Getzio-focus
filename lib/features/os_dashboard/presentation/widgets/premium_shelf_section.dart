@@ -2,12 +2,17 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/providers/app_providers.dart';
 import '../providers/os_providers.dart';
+import '../../../todo/domain/models/todo_model.dart';
+import '../../../todo/presentation/providers/todo_providers.dart';
 
 class ShelfCardData {
   final String id;
+  final String moduleType;
   final String title;
   final String emoji;
   final String progressText;
@@ -17,6 +22,7 @@ class ShelfCardData {
 
   const ShelfCardData({
     required this.id,
+    required this.moduleType,
     required this.title,
     required this.emoji,
     required this.progressText,
@@ -26,7 +32,7 @@ class ShelfCardData {
   });
 }
 
-class PremiumShelfSection extends StatefulWidget {
+class PremiumShelfSection extends ConsumerStatefulWidget {
   final OSState state;
   final Function(String) onExpandModule;
   final int waterLoggedMl;
@@ -57,13 +63,13 @@ class PremiumShelfSection extends StatefulWidget {
   });
 
   @override
-  State<PremiumShelfSection> createState() => _PremiumShelfSectionState();
+  ConsumerState<PremiumShelfSection> createState() => _PremiumShelfSectionState();
 }
 
-class _PremiumShelfSectionState extends State<PremiumShelfSection> {
+class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
   late ScrollController _scrollController;
   int _liftedIndex = -1;
-  late List<ShelfCardData> _cards;
+  bool _hasCentered = false;
 
   // Constants for card sizes
   final double cardWidth = 80.0;
@@ -74,16 +80,6 @@ class _PremiumShelfSectionState extends State<PremiumShelfSection> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    _cards = _buildCardData();
-
-    // Center the cards after frame is rendered
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients && _cards.isNotEmpty) {
-        final int middleIndex = (_cards.length / 2).floor();
-        final double targetOffset = middleIndex * (cardWidth + spacing);
-        _scrollController.jumpTo(targetOffset);
-      }
-    });
 
     // Reset lifted index on scroll start
     _scrollController.addListener(() {
@@ -96,95 +92,113 @@ class _PremiumShelfSectionState extends State<PremiumShelfSection> {
   }
 
   @override
-  void didUpdateWidget(covariant PremiumShelfSection oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Re-build card list if values change
-    if (widget.waterLoggedMl != oldWidget.waterLoggedMl ||
-        widget.workoutComplete != oldWidget.workoutComplete ||
-        widget.readPages != oldWidget.readPages ||
-        widget.savingsSaved != oldWidget.savingsSaved ||
-        widget.journalSaved != oldWidget.journalSaved ||
-        widget.state.selectedLifeAreas != oldWidget.state.selectedLifeAreas) {
-      setState(() {
-        _cards = _buildCardData();
-      });
-    }
-  }
-
-  @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
   }
 
-  List<ShelfCardData> _buildCardData() {
+  List<ShelfCardData> _buildCardData(List<TodoModel> todos) {
     final List<ShelfCardData> cards = [];
 
-    // 1. Reading
-    if (widget.state.selectedLifeAreas.contains('reading') ||
-        widget.state.selectedLifeAreas.contains('learning')) {
-      final double progress = (widget.readPages / widget.readPagesTarget).clamp(
-        0.0,
-        1.0,
-      );
+    // 1. Overdue tasks (Incomplete, created before today)
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final overdueTasks = todos.where((t) => !t.isCompleted && t.createdAt.isBefore(todayStart)).toList();
+    for (var todo in overdueTasks) {
       cards.add(
         ShelfCardData(
-          id: 'learning',
-          title: 'Reading',
-          emoji: '📚',
-          progressText: '${widget.readPages} / ${widget.readPagesTarget} Pgs',
-          nextAction:
-              'Read ${widget.readPagesTarget - widget.readPages > 0 ? (widget.readPagesTarget - widget.readPages).clamp(5, 15) : 10} Pages',
-          progressValue: progress,
-          metricLabel: 'Book: ${widget.activeBook}',
+          id: 'overdue_${todo.id}',
+          moduleType: 'routine',
+          title: todo.title,
+          emoji: '⚠️',
+          progressText: 'Overdue',
+          nextAction: 'Complete task',
+          progressValue: 0.0,
+          metricLabel: 'Due today',
         ),
       );
     }
 
-    // 2. Finance
-    if (widget.state.selectedLifeAreas.contains('finance')) {
-      final double progress = (widget.savingsSaved / widget.savingsTarget)
-          .clamp(0.0, 1.0);
+    // 2. Recovery tasks (Yesterday's missed habits)
+    for (var recoveryTask in widget.state.recoveryTasks) {
       cards.add(
         ShelfCardData(
-          id: 'finance',
-          title: 'Savings',
-          emoji: '💰',
-          progressText: '₹${widget.savingsSaved.toInt()}',
-          nextAction: 'Save ₹500 Today',
-          progressValue: progress,
-          metricLabel: 'Goal ₹${widget.savingsTarget.toInt()}',
+          id: 'recovery_$recoveryTask',
+          moduleType: 'routine',
+          title: recoveryTask,
+          emoji: '🩹',
+          progressText: 'Recovery',
+          nextAction: 'Complete recovery',
+          progressValue: 0.0,
+          metricLabel: 'Yesterday\'s habit',
         ),
       );
     }
 
-    // 3. Health
-    if (widget.state.selectedLifeAreas.contains('health') ||
-        widget.state.selectedLifeAreas.contains('nutrition') ||
-        widget.state.selectedLifeAreas.contains('sleep')) {
+    // 3. Today's habits (selected, not completed today)
+    final incompleteHabits = widget.state.selectedHabits.where((habit) {
+      return !widget.state.completedHabitIdsToday.contains(habit.id);
+    }).toList();
+
+    String getHabitEmoji(String cat) {
+      switch (cat.toLowerCase()) {
+        case 'fitness':
+        case 'workout':
+        case 'health':
+          return '💪';
+        case 'finance':
+        case 'money':
+          return '💰';
+        case 'reading':
+        case 'learning':
+        case 'mind':
+          return '📚';
+        default:
+          return '✅';
+      }
+    }
+
+    for (var habit in incompleteHabits) {
       cards.add(
         ShelfCardData(
-          id: 'health',
-          title: 'Workout',
-          emoji: '💪',
-          progressText: widget.workoutComplete ? 'Completed' : 'Pending',
-          nextAction: widget.workoutComplete
-              ? 'Recover Today'
-              : 'Workout Today',
-          progressValue: widget.workoutComplete ? 1.0 : 0.4,
-          metricLabel: 'Steps: ${widget.stepsWalked}',
+          id: 'habit_${habit.id}',
+          moduleType: 'routine',
+          title: habit.title,
+          emoji: getHabitEmoji(habit.category),
+          progressText: 'Pending',
+          nextAction: 'Mark completed',
+          progressValue: 0.0,
+          metricLabel: habit.category,
         ),
       );
     }
 
-    // 4. Goals / Productivity
-    if (widget.state.selectedLifeAreas.contains('goals') ||
-        widget.state.selectedLifeAreas.contains('productivity') ||
-        widget.state.selectedLifeAreas.contains('coding') ||
-        widget.state.selectedLifeAreas.contains('mindset')) {
+    // 4. Goal milestones (Target goals from Hive)
+    final hiveDb = ref.read(hiveDatabaseProvider);
+    final selectedGoals = hiveDb.getSelectedGoals();
+    if (selectedGoals.isNotEmpty) {
+      for (var goal in selectedGoals) {
+        final title = goal['title'] as String? ?? 'Goal';
+        final category = goal['category'] as String? ?? 'General';
+        final timeline = goal['timeline'] as String? ?? '1 Month';
+        cards.add(
+          ShelfCardData(
+            id: 'goal_${goal['id'] ?? title}',
+            moduleType: 'goals',
+            title: title,
+            emoji: '🎯',
+            progressText: 'Active',
+            nextAction: 'Take action today',
+            progressValue: 0.5,
+            metricLabel: '$category • $timeline',
+          ),
+        );
+      }
+    } else {
       cards.add(
         const ShelfCardData(
-          id: 'goals',
+          id: 'default_goal_1',
+          moduleType: 'goals',
           title: 'Startup Launch',
           emoji: '🎯',
           progressText: '70% Done',
@@ -195,181 +209,140 @@ class _PremiumShelfSectionState extends State<PremiumShelfSection> {
       );
     }
 
-    // 5. Journaling
-    if (widget.state.selectedLifeAreas.contains('journaling')) {
+    // 5. Health reminders: Water, Sleep, Workout
+    if (widget.waterLoggedMl < 2500) {
       cards.add(
         ShelfCardData(
-          id: 'journal',
-          title: 'Journal',
-          emoji: '📝',
-          progressText: widget.journalSaved ? 'Written' : 'Pending',
-          nextAction: 'Write Reflection',
-          progressValue: widget.journalSaved ? 1.0 : 0.0,
-          metricLabel: widget.journalSaved
-              ? 'Log Saved'
-              : 'Last Entry: Yesterday',
+          id: 'health_water',
+          moduleType: 'health',
+          title: 'Hydration',
+          emoji: '💧',
+          progressText: '${widget.waterLoggedMl} / 2500 ml',
+          nextAction: 'Drink 250ml',
+          progressValue: (widget.waterLoggedMl / 2500.0).clamp(0.0, 1.0),
+          metricLabel: 'Target: 2.5L',
         ),
       );
     }
 
-    // 6. Business
-    if (widget.state.selectedLifeAreas.contains('business')) {
-      cards.add(
-        const ShelfCardData(
-          id: 'goals',
-          title: 'Business',
-          emoji: '🚀',
-          progressText: '80% Progress',
-          nextAction: 'Pitch Deck Update',
-          progressValue: 0.8,
-          metricLabel: '5 Tasks Remaining',
-        ),
-      );
-    }
-
-    // 7. Spiritual
-    if (widget.state.selectedLifeAreas.contains('spiritual')) {
-      cards.add(
-        const ShelfCardData(
-          id: 'routine',
-          title: 'Spiritual',
-          emoji: '🙏',
-          progressText: '15 / 30 Days',
-          nextAction: 'Meditation 10m',
-          progressValue: 0.5,
-          metricLabel: 'Streak: 6 Days',
-        ),
-      );
-    }
-
-    // 8. Fitness / Running
-    if (widget.state.selectedLifeAreas.contains('running') ||
-        widget.state.selectedLifeAreas.contains('fitness')) {
+    if (widget.sleepHours < 8.0) {
       cards.add(
         ShelfCardData(
-          id: 'health',
-          title: 'Fitness',
-          emoji: '🏃',
-          progressText: '12 / 20 Runs',
-          nextAction: 'Run 5K Today',
-          progressValue: 0.6,
+          id: 'health_sleep',
+          moduleType: 'health',
+          title: 'Sleep',
+          emoji: '😴',
+          progressText: '${widget.sleepHours} Hours',
+          nextAction: 'Wind down at 10 PM',
+          progressValue: (widget.sleepHours / 8.0).clamp(0.0, 1.0),
+          metricLabel: 'Target: 8.0h',
+        ),
+      );
+    }
+
+    if (!widget.workoutComplete) {
+      cards.add(
+        ShelfCardData(
+          id: 'health_workout',
+          moduleType: 'health',
+          title: 'Workout',
+          emoji: '💪',
+          progressText: 'Pending',
+          nextAction: 'Workout Today',
+          progressValue: 0.0,
           metricLabel: 'Steps: ${widget.stepsWalked}',
         ),
       );
     }
 
-    // 9. Career
-    if (widget.state.selectedLifeAreas.contains('career')) {
+    // 6. Finance reminders
+    if (widget.savingsSaved < widget.savingsTarget) {
       cards.add(
-        const ShelfCardData(
-          id: 'goals',
-          title: 'Career',
-          emoji: '📈',
-          progressText: '3 / 5 Applications',
-          nextAction: 'Update CV Profile',
-          progressValue: 0.6,
-          metricLabel: 'Status: Active',
-        ),
-      );
-    }
-
-    // Fallback default list if onboarding set is empty
-    if (cards.isEmpty) {
-      cards.addAll([
         ShelfCardData(
-          id: 'learning',
-          title: 'Reading',
-          emoji: '📚',
-          progressText: '${widget.readPages} / ${widget.readPagesTarget} Pgs',
-          nextAction: 'Read Pages Today',
-          progressValue: (widget.readPages / widget.readPagesTarget).clamp(
-            0.0,
-            1.0,
-          ),
-          metricLabel: 'Book: ${widget.activeBook}',
-        ),
-        ShelfCardData(
-          id: 'finance',
+          id: 'finance_savings',
+          moduleType: 'finance',
           title: 'Savings',
           emoji: '💰',
           progressText: '₹${widget.savingsSaved.toInt()}',
           nextAction: 'Save ₹500 Today',
-          progressValue: (widget.savingsSaved / widget.savingsTarget).clamp(
-            0.0,
-            1.0,
-          ),
-          metricLabel: 'Goal ₹${widget.savingsTarget.toInt()}',
+          progressValue: (widget.savingsSaved / widget.savingsTarget).clamp(0.0, 1.0),
+          metricLabel: 'Goal: ₹${widget.savingsTarget.toInt()}',
         ),
-        ShelfCardData(
-          id: 'health',
-          title: 'Workout',
-          emoji: '💪',
-          progressText: widget.workoutComplete ? 'Completed' : 'Pending',
-          nextAction: widget.workoutComplete
-              ? 'Recover Today'
-              : 'Workout Today',
-          progressValue: widget.workoutComplete ? 1.0 : 0.4,
-          metricLabel: 'Steps: ${widget.stepsWalked}',
-        ),
-        const ShelfCardData(
-          id: 'goals',
-          title: 'Startup Launch',
-          emoji: '🎯',
-          progressText: '70% Done',
-          nextAction: 'Finish Landing Page',
-          progressValue: 0.7,
-          metricLabel: '9 Days Remaining',
-        ),
-        ShelfCardData(
-          id: 'journal',
-          title: 'Journal',
-          emoji: '📝',
-          progressText: widget.journalSaved ? 'Written' : 'Pending',
-          nextAction: 'Write Reflection',
-          progressValue: widget.journalSaved ? 1.0 : 0.0,
-          metricLabel: widget.journalSaved
-              ? 'Log Saved'
-              : 'Last Entry: Yesterday',
-        ),
-      ]);
+      );
     }
-    
-    // Add 3 additional cards for UI testing
-    cards.addAll([
-      const ShelfCardData(
-        id: 'hydration',
-        title: 'Hydration',
-        emoji: '💧',
-        progressText: '1,200 / 2,500 mL',
-        nextAction: 'Drink 250ml Water',
-        progressValue: 0.48,
-        metricLabel: 'Daily Target: 2.5L',
-      ),
-      const ShelfCardData(
-        id: 'sleep',
-        title: 'Sleep',
-        emoji: '😴',
-        progressText: '7.8 Hours',
-        nextAction: 'Wind down at 10 PM',
-        progressValue: 0.85,
-        metricLabel: 'Deep Sleep: 2h 15m',
-      ),
-      const ShelfCardData(
-        id: 'habits',
-        title: 'Streak',
-        emoji: '🔥',
-        progressText: '18 Days',
-        nextAction: 'Complete Daily 5',
-        progressValue: 0.9,
-        metricLabel: 'Level 4 Focus',
-      ),
-    ]);
 
-    return cards;
+    // 7. Reading target
+    if (widget.readPages < widget.readPagesTarget) {
+      cards.add(
+        ShelfCardData(
+          id: 'reading_progress',
+          moduleType: 'learning',
+          title: 'Reading',
+          emoji: '📚',
+          progressText: '${widget.readPages} / ${widget.readPagesTarget} Pgs',
+          nextAction: 'Read ${widget.readPagesTarget - widget.readPages > 0 ? widget.readPagesTarget - widget.readPages : 10} Pages',
+          progressValue: (widget.readPages / widget.readPagesTarget).clamp(0.0, 1.0),
+          metricLabel: widget.activeBook,
+        ),
+      );
+    }
+
+    // 8. Daily affirmation
+    final affirmationsData = hiveDb.getSelectedAffirmations();
+    String pinnedText = 'Discipline creates freedom.';
+    if (affirmationsData.isNotEmpty) {
+      final firstPinned = affirmationsData.firstWhere(
+        (e) => e['isPinned'] == true,
+        orElse: () => affirmationsData.first,
+      );
+      pinnedText = firstPinned['text'] as String? ?? pinnedText;
+    }
+    cards.add(
+      ShelfCardData(
+        id: 'affirmation_daily',
+        moduleType: 'affirmations',
+        title: 'Affirmation',
+        emoji: '🖼️',
+        progressText: 'Active',
+        nextAction: 'Read Affirmation',
+        progressValue: 1.0,
+        metricLabel: pinnedText,
+      ),
+    );
+
+    // Filter duplicates by unique card ID and cap at 7
+    final Set<String> seenIds = {};
+    final List<ShelfCardData> uniqueCards = [];
+    for (var card in cards) {
+      if (!seenIds.contains(card.id)) {
+        seenIds.add(card.id);
+        uniqueCards.add(card);
+      }
+    }
+
+    if (uniqueCards.length > 7) {
+      return uniqueCards.sublist(0, 7);
+    }
+    return uniqueCards;
   }
 
   @override
   Widget build(BuildContext context) {
+    final todosAsync = ref.watch(todosProvider);
+    final todos = todosAsync.value ?? [];
+    final cards = _buildCardData(todos);
+
+    if (!_hasCentered && cards.isNotEmpty) {
+      _hasCentered = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          final int middleIndex = (cards.length / 2).floor();
+          final double targetOffset = middleIndex * (cardWidth + spacing);
+          _scrollController.jumpTo(targetOffset);
+        }
+      });
+    }
+
     Color woodColor;
     if (widget.state.woodTexture == 'Oak') {
       woodColor = const Color(0xFFC7B3A3);
@@ -423,7 +396,7 @@ class _PremiumShelfSectionState extends State<PremiumShelfSection> {
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
                   padding: EdgeInsets.symmetric(horizontal: sidePadding),
-                  itemCount: _cards.length,
+                  itemCount: cards.length,
                   clipBehavior: Clip.none,
                   itemBuilder: (context, index) {
                     return AnimatedBuilder(
@@ -438,7 +411,7 @@ class _PremiumShelfSectionState extends State<PremiumShelfSection> {
                         // Compute current active index based on proximity to center
                         double minDistance = double.infinity;
                         int activeIndex = 0;
-                        for (int i = 0; i < _cards.length; i++) {
+                        for (int i = 0; i < cards.length; i++) {
                           final double itemC =
                               sidePadding +
                               i * (cardWidth + spacing) +
@@ -459,7 +432,7 @@ class _PremiumShelfSectionState extends State<PremiumShelfSection> {
                             (distance / (cardWidth + spacing)).clamp(-2.5, 2.5);
 
                         return _buildCard(
-                          _cards[index],
+                          cards[index],
                           index,
                           normalizedDistance,
                           index == activeIndex,
@@ -608,7 +581,7 @@ class _PremiumShelfSectionState extends State<PremiumShelfSection> {
                 } else {
                   // Double tap / tap active card: Expand full screen
                   HapticFeedback.heavyImpact();
-                  widget.onExpandModule(card.id);
+                  widget.onExpandModule(card.moduleType);
                   setState(() {
                     _liftedIndex = -1;
                   });
