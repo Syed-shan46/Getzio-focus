@@ -1175,6 +1175,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
     CustomPainter painter,
     double sizeVal,
   ) {
+    final bool isSelected = _activeModule == id;
     return Tooltip(
       message: label,
       textStyle: const TextStyle(fontSize: 9, color: Colors.white),
@@ -1184,10 +1185,32 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
       ),
       child: GestureDetector(
         onTap: () => _expandModule(id),
-        child: SizedBox(
-          width: sizeVal,
-          height: sizeVal,
-          child: CustomPaint(painter: painter),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.translationValues(0, isSelected ? -8 : 0, 0),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.accentBlue.withValues(alpha: 0.6),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                    ),
+                  ]
+                : [],
+          ),
+          child: AnimatedScale(
+            scale: isSelected ? 1.15 : 1.0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            child: SizedBox(
+              width: sizeVal,
+              height: sizeVal,
+              child: CustomPaint(painter: painter),
+            ),
+          ),
         ),
       ),
     );
