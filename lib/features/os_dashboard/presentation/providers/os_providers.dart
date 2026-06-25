@@ -5,6 +5,7 @@ import '../../../../core/storage/hive_database.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../onboarding/domain/models/onboarding_models.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/domain/models/auth_user_model.dart';
 
 // State definition for the OS dashboard
 class OSState {
