@@ -1,8 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/vision_room_providers.dart';
 import '../walls/vision_wall.dart';
 import '../walls/habit_wall.dart';
@@ -10,7 +8,7 @@ import '../walls/motivation_wall.dart';
 import '../walls/achievement_wall.dart';
 import '../walls/finance_wall.dart';
 import '../walls/timeline_wall.dart';
-import '../widgets/room_nav_dots.dart';
+
 
 class VisionRoomScreen extends ConsumerStatefulWidget {
   const VisionRoomScreen({super.key});
@@ -33,152 +31,6 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
     'Motivation Wall',
     'Future Timeline'
   ];
-
-  final Set<int> _visitedBoards = {3};
-
-  void _handleDotTapped(int index) {
-    final isGuest = ref.read(authProvider).value == null;
-    if (isGuest) {
-      if (!_visitedBoards.contains(index)) {
-        if (_visitedBoards.length >= 3) {
-          _showPremiumAuthSheet(context);
-          return;
-        } else {
-          setState(() {
-            _visitedBoards.add(index);
-          });
-        }
-      }
-    }
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  void _showPremiumAuthSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            padding: const EdgeInsets.all(28),
-            decoration: const BoxDecoration(
-              color: Color(0xFF0F172A),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-              border: Border.fromBorderSide(BorderSide(color: Colors.white10, width: 1.5)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 48,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Save Your Vision Forever',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontFamily: 'Outfit',
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Create your free account to unlock unlimited Vision Room boards, sync across devices, and securely back up your dreams.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 28),
-                _buildSocialButton(
-                  context,
-                  icon: Icons.g_mobiledata_rounded,
-                  label: 'Continue with Google',
-                  color: Colors.redAccent,
-                  provider: 'Google',
-                ),
-                const SizedBox(height: 12),
-                _buildSocialButton(
-                  context,
-                  icon: Icons.apple_rounded,
-                  label: 'Continue with Apple',
-                  color: Colors.white,
-                  provider: 'Apple',
-                ),
-                const SizedBox(height: 12),
-                _buildSocialButton(
-                  context,
-                  icon: Icons.mail_outline_rounded,
-                  label: 'Continue with Email',
-                  color: AppColors.accentBlue,
-                  provider: 'Email',
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Maybe Later',
-                    style: TextStyle(color: Colors.white30, fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSocialButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required Color color,
-    required String provider,
-  }) {
-    return SizedBox(
-      height: 52,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          Navigator.pop(context);
-          ref.read(authProvider.notifier).simulateSocialLogin(provider);
-        },
-        icon: Icon(icon, color: color == Colors.white ? Colors.black : Colors.white, size: 24),
-        label: Text(
-          label,
-          style: TextStyle(
-            color: color == Colors.white ? Colors.black : Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color == Colors.white ? Colors.white : Colors.white.withValues(alpha: 0.05),
-          side: color == Colors.white ? null : const BorderSide(color: Colors.white10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          elevation: 0,
-        ),
-      ),
-    );
-  }
 
   @override
   void initState() {
@@ -274,7 +126,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
                       // Interaction blocking handled elsewhere
                     ),
 
-                  // 5. UI Overlay (Top Bar + Nav Dots)
+                  // 5. UI Overlay (Top Bar)
                   SafeArea(
                     child: IgnorePointer(
                       ignoring: focusMode,
@@ -285,11 +137,6 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _buildTopBar(),
-                            RoomNavDots(
-                              controller: _pageController,
-                              names: _wallNames,
-                              onDotTapped: _handleDotTapped,
-                            ),
                           ],
                         ),
                       ),

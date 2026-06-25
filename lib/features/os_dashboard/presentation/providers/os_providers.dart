@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -32,6 +33,7 @@ class OSState {
   final String plantType;
   final String ambientMode;
   final bool rainMode;
+  final String homeExperience;
   final List<String> selectedLifeAreas;
   final List<String> recoveryTasks;
 
@@ -56,6 +58,7 @@ class OSState {
     this.plantType = 'Bonsai',
     this.ambientMode = 'Auto',
     this.rainMode = false,
+    this.homeExperience = 'living',
     this.selectedLifeAreas = const [],
     this.recoveryTasks = const [],
   });
@@ -81,6 +84,7 @@ class OSState {
     String? plantType,
     String? ambientMode,
     bool? rainMode,
+    String? homeExperience,
     List<String>? selectedLifeAreas,
     List<String>? recoveryTasks,
   }) {
@@ -105,6 +109,7 @@ class OSState {
       plantType: plantType ?? this.plantType,
       ambientMode: ambientMode ?? this.ambientMode,
       rainMode: rainMode ?? this.rainMode,
+      homeExperience: homeExperience ?? this.homeExperience,
       selectedLifeAreas: selectedLifeAreas ?? this.selectedLifeAreas,
       recoveryTasks: recoveryTasks ?? this.recoveryTasks,
     );
@@ -158,6 +163,7 @@ class OSStateNotifier extends StateNotifier<OSState> {
     final plant = settings['plantType'] as String? ?? 'Bonsai';
     final ambient = settings['ambientMode'] as String? ?? 'Auto';
     final rain = settings['rainMode'] as bool? ?? false;
+    final homeExp = settings['homeExperience'] as String? ?? 'living';
     
     // Load life areas from onboarding
     final lifeAreas = _hiveDb.getSelectedLifeAreas();
@@ -192,6 +198,7 @@ class OSStateNotifier extends StateNotifier<OSState> {
       plantType: plant,
       ambientMode: ambient,
       rainMode: rain,
+      homeExperience: homeExp,
       selectedLifeAreas: lifeAreas,
     );
   }
@@ -275,7 +282,7 @@ class OSStateNotifier extends StateNotifier<OSState> {
       try {
         final dio = _ref.read(dioClientProvider);
         dio.post(
-          '/api/focus/habits/check',
+          '/focus/habits/check',
           data: {
             'habitId': habitId,
             'completed': isAdd,
@@ -361,9 +368,9 @@ class OSStateNotifier extends StateNotifier<OSState> {
             'exerciseTarget': healthPrefs['exerciseTarget'] ?? 30,
           },
           'affirmations': selectedAffirmations.map((a) => a['text'] as String).toList(),
-          'workspaceTheme': _hiveDb.getWorkspaceSettings(),
+          'workspaceTheme': jsonEncode(_hiveDb.getWorkspaceSettings()),
         };
-        dio.post('/api/focus/onboarding', data: onboardingPayload).then((_) {
+        dio.post('/focus/onboarding', data: onboardingPayload).then((_) {
           log('[OSStateNotifier] Synced onboarding preferences with updated habits');
         }).catchError((e) {
           log('[OSStateNotifier] Failed to sync onboarding habits: $e');
@@ -380,12 +387,14 @@ class OSStateNotifier extends StateNotifier<OSState> {
     String? plantType,
     String? ambientMode,
     bool? rainMode,
+    String? homeExperience,
   }) async {
     final newWood = woodTexture ?? state.woodTexture;
     final newWall = wallColor ?? state.wallColor;
     final newPlant = plantType ?? state.plantType;
     final newAmbient = ambientMode ?? state.ambientMode;
     final newRain = rainMode ?? state.rainMode;
+    final newHomeExp = homeExperience ?? state.homeExperience;
 
     state = state.copyWith(
       woodTexture: newWood,
@@ -393,6 +402,7 @@ class OSStateNotifier extends StateNotifier<OSState> {
       plantType: newPlant,
       ambientMode: newAmbient,
       rainMode: newRain,
+      homeExperience: newHomeExp,
     );
 
     final updatedSettings = {
@@ -401,6 +411,7 @@ class OSStateNotifier extends StateNotifier<OSState> {
       'plantType': newPlant,
       'ambientMode': newAmbient,
       'rainMode': newRain,
+      'homeExperience': newHomeExp,
     };
 
     await _hiveDb.saveWorkspaceSettings(updatedSettings);
@@ -440,9 +451,9 @@ class OSStateNotifier extends StateNotifier<OSState> {
             'exerciseTarget': healthPrefs['exerciseTarget'] ?? 30,
           },
           'affirmations': selectedAffirmations.map((a) => a['text'] as String).toList(),
-          'workspaceTheme': updatedSettings,
+          'workspaceTheme': jsonEncode(updatedSettings),
         };
-        dio.post('/api/focus/onboarding', data: onboardingPayload).then((_) {
+        dio.post('/focus/onboarding', data: onboardingPayload).then((_) {
           log('[OSStateNotifier] Synced onboarding preferences with updated workspace settings');
         }).catchError((e) {
           log('[OSStateNotifier] Failed to sync onboarding workspace settings: $e');
@@ -469,7 +480,7 @@ class OSStateNotifier extends StateNotifier<OSState> {
 
     try {
       final dio = _ref.read(dioClientProvider);
-      final response = await dio.get('/api/focus/habits/today');
+      final response = await dio.get('/focus/habits/today');
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data['data'];
         if (data != null) {

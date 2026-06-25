@@ -9,6 +9,8 @@ import '../../../../shared/providers/app_providers.dart';
 import '../providers/os_providers.dart';
 import '../../../todo/domain/models/todo_model.dart';
 import '../../../todo/presentation/providers/todo_providers.dart';
+import '../../../auth/presentation/widgets/save_workspace_sheet.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 
 class ShelfCardData {
   final String id;
@@ -19,6 +21,7 @@ class ShelfCardData {
   final String nextAction;
   final double progressValue; // 0.0 to 1.0
   final String? metricLabel;
+  final bool isGold;
 
   const ShelfCardData({
     required this.id,
@@ -29,6 +32,7 @@ class ShelfCardData {
     required this.nextAction,
     required this.progressValue,
     this.metricLabel,
+    this.isGold = false,
   });
 }
 
@@ -100,6 +104,111 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
   List<ShelfCardData> _buildCardData(List<TodoModel> todos) {
     final List<ShelfCardData> cards = [];
 
+    // Inject Cloud Save promo card for guests
+    final authState = ref.watch(authProvider);
+    final isLoggedIn = authState.hasValue && authState.value != null;
+    if (!isLoggedIn) {
+      cards.add(
+        const ShelfCardData(
+          id: 'cloud_save_promo',
+          moduleType: 'cloud_save_promo',
+          title: 'Cloud Save',
+          emoji: '☁️',
+          progressText: 'Save Progress',
+          nextAction: 'Save Workspace',
+          progressValue: 0.0,
+          metricLabel: 'Prevent data loss',
+          isGold: false,
+        ),
+      );
+    }
+
+    // Rotational suggested cards (they are always present, rotating by day, and some are gold)
+    final day = DateTime.now().weekday;
+
+    // Card 1: Today's Quote / Quote of the Day (Gold on Monday & Thursday)
+    final isQuoteGold = (day == 1 || day == 4);
+    cards.add(ShelfCardData(
+      id: 'suggested_quote',
+      moduleType: 'affirmations',
+      title: isQuoteGold ? 'Quote of the Day' : 'Today\'s Quote',
+      emoji: isQuoteGold ? '⭐' : '✨',
+      progressText: 'Inspirational',
+      nextAction: 'Read Mantras',
+      progressValue: 1.0,
+      metricLabel: 'Tap to read',
+      isGold: isQuoteGold,
+    ));
+
+    // Card 2: Today's Focus
+    cards.add(const ShelfCardData(
+      id: 'suggested_focus',
+      moduleType: 'focus',
+      title: 'Today\'s Focus',
+      emoji: '🎯',
+      progressText: 'Ready',
+      nextAction: 'View Tasks',
+      progressValue: 0.0,
+      metricLabel: 'Daily discipline',
+      isGold: false,
+    ));
+
+    // Card 3: Vision Highlight / Milestone Reached (Gold on Wednesday & Saturday)
+    final isVisionGold = (day == 3 || day == 6);
+    cards.add(ShelfCardData(
+      id: 'suggested_vision',
+      moduleType: 'vision_room',
+      title: isVisionGold ? 'Milestone Reached' : 'Vision Highlight',
+      emoji: isVisionGold ? '🎉' : '🏡',
+      progressText: 'Visualize',
+      nextAction: 'Open Room',
+      progressValue: 0.8,
+      metricLabel: 'Unlock dreams',
+      isGold: isVisionGold,
+    ));
+
+    // Card 4: Daily Reflection / Today's Inspiration (Gold on Tuesday & Friday)
+    final isReflectionGold = (day == 2 || day == 5);
+    cards.add(ShelfCardData(
+      id: 'suggested_reflection',
+      moduleType: 'journal',
+      title: isReflectionGold ? 'Today\'s Inspiration' : 'Daily Reflection',
+      emoji: isReflectionGold ? '🌅' : '💬',
+      progressText: 'Write Entry',
+      nextAction: 'Open Journal',
+      progressValue: 0.2,
+      metricLabel: 'Self reflection',
+      isGold: isReflectionGold,
+    ));
+
+    // Card 5: Progress Highlight / Weekly Achievement (Gold on Sunday)
+    final isProgressGold = (day == 7);
+    cards.add(ShelfCardData(
+      id: 'suggested_progress',
+      moduleType: 'achievements',
+      title: isProgressGold ? 'Weekly Achievement' : 'Progress Highlight',
+      emoji: isProgressGold ? '🏆' : '🌟',
+      progressText: 'Level Up',
+      nextAction: 'View Badges',
+      progressValue: 0.6,
+      metricLabel: 'Celebrate success',
+      isGold: isProgressGold,
+    ));
+
+    // Card 6: Calm Reminder
+    cards.add(const ShelfCardData(
+      id: 'suggested_calm',
+      moduleType: 'health',
+      title: 'Calm Reminder',
+      emoji: '🌅',
+      progressText: 'Relax',
+      nextAction: 'Breathing Block',
+      progressValue: 0.5,
+      metricLabel: 'Cozy session',
+      isGold: false,
+    ));
+
+    // Dynamic Context-based Cards below:
     // 1. Overdue tasks (Incomplete, created before today)
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
@@ -115,6 +224,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
           nextAction: 'Complete task',
           progressValue: 0.0,
           metricLabel: 'Due today',
+          isGold: false,
         ),
       );
     }
@@ -131,6 +241,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
           nextAction: 'Complete recovery',
           progressValue: 0.0,
           metricLabel: 'Yesterday\'s habit',
+          isGold: false,
         ),
       );
     }
@@ -169,6 +280,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
           nextAction: 'Mark completed',
           progressValue: 0.0,
           metricLabel: habit.category,
+          isGold: false,
         ),
       );
     }
@@ -191,22 +303,10 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
             nextAction: 'Take action today',
             progressValue: 0.5,
             metricLabel: '$category • $timeline',
+            isGold: false,
           ),
         );
       }
-    } else {
-      cards.add(
-        const ShelfCardData(
-          id: 'default_goal_1',
-          moduleType: 'goals',
-          title: 'Startup Launch',
-          emoji: '🎯',
-          progressText: '70% Done',
-          nextAction: 'Finish Landing Page',
-          progressValue: 0.7,
-          metricLabel: '9 Days Remaining',
-        ),
-      );
     }
 
     // 5. Health reminders: Water, Sleep, Workout
@@ -221,6 +321,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
           nextAction: 'Drink 250ml',
           progressValue: (widget.waterLoggedMl / 2500.0).clamp(0.0, 1.0),
           metricLabel: 'Target: 2.5L',
+          isGold: false,
         ),
       );
     }
@@ -236,6 +337,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
           nextAction: 'Wind down at 10 PM',
           progressValue: (widget.sleepHours / 8.0).clamp(0.0, 1.0),
           metricLabel: 'Target: 8.0h',
+          isGold: false,
         ),
       );
     }
@@ -251,6 +353,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
           nextAction: 'Workout Today',
           progressValue: 0.0,
           metricLabel: 'Steps: ${widget.stepsWalked}',
+          isGold: false,
         ),
       );
     }
@@ -267,6 +370,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
           nextAction: 'Save ₹500 Today',
           progressValue: (widget.savingsSaved / widget.savingsTarget).clamp(0.0, 1.0),
           metricLabel: 'Goal: ₹${widget.savingsTarget.toInt()}',
+          isGold: false,
         ),
       );
     }
@@ -283,34 +387,12 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
           nextAction: 'Read ${widget.readPagesTarget - widget.readPages > 0 ? widget.readPagesTarget - widget.readPages : 10} Pages',
           progressValue: (widget.readPages / widget.readPagesTarget).clamp(0.0, 1.0),
           metricLabel: widget.activeBook,
+          isGold: false,
         ),
       );
     }
 
-    // 8. Daily affirmation
-    final affirmationsData = hiveDb.getSelectedAffirmations();
-    String pinnedText = 'Discipline creates freedom.';
-    if (affirmationsData.isNotEmpty) {
-      final firstPinned = affirmationsData.firstWhere(
-        (e) => e['isPinned'] == true,
-        orElse: () => affirmationsData.first,
-      );
-      pinnedText = firstPinned['text'] as String? ?? pinnedText;
-    }
-    cards.add(
-      ShelfCardData(
-        id: 'affirmation_daily',
-        moduleType: 'affirmations',
-        title: 'Affirmation',
-        emoji: '🖼️',
-        progressText: 'Active',
-        nextAction: 'Read Affirmation',
-        progressValue: 1.0,
-        metricLabel: pinnedText,
-      ),
-    );
-
-    // Filter duplicates by unique card ID and cap at 7
+    // Filter duplicates by unique card ID and cap at 9 to keep it scrolling beautifully
     final Set<String> seenIds = {};
     final List<ShelfCardData> uniqueCards = [];
     for (var card in cards) {
@@ -320,8 +402,8 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
       }
     }
 
-    if (uniqueCards.length > 7) {
-      return uniqueCards.sublist(0, 7);
+    if (uniqueCards.length > 9) {
+      return uniqueCards.sublist(0, 9);
     }
     return uniqueCards;
   }
@@ -581,7 +663,11 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                 } else {
                   // Double tap / tap active card: Expand full screen
                   HapticFeedback.heavyImpact();
-                  widget.onExpandModule(card.moduleType);
+                  if (card.moduleType == 'cloud_save_promo') {
+                    SaveWorkspaceSheet.show(context);
+                  } else {
+                    widget.onExpandModule(card.moduleType);
+                  }
                   setState(() {
                     _liftedIndex = -1;
                   });
@@ -595,17 +681,31 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
               height: cardHeight,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.white.withValues(alpha: 0.06),
-                    Colors.white.withValues(alpha: 0.02),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: card.isGold
+                    ? const LinearGradient(
+                        colors: [
+                          Color(0xFFFFF7C2),
+                          Color(0xFFD4AF37),
+                          Color(0xFFAA7C11),
+                          Color(0xFFD4AF37),
+                        ],
+                        stops: [0.0, 0.35, 0.7, 1.0],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : LinearGradient(
+                        colors: [
+                          Colors.white.withValues(alpha: 0.06),
+                          Colors.white.withValues(alpha: 0.02),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  width: 0.5,
+                  color: card.isGold
+                      ? const Color(0xFFFFE082).withValues(alpha: 0.6)
+                      : Colors.white.withValues(alpha: 0.08),
+                  width: card.isGold ? 1.2 : 0.5,
                 ),
                 boxShadow: [
                   if (!isActive)
@@ -622,12 +722,13 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                   fit: StackFit.expand,
                   children: [
                     // 0. Frosted Glassmorphism Backdrop Blur
-                    Positioned.fill(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
-                        child: Container(color: Colors.transparent),
+                    if (!card.isGold)
+                      Positioned.fill(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
+                          child: Container(color: Colors.transparent),
+                        ),
                       ),
-                    ),
 
                     // 1. Diagonal glossy glare reflection line
                     Positioned.fill(
@@ -662,9 +763,11 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                                 padding: const EdgeInsets.all(2.0),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white.withValues(
-                                    alpha: isActive ? 0.08 : 0.04,
-                                  ),
+                                  color: card.isGold
+                                      ? Colors.black.withValues(alpha: 0.12)
+                                      : Colors.white.withValues(
+                                          alpha: isActive ? 0.08 : 0.04,
+                                        ),
                                 ),
                                 child: Text(
                                   card.emoji,
@@ -684,9 +787,11 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                                   fontSize: 7.0,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 0.5,
-                                  color: Colors.white.withValues(
-                                    alpha: isActive ? 0.95 : 0.72,
-                                  ),
+                                  color: card.isGold
+                                      ? const Color(0xFF2C1E03)
+                                      : Colors.white.withValues(
+                                          alpha: isActive ? 0.95 : 0.72,
+                                        ),
                                 ),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
@@ -698,9 +803,11 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                                 style: TextStyle(
                                   fontSize: 8.5,
                                   fontWeight: FontWeight.bold,
-                                  color: isActive
-                                      ? AppColors.accentBlue
-                                      : Colors.white60,
+                                  color: card.isGold
+                                      ? const Color(0xFF4A3403)
+                                      : (isActive
+                                          ? AppColors.accentBlue
+                                          : Colors.white60),
                                 ),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
@@ -713,7 +820,9 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                                   style: TextStyle(
                                     fontSize: 6.0,
                                     fontWeight: FontWeight.w500,
-                                    color: Colors.white.withValues(alpha: 0.35),
+                                    color: card.isGold
+                                        ? const Color(0xFF5A4106)
+                                        : Colors.white.withValues(alpha: 0.35),
                                   ),
                                   textAlign: TextAlign.center,
                                   maxLines: 1,
@@ -733,7 +842,9 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                                   fontSize: 4.5,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 0.5,
-                                  color: Colors.white.withValues(alpha: 0.25),
+                                  color: card.isGold
+                                      ? const Color(0xFF4A3403).withValues(alpha: 0.6)
+                                      : Colors.white.withValues(alpha: 0.25),
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -743,9 +854,11 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                                 style: TextStyle(
                                   fontSize: 6.5,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white.withValues(
-                                    alpha: isActive ? 0.85 : 0.55,
-                                  ),
+                                  color: card.isGold
+                                      ? const Color(0xFF2C1E03)
+                                      : Colors.white.withValues(
+                                          alpha: isActive ? 0.85 : 0.55,
+                                        ),
                                 ),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
@@ -757,7 +870,9 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                               Container(
                                 height: 1.6,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.08),
+                                  color: card.isGold
+                                      ? Colors.black.withValues(alpha: 0.1)
+                                      : Colors.white.withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(0.8),
                                 ),
                                 child: ClipRRect(
@@ -769,12 +884,17 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           gradient: LinearGradient(
-                                            colors: [
-                                              AppColors.accentBlue,
-                                              AppColors.accentBlue.withValues(
-                                                alpha: 0.65,
-                                              ),
-                                            ],
+                                            colors: card.isGold
+                                                ? [
+                                                    const Color(0xFF3E2723),
+                                                    const Color(0xFF5D4037),
+                                                  ]
+                                                : [
+                                                    AppColors.accentBlue,
+                                                    AppColors.accentBlue.withValues(
+                                                      alpha: 0.65,
+                                                    ),
+                                                  ],
                                           ),
                                         ),
                                       ),

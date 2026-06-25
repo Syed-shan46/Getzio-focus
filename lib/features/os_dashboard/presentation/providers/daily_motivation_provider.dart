@@ -231,7 +231,7 @@ class MotivationNotifier extends StateNotifier<MotivationState> {
           'affirmations': list.map((a) => a.text).toList(),
           'workspaceTheme': _hiveDb.getWorkspaceSettings(),
         };
-        dio.post('/api/focus/onboarding', data: onboardingPayload).then((_) {
+        dio.post('/focus/onboarding', data: onboardingPayload).then((_) {
           dev.log('[MotivationSync] Synced affirmations to server successfully');
         }).catchError((e) {
           dev.log('[MotivationSync] Failed to sync affirmations: $e');

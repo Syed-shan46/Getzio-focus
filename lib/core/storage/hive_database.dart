@@ -320,4 +320,12 @@ class HiveDatabase {
     if (list == null) return [];
     return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
   }
+
+  bool hasSeenPreview(String feature) {
+    return _settingsBox.get('focus_seen_preview_$feature', defaultValue: false) as bool;
+  }
+
+  Future<void> setSeenPreview(String feature) async {
+    await _settingsBox.put('focus_seen_preview_$feature', true);
+  }
 }

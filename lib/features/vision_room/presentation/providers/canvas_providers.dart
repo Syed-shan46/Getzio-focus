@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/storage/hive_database.dart';
@@ -12,6 +13,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   final Ref _ref;
   final List<CanvasState> _undoStack = [];
   final List<CanvasState> _redoStack = [];
+  final Map<String, Timer> _itemDebouncers = {};
 
   CanvasHistoryNotifier(this._hiveDb, this._ref) : super(CanvasState(items: [])) {
     _loadInitialItems();
@@ -26,6 +28,64 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   }
 
   void _loadInitialItems() {
+    final hasToken = _hiveDb.getAuthToken() != null;
+    if (hasToken) {
+      try {
+        final dio = _ref.read(dioClientProvider);
+        dio.get('/focus/vision-room').then((response) {
+          if (response.data != null && response.data['success'] == true) {
+            final data = response.data['data'];
+            final itemsList = data['items'] as List?;
+            if (itemsList != null) {
+              final items = itemsList.map((itemJson) {
+                return VisionItem(
+                  id: itemJson['itemId'] ?? '',
+                  type: itemJson['type'] ?? '',
+                  content: itemJson['type'] == 'image' ? (itemJson['imageUrl'] ?? '') : (itemJson['text'] ?? ''),
+                  x: (itemJson['xPosition'] as num?)?.toDouble() ?? 0.0,
+                  y: (itemJson['yPosition'] as num?)?.toDouble() ?? 0.0,
+                  width: (itemJson['width'] as num?)?.toDouble() ?? 180.0,
+                  height: (itemJson['height'] as num?)?.toDouble() ?? 120.0,
+                  rotation: (itemJson['rotation'] as num?)?.toDouble() ?? 0.0,
+                  colorValue: itemJson['color'] != null && itemJson['color'].toString().isNotEmpty
+                      ? int.tryParse(itemJson['color'], radix: 16) ?? 0xFF1E1B4B
+                      : 0xFF1E1B4B,
+                  isPinned: itemJson['locked'] ?? false,
+                  zIndex: (itemJson['zIndex'] as num?)?.toInt() ?? 0,
+                  attachmentType: 'pin',
+                  attachmentStyle: 'redPin',
+                  materialStyle: 'default',
+                  metadata: {
+                    'scale': (itemJson['scale'] as num?)?.toDouble() ?? 1.0,
+                    'opacity': (itemJson['opacity'] as num?)?.toDouble() ?? 1.0,
+                    'font': itemJson['font'] ?? '',
+                  }
+                );
+              }).toList();
+              
+              items.sort((a, b) => a.zIndex.compareTo(b.zIndex));
+              state = CanvasState(items: items);
+              
+              final serialized = items.map((i) => i.toJson()).toList();
+              _hiveDb.saveVisionItems(serialized);
+              return;
+            }
+          }
+          _loadLocalCached();
+        }).catchError((e) {
+          debugPrint('[CanvasSync] Error loading initial items from backend: $e');
+          _loadLocalCached();
+        });
+      } catch (e) {
+        debugPrint('[CanvasSync] Exception loading initial items: $e');
+        _loadLocalCached();
+      }
+    } else {
+      _loadLocalCached();
+    }
+  }
+
+  void _loadLocalCached() {
     final cached = _hiveDb.getVisionItems();
     final items = cached.map((json) => VisionItem.fromJson(json)).toList();
     state = CanvasState(items: items);
@@ -37,26 +97,65 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   void _saveState() {
     final serializedItems = state.items.map((i) => i.toJson()).toList();
     _hiveDb.saveVisionItems(serializedItems);
+  }
 
-    // Sync to backend if logged in
+  Future<void> saveRoomToServer() async {
     final hasToken = _hiveDb.getAuthToken() != null;
-    if (hasToken) {
+    if (!hasToken) return;
+
+    try {
+      final dio = _ref.read(dioClientProvider);
+      final serializedItems = state.items.map((i) => i.toJson()).toList();
+      await dio.post(
+        '/focus/vision-room',
+        data: {
+          'items': serializedItems,
+        },
+      );
+      debugPrint('[CanvasSync] Saved entire room to server successfully');
+    } catch (e) {
+      debugPrint('[CanvasSync] Error saving entire room: $e');
+      rethrow;
+    }
+  }
+
+  Map<String, dynamic> _mapItemToDbKeys(VisionItem item) {
+    return {
+      'itemId': item.id,
+      'type': item.type,
+      'imageUrl': item.type == 'image' ? item.content : '',
+      'text': item.type != 'image' ? item.content : '',
+      'color': item.colorValue.toRadixString(16),
+      'font': item.metadata?['font'] ?? '',
+      'xPosition': item.x,
+      'yPosition': item.y,
+      'width': item.width,
+      'height': item.height,
+      'rotation': item.rotation,
+      'scale': item.metadata?['scale'] ?? 1.0,
+      'zIndex': item.zIndex,
+      'opacity': item.metadata?['opacity'] ?? 1.0,
+      'locked': item.isPinned,
+    };
+  }
+
+  void _debouncePatchItem(String id, Map<String, dynamic> data) {
+    final hasToken = _hiveDb.getAuthToken() != null;
+    if (!hasToken) return;
+
+    _itemDebouncers[id]?.cancel();
+    _itemDebouncers[id] = Timer(const Duration(milliseconds: 350), () {
       try {
         final dio = _ref.read(dioClientProvider);
-        dio.post(
-          '/api/focus/vision-room',
-          data: {
-            'items': serializedItems,
-          },
-        ).then((_) {
-          debugPrint('[CanvasSync] Synced vision items to server successfully');
+        dio.patch('/focus/vision-room/item/$id', data: data).then((_) {
+          debugPrint('[CanvasSync] Patched item $id successfully');
         }).catchError((e) {
-          debugPrint('[CanvasSync] Failed to sync vision items: $e');
+          debugPrint('[CanvasSync] Failed to patch item $id: $e');
         });
       } catch (e) {
-        debugPrint('[CanvasSync] Error syncing vision items: $e');
+        debugPrint('[CanvasSync] Exception patching item $id: $e');
       }
-    }
+    });
   }
 
   void commitState(CanvasState newState) {
@@ -95,6 +194,20 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     newItems.sort((a, b) => a.zIndex.compareTo(b.zIndex));
     
     commitState(state.copyWith(items: newItems));
+
+    final hasToken = _hiveDb.getAuthToken() != null;
+    if (hasToken) {
+      try {
+        final dio = _ref.read(dioClientProvider);
+        dio.post('/focus/vision-room/item', data: _mapItemToDbKeys(newItem)).then((_) {
+          debugPrint('[CanvasSync] Created item ${newItem.id} on backend');
+        }).catchError((e) {
+          debugPrint('[CanvasSync] Failed to create item ${newItem.id}: $e');
+        });
+      } catch (e) {
+        debugPrint('[CanvasSync] Exception creating item: $e');
+      }
+    }
   }
 
   void bringToFront(String id) {
@@ -105,7 +218,9 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     
     final newItems = state.items.map((item) {
       if (item.id == id) {
-        return item.copyWith(zIndex: maxZ + 1);
+        final updated = item.copyWith(zIndex: maxZ + 1);
+        _debouncePatchItem(id, {'zIndex': updated.zIndex});
+        return updated;
       }
       return item;
     }).toList();
@@ -122,7 +237,9 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     
     final newItems = state.items.map((item) {
       if (item.id == id) {
-        return item.copyWith(zIndex: minZ - 1);
+        final updated = item.copyWith(zIndex: minZ - 1);
+        _debouncePatchItem(id, {'zIndex': updated.zIndex});
+        return updated;
       }
       return item;
     }).toList();
@@ -132,64 +249,86 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   }
 
   void updatePosition(String id, double dx, double dy) {
-    state = state.copyWith(
-      items: state.items.map((item) {
-        if (item.id == id) {
-          return item.copyWith(x: item.x + dx, y: item.y + dy);
-        }
-        return item;
-      }).toList(),
-    );
+    final updatedItems = state.items.map((item) {
+      if (item.id == id) {
+        final updated = item.copyWith(x: item.x + dx, y: item.y + dy);
+        _debouncePatchItem(id, {
+          'xPosition': updated.x,
+          'yPosition': updated.y
+        });
+        return updated;
+      }
+      return item;
+    }).toList();
+    state = state.copyWith(items: updatedItems);
   }
 
   void updateSize(String id, double width, double height, {double? dx, double? dy}) {
-    state = state.copyWith(
-      items: state.items.map((item) {
-        if (item.id == id) {
-          return item.copyWith(
-            width: width.clamp(50.0, 2000.0),
-            height: height.clamp(50.0, 2000.0),
-            x: item.x + (dx ?? 0),
-            y: item.y + (dy ?? 0),
-          );
-        }
-        return item;
-      }).toList(),
-    );
+    final updatedItems = state.items.map((item) {
+      if (item.id == id) {
+        final updated = item.copyWith(
+          width: width.clamp(50.0, 2000.0),
+          height: height.clamp(50.0, 2000.0),
+          x: item.x + (dx ?? 0),
+          y: item.y + (dy ?? 0),
+        );
+        _debouncePatchItem(id, {
+          'xPosition': updated.x,
+          'yPosition': updated.y,
+          'width': updated.width,
+          'height': updated.height
+        });
+        return updated;
+      }
+      return item;
+    }).toList();
+    state = state.copyWith(items: updatedItems);
   }
 
   void updateContent(String id, String newContent) {
-    commitState(state.copyWith(
-      items: state.items.map((item) {
-        if (item.id == id) {
-          return item.copyWith(content: newContent);
-        }
-        return item;
-      }).toList(),
-    ));
+    final updatedItems = state.items.map((item) {
+      if (item.id == id) {
+        final updated = item.copyWith(content: newContent);
+        final patchData = updated.type == 'image' 
+            ? {'imageUrl': newContent} 
+            : {'text': newContent};
+        _debouncePatchItem(id, patchData);
+        return updated;
+      }
+      return item;
+    }).toList();
+    commitState(state.copyWith(items: updatedItems));
   }
 
   void updateAttachment(String id, String type, String style) {
-    commitState(state.copyWith(
-      items: state.items.map((item) {
-        if (item.id == id) {
-          return item.copyWith(attachmentType: type, attachmentStyle: style);
-        }
-        return item;
-      }).toList(),
-    ));
+    final updatedItems = state.items.map((item) {
+      if (item.id == id) {
+        final updated = item.copyWith(attachmentType: type, attachmentStyle: style);
+        _debouncePatchItem(id, {
+          'attachmentType': type,
+          'attachmentStyle': style
+        });
+        return updated;
+      }
+      return item;
+    }).toList();
+    commitState(state.copyWith(items: updatedItems));
   }
 
   void commitTransform(String id, double newWidth, double newHeight, double newRotation) {
-    // This is called at the end of a gesture (e.g., drag end or scale end).
-    // Here we commit the final position/scale/rotation to the undo stack.
     final newItems = state.items.map((item) {
       if (item.id == id) {
-        return item.copyWith(
+        final updated = item.copyWith(
           width: newWidth.clamp(50.0, 2000.0),
           height: newHeight.clamp(50.0, 2000.0),
           rotation: newRotation,
         );
+        _debouncePatchItem(id, {
+          'width': updated.width,
+          'height': updated.height,
+          'rotation': updated.rotation
+        });
+        return updated;
       }
       return item;
     }).toList();
@@ -200,6 +339,20 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     commitState(state.copyWith(
       items: state.items.where((item) => item.id != id).toList(),
     ));
+
+    final hasToken = _hiveDb.getAuthToken() != null;
+    if (hasToken) {
+      try {
+        final dio = _ref.read(dioClientProvider);
+        dio.delete('/focus/vision-room/item/$id').then((_) {
+          debugPrint('[CanvasSync] Deleted item $id on backend');
+        }).catchError((e) {
+          debugPrint('[CanvasSync] Failed to delete item $id: $e');
+        });
+      } catch (e) {
+        debugPrint('[CanvasSync] Exception deleting item: $e');
+      }
+    }
   }
 
   void updateViewport(Matrix4 newTransform) {
@@ -216,6 +369,14 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
 
   void clearSelection() {
     state = state.copyWith(selectedIds: {});
+  }
+
+  @override
+  void dispose() {
+    for (var debouncer in _itemDebouncers.values) {
+      debouncer.cancel();
+    }
+    super.dispose();
   }
 }
 

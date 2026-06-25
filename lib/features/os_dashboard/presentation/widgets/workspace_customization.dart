@@ -309,6 +309,68 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
 
+                  // 4.5. Home Experience
+                  _buildSectionHeader('Home Experience'),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Center(child: Text('Living Room (3D)')),
+                          selected: state.homeExperience == 'living',
+                          onSelected: (selected) {
+                            if (selected) {
+                              HapticFeedback.selectionClick();
+                              notifier.updateWorkspaceSettings(homeExperience: 'living');
+                            }
+                          },
+                          selectedColor: AppColors.accentBlue.withValues(alpha: 0.25),
+                          backgroundColor: Colors.white.withValues(alpha: 0.03),
+                          labelStyle: TextStyle(
+                            color: state.homeExperience == 'living' ? AppColors.accentBlue : Colors.white70,
+                            fontWeight: state.homeExperience == 'living' ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 12.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: state.homeExperience == 'living' ? AppColors.accentBlue : Colors.white12,
+                            ),
+                          ),
+                          showCheckmark: false,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Center(child: Text('Classic Dash (2D)')),
+                          selected: state.homeExperience == 'classic',
+                          onSelected: (selected) {
+                            if (selected) {
+                              HapticFeedback.selectionClick();
+                              notifier.updateWorkspaceSettings(homeExperience: 'classic');
+                            }
+                          },
+                          selectedColor: AppColors.accentBlue.withValues(alpha: 0.25),
+                          backgroundColor: Colors.white.withValues(alpha: 0.03),
+                          labelStyle: TextStyle(
+                            color: state.homeExperience == 'classic' ? AppColors.accentBlue : Colors.white70,
+                            fontWeight: state.homeExperience == 'classic' ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 12.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: state.homeExperience == 'classic' ? AppColors.accentBlue : Colors.white12,
+                            ),
+                          ),
+                          showCheckmark: false,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
                   // 5. Rain Mode Toggle
                   Container(
                     padding: const EdgeInsets.all(16),

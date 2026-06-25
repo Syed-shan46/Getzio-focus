@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -117,15 +118,15 @@ class GuestDataMigrationService {
         'favorite': a['isPinned'] ?? false,
       }).toList(),
       'visionRoom': {
-        'items': visionItems,
+        'items': [],
       },
       'habitLogs': logsList,
-      'workspaceSettings': workspaceSettings['theme'] ?? 'default'
+      'workspaceSettings': jsonEncode(workspaceSettings)
     };
 
     try {
       dev.log('$_logTag Migration Request Sent');
-      final response = await dio.post('/api/focus/migrate', data: payload);
+      final response = await dio.post('/focus/migrate', data: payload);
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
@@ -214,7 +215,7 @@ class GuestDataMigrationService {
 
     try {
       dev.log('$_logTag Reloading Profile details from backend...');
-      final profileRes = await dio.get('/api/focus/profile');
+      final profileRes = await dio.get('/focus/profile');
       if (profileRes.statusCode == 200 && profileRes.data != null) {
         final profileData = profileRes.data['data'] as Map<String, dynamic>?;
         if (profileData != null) {
@@ -225,13 +226,23 @@ class GuestDataMigrationService {
             await hiveDb.saveSelectedLifeAreas(List<String>.from(profileData['lifeAreas'] as List));
           }
           if (profileData['workspaceTheme'] != null) {
-            await hiveDb.saveWorkspaceSettings({'theme': profileData['workspaceTheme']});
+            final themeVal = profileData['workspaceTheme'] as String;
+            try {
+              if (themeVal.startsWith('{')) {
+                final Map<String, dynamic> parsedSettings = jsonDecode(themeVal);
+                await hiveDb.saveWorkspaceSettings(parsedSettings);
+              } else {
+                await hiveDb.saveWorkspaceSettings({'theme': themeVal});
+              }
+            } catch (e) {
+              await hiveDb.saveWorkspaceSettings({'theme': themeVal});
+            }
           }
         }
       }
 
       dev.log('$_logTag Reloading Habits details from backend...');
-      final sessionRes = await dio.get('/api/focus/habits/today');
+      final sessionRes = await dio.get('/focus/habits/today');
       if (sessionRes.statusCode == 200 && sessionRes.data != null) {
         final data = sessionRes.data['data'];
         if (data != null) {
@@ -255,7 +266,7 @@ class GuestDataMigrationService {
       }
 
       dev.log('$_logTag Reloading Goals details from backend...');
-      final goalsRes = await dio.get('/api/focus/goals');
+      final goalsRes = await dio.get('/focus/goals');
       if (goalsRes.statusCode == 200 && goalsRes.data != null) {
         final goalsList = goalsRes.data['data'] as List?;
         if (goalsList != null) {
@@ -276,7 +287,7 @@ class GuestDataMigrationService {
       }
 
       dev.log('$_logTag Reloading Reading Tracker from backend...');
-      final readingRes = await dio.get('/api/focus/reading');
+      final readingRes = await dio.get('/focus/reading');
       if (readingRes.statusCode == 200 && readingRes.data != null) {
         final readingData = readingRes.data['data'] as Map<String, dynamic>?;
         if (readingData != null) {
@@ -288,7 +299,7 @@ class GuestDataMigrationService {
       }
 
       dev.log('$_logTag Reloading Finance Tracker from backend...');
-      final financeRes = await dio.get('/api/focus/finance');
+      final financeRes = await dio.get('/focus/finance');
       if (financeRes.statusCode == 200 && financeRes.data != null) {
         final financeData = financeRes.data['data'] as Map<String, dynamic>?;
         if (financeData != null) {
@@ -299,7 +310,7 @@ class GuestDataMigrationService {
       }
 
       dev.log('$_logTag Reloading Health Tracker from backend...');
-      final healthRes = await dio.get('/api/focus/health');
+      final healthRes = await dio.get('/focus/health');
       if (healthRes.statusCode == 200 && healthRes.data != null) {
         final healthData = healthRes.data['data'] as Map<String, dynamic>?;
         if (healthData != null) {
@@ -312,17 +323,47 @@ class GuestDataMigrationService {
       }
 
       dev.log('$_logTag Reloading Vision Room from backend...');
-      final visionRes = await dio.get('/api/focus/vision-room');
+      final visionRes = await dio.get('/focus/vision-room');
       if (visionRes.statusCode == 200 && visionRes.data != null) {
         final visionData = visionRes.data['data'] as Map<String, dynamic>?;
         if (visionData != null && visionData['items'] != null) {
           final itemsList = visionData['items'] as List;
-          await hiveDb.saveVisionItems(itemsList.map((e) => Map<String, dynamic>.from(e as Map)).toList());
+          final mappedItems = itemsList.map((itemJson) {
+            final typeStr = itemJson['type'] ?? '';
+            final contentStr = typeStr == 'image' ? (itemJson['imageUrl'] ?? '') : (itemJson['text'] ?? '');
+            final colorHex = itemJson['color'] ?? '';
+            final colorVal = colorHex.toString().isNotEmpty 
+                ? int.tryParse(colorHex, radix: 16) ?? 0xFF1E1B4B 
+                : 0xFF1E1B4B;
+
+            return {
+              'id': itemJson['itemId'] ?? '',
+              'type': typeStr,
+              'content': contentStr,
+              'x': (itemJson['xPosition'] as num?)?.toDouble() ?? 0.0,
+              'y': (itemJson['yPosition'] as num?)?.toDouble() ?? 0.0,
+              'width': (itemJson['width'] as num?)?.toDouble() ?? 180.0,
+              'height': (itemJson['height'] as num?)?.toDouble() ?? 120.0,
+              'rotation': (itemJson['rotation'] as num?)?.toDouble() ?? 0.0,
+              'colorValue': colorVal,
+              'isPinned': itemJson['locked'] ?? false,
+              'zIndex': (itemJson['zIndex'] as num?)?.toInt() ?? 0,
+              'attachmentType': 'pin',
+              'attachmentStyle': 'redPin',
+              'materialStyle': 'default',
+              'metadata': {
+                'scale': (itemJson['scale'] as num?)?.toDouble() ?? 1.0,
+                'opacity': (itemJson['opacity'] as num?)?.toDouble() ?? 1.0,
+                'font': itemJson['font'] ?? '',
+              }
+            };
+          }).toList();
+          await hiveDb.saveVisionItems(mappedItems);
         }
       }
 
       dev.log('$_logTag Reloading Affirmations from backend...');
-      final affirmationsRes = await dio.get('/api/focus/affirmations');
+      final affirmationsRes = await dio.get('/focus/affirmations');
       if (affirmationsRes.statusCode == 200 && affirmationsRes.data != null) {
         final affirmationsList = affirmationsRes.data['data'] as List?;
         if (affirmationsList != null) {

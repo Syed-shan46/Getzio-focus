@@ -25,6 +25,7 @@ import '../widgets/countdown_builder_modal.dart';
 import '../widgets/premium_cards.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/screens/phone_login_screen.dart';
 
 class VisionWall extends ConsumerStatefulWidget {
   const VisionWall({super.key});
@@ -87,7 +88,7 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Create your free account to unlock unlimited Vision Room items, sync across devices, and securely back up your dreams and goals.',
+                  'Create a free account to unlock unlimited Vision Boards, securely back up your workspace and sync across all your devices.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white54,
@@ -96,35 +97,38 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                   ),
                 ),
                 const SizedBox(height: 28),
-                _buildSocialButton(
-                  context,
-                  icon: Icons.g_mobiledata_rounded,
-                  label: 'Continue with Google',
-                  color: Colors.redAccent,
-                  provider: 'Google',
-                ),
-                const SizedBox(height: 12),
-                _buildSocialButton(
-                  context,
-                  icon: Icons.apple_rounded,
-                  label: 'Continue with Apple',
-                  color: Colors.white,
-                  provider: 'Apple',
-                ),
-                const SizedBox(height: 12),
-                _buildSocialButton(
-                  context,
-                  icon: Icons.mail_outline_rounded,
-                  label: 'Continue with Email',
-                  color: AppColors.accentBlue,
-                  provider: 'Email',
+                SizedBox(
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.phone_android_rounded, color: Colors.black, size: 24),
+                    label: const Text(
+                      'Continue with Phone',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: const Text(
                     'Maybe Later',
-                    style: TextStyle(color: Colors.white30, fontSize: 13),
+                    style: TextStyle(color: Colors.white30, fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -132,39 +136,6 @@ class _VisionWallState extends ConsumerState<VisionWall> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildSocialButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required Color color,
-    required String provider,
-  }) {
-    return SizedBox(
-      height: 52,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          Navigator.pop(context);
-          ref.read(authProvider.notifier).simulateSocialLogin(provider);
-        },
-        icon: Icon(icon, color: color == Colors.white ? Colors.black : Colors.white, size: 24),
-        label: Text(
-          label,
-          style: TextStyle(
-            color: color == Colors.white ? Colors.black : Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color == Colors.white ? Colors.white : Colors.white.withValues(alpha: 0.05),
-          side: color == Colors.white ? null : const BorderSide(color: Colors.white10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          elevation: 0,
-        ),
-      ),
     );
   }
 
@@ -442,6 +413,7 @@ class _VisionWallState extends ConsumerState<VisionWall> {
     final items = canvasState.items;
     final viewportTransform = canvasState.viewportTransform;
     final selectedIds = canvasState.selectedIds;
+    final isGuest = ref.watch(authProvider).value == null;
 
     return SafeArea(
       child: Stack(
@@ -559,40 +531,113 @@ class _VisionWallState extends ConsumerState<VisionWall> {
               right: 20,
               child: _buildFloatingToolbar(context, selectedIds.first),
             ),
+          
+          // 2.5. Save Board Button (Bottom Left, visible to all, prompts auth for guests)
+          Positioned(
+            bottom: 30,
+            left: 20,
+            child: FloatingActionButton.extended(
+              heroTag: 'save_room_btn',
+              backgroundColor: const Color(0xFF10B981), // Emerald green
+              onPressed: () async {
+                HapticFeedback.mediumImpact();
+                if (isGuest) {
+                  _showPremiumAuthSheet(context);
+                  return;
+                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Saving Vision Room...'),
+                    duration: Duration(milliseconds: 600),
+                  ),
+                );
+                try {
+                  await ref.read(canvasStateProvider.notifier).saveRoomToServer();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Vision Room saved successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to save Vision Room: $e'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.cloud_upload_rounded, color: Colors.white),
+              label: const Text('Save Board', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ),
 
-          // 3. Action Controls (Add / Undo / Redo)
+          // 3. Add Button
           Positioned(
             bottom: 30,
             right: 20,
-            child: Row(
-              children: [
-                FloatingActionButton(
-                  heroTag: 'add_btn',
-                  backgroundColor: AppColors.accentBlue,
-                  onPressed: () => _showAddMenu(),
-                  child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
-                ),
-                const SizedBox(width: 16),
-                FloatingActionButton.small(
-                  heroTag: 'undo_btn',
-                  backgroundColor: const Color(0xFF0F172A).withValues(alpha: 0.8),
-                  child: const Icon(Icons.undo, color: Colors.white),
-                  onPressed: () {
-                    ref.read(canvasStateProvider.notifier).undo();
-                  },
-                ),
-                const SizedBox(width: 8),
-                FloatingActionButton.small(
-                  heroTag: 'redo_btn',
-                  backgroundColor: const Color(0xFF0F172A).withValues(alpha: 0.8),
-                  child: const Icon(Icons.redo, color: Colors.white),
-                  onPressed: () {
-                    ref.read(canvasStateProvider.notifier).redo();
-                  },
-                ),
-              ],
+            child: FloatingActionButton(
+              heroTag: 'add_btn',
+              backgroundColor: AppColors.accentBlue,
+              onPressed: () => _showAddMenu(),
+              child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
             ),
           ),
+          
+          // Guest Mode Warning Banner and Save Room Button
+          if (isGuest)
+            Positioned(
+              top: 16,
+              left: 16,
+              right: 16,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.75),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white12, width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline_rounded, color: Colors.amberAccent, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Guest Mode — Your Vision Room will not be saved. Sign in to save it securely.',
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.87), fontSize: 11, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        TextButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: AppColors.accentBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: const Text(
+                            'Save Vision Room',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

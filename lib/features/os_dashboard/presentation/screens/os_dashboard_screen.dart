@@ -17,6 +17,12 @@ import '../../../vision_room/presentation/screens/vision_room_screen.dart';
 import '../../../todo/presentation/widgets/left_floating_shelf.dart';
 import '../../../todo/presentation/widgets/floor_glass_panel.dart';
 import 'daily_motivation_screen.dart';
+import '../widgets/classic_dashboard_widget.dart';
+import '../widgets/premium_preview_overlay.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/domain/models/auth_user_model.dart';
+import '../../../../shared/providers/app_providers.dart';
+import '../widgets/setup_assistant_sheet.dart';
 
 // Helper model classes for background effects
 class DustParticle {
@@ -355,6 +361,29 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
   void _handleDoorTap(bool isUnlocked) {
     HapticFeedback.mediumImpact();
     if (isUnlocked) {
+      final authState = ref.read(authProvider);
+      final isLoggedIn = authState.hasValue && authState.value != null;
+      final hiveDb = ref.read(hiveDatabaseProvider);
+
+      if (!isLoggedIn && !hiveDb.hasSeenPreview('vision_room')) {
+        PremiumPreviewOverlay.show(
+          context: context,
+          featureId: 'vision_room',
+          onContinue: () {
+            hiveDb.setSeenPreview('vision_room');
+            _doorOpenController.forward().then((_) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const VisionRoomScreen()),
+              ).then((_) {
+                _doorOpenController.reverse();
+              });
+            });
+          },
+        );
+        return;
+      }
+
       _doorOpenController.forward().then((_) {
         Navigator.push(
           context,
@@ -383,10 +412,19 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
   // Transform expansion sheets trigger
   void _expandModule(String module) {
     HapticFeedback.mediumImpact();
-    setState(() {
-      _activeModule = module;
-    });
-    _expandController.forward();
+    if (module == 'vision_room') {
+      _handleDoorTap(true);
+      return;
+    }
+
+    // Lock all other modules behind "Coming Soon" premium previews
+    PremiumPreviewOverlay.show(
+      context: context,
+      featureId: module,
+      onContinue: () {
+        // Just close and do nothing
+      },
+    );
   }
 
   void _closeModule() {
@@ -415,7 +453,26 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<AuthUserModel?>>(authProvider, (previous, next) {
+      if (next.hasValue && next.value != null && (previous == null || !previous.hasValue || previous.value == null)) {
+        final hiveDb = ref.read(hiveDatabaseProvider);
+        final habits = hiveDb.getSelectedHabits();
+        final goals = hiveDb.getSelectedGoals();
+        if (habits.isEmpty && goals.isEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            SetupAssistantSheet.show(context);
+          });
+        }
+      }
+    });
+
     final state = ref.watch(osStateProvider);
+    final authState = ref.watch(authProvider);
+    final isLoggedIn = authState.hasValue && authState.value != null;
+
+    if (state.homeExperience == 'classic') {
+      return const ClassicDashboardWidget();
+    }
     final totalXp = state.xp;
     final isUnlockedVision =
         true; // Always unlocked by default in premium workspace
@@ -670,6 +727,49 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                     child: DailyMotivationScreen(onClose: _closeMotivation),
                   ),
                 ),
+
+              // ─── FLOATING GUEST STORAGE NOTICE ─────────────────────────────
+              if (!isLoggedIn)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  left: 16,
+                  child: SafeArea(
+                    bottom: false,
+                    top: false,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.amber.withValues(alpha: 0.35),
+                          width: 0.8,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.cloud_off_rounded, size: 12, color: Colors.amber),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Stored on this device only',
+                            style: GoogleFonts.outfit(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         );
@@ -823,10 +923,11 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
     return GestureDetector(
       onTap: () {
         HapticFeedback.mediumImpact();
-        setState(() {
-          _motivationOpen = true;
-        });
-        _motivationController.forward();
+        PremiumPreviewOverlay.show(
+          context: context,
+          featureId: 'affirmations',
+          onContinue: () {},
+        );
       },
       child: SizedBox(
         width: screenW * 0.24,
@@ -1177,7 +1278,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
   ) {
     final bool isSelected = _activeModule == id;
     return Tooltip(
-      message: label,
+      message: '$label (Coming Soon)',
       textStyle: const TextStyle(fontSize: 9, color: Colors.white),
       decoration: BoxDecoration(
         color: Colors.black87,
@@ -1185,32 +1286,61 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
       ),
       child: GestureDetector(
         onTap: () => _expandModule(id),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-          transform: Matrix4.translationValues(0, isSelected ? -8 : 0, 0),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: AppColors.accentBlue.withValues(alpha: 0.6),
-                      blurRadius: 16,
-                      spreadRadius: 2,
-                    ),
-                  ]
-                : [],
-          ),
-          child: AnimatedScale(
-            scale: isSelected ? 1.15 : 1.0,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-            child: SizedBox(
-              width: sizeVal,
-              height: sizeVal,
-              child: CustomPaint(painter: painter),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              transform: Matrix4.translationValues(0, isSelected ? -8 : 0, 0),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.accentBlue.withValues(alpha: 0.6),
+                          blurRadius: 16,
+                          spreadRadius: 2,
+                        ),
+                      ]
+                    : [],
+              ),
+              child: AnimatedScale(
+                scale: isSelected ? 1.15 : 1.0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                child: SizedBox(
+                  width: sizeVal,
+                  height: sizeVal,
+                  child: CustomPaint(painter: painter),
+                ),
+              ),
             ),
-          ),
+            // Subtle "Soon" badge
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFD97706), const Color(0xFFB45309)],
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.white24, width: 0.5),
+                ),
+                child: const Text(
+                  'SOON',
+                  style: TextStyle(
+                    fontSize: 5,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

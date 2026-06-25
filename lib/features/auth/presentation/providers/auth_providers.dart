@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../../core/storage/hive_database.dart';
@@ -137,10 +138,10 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
           'exerciseTarget': healthPrefs['exerciseTarget'] ?? 30,
         },
         'affirmations': updatedAffirmations.map((a) => a['text'] as String).toList(),
-        'workspaceTheme': workspaceSettings['theme'] ?? 'default',
+        'workspaceTheme': jsonEncode(workspaceSettings),
       };
       
-      final response = await dio.post('/api/focus/onboarding', data: onboardingPayload);
+      final response = await dio.post('/focus/onboarding', data: onboardingPayload);
       log('[Sync] Onboarding sync completed successfully: ${response.statusCode}');
     } catch (e) {
       log('[Sync] Onboarding sync failed: $e');
@@ -216,7 +217,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
         'workspaceSettings': workspaceSettings['theme'] ?? 'default'
       };
 
-      final response = await dio.post('/api/focus/sync', data: syncPayload);
+      final response = await dio.post('/focus/sync', data: syncPayload);
       log('[Sync] Core progress and vision room items sync completed: ${response.statusCode}');
 
       if (response.statusCode == 200 && response.data != null) {
@@ -314,6 +315,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
     await _hiveDb.saveUserPhone(mockUser.mobile);
     await _hiveDb.saveUserName(mockUser.name);
 
+    // Clear guest vision items so the user starts fresh post-login
+    await _hiveDb.saveVisionItems([]);
+
     // Guest -> Account Migration / Reload from Backend
     final hasGuestData = GuestDataMigrationService.checkGuestDataExists(_hiveDb);
     if (hasGuestData) {
@@ -362,6 +366,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
       await _hiveDb.saveUserId(user.id);
       await _hiveDb.saveUserPhone(user.mobile);
       await _hiveDb.saveUserName(user.name);
+
+      // Clear guest vision items so the user starts fresh post-login
+      await _hiveDb.saveVisionItems([]);
 
       // Guest -> Account Migration / Reload from Backend
       final hasGuestData = GuestDataMigrationService.checkGuestDataExists(_hiveDb);
