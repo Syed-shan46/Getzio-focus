@@ -141,6 +141,38 @@ class HiveDatabase {
     return _settingsBox.get('sync_last_time') as String?;
   }
 
+  Future<void> saveMigrationStatus({
+    required bool migrationCompleted,
+    required String lastMigrationTime,
+    required String serverUserId,
+    required bool migrationPending,
+  }) async {
+    await _settingsBox.put('migration_completed', migrationCompleted);
+    await _settingsBox.put('migration_last_time', lastMigrationTime);
+    await _settingsBox.put('migration_server_user_id', serverUserId);
+    await _settingsBox.put('migration_pending', migrationPending);
+  }
+
+  bool isMigrationCompleted() {
+    return _settingsBox.get('migration_completed', defaultValue: false) as bool;
+  }
+
+  String? getLastMigrationTime() {
+    return _settingsBox.get('migration_last_time') as String?;
+  }
+
+  String? getServerUserId() {
+    return _settingsBox.get('migration_server_user_id') as String?;
+  }
+
+  bool isMigrationPending() {
+    return _settingsBox.get('migration_pending', defaultValue: false) as bool;
+  }
+
+  Future<void> setMigrationPending(bool pending) async {
+    await _settingsBox.put('migration_pending', pending);
+  }
+
   Future<void> clearAuth() async {
     await _settingsBox.delete('auth_token');
     await _settingsBox.delete('user_id');

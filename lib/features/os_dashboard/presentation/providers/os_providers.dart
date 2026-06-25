@@ -6,6 +6,7 @@ import '../../../../shared/providers/app_providers.dart';
 import '../../../onboarding/domain/models/onboarding_models.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/domain/models/auth_user_model.dart';
+import '../../../auth/domain/services/guest_migration_service.dart';
 
 // State definition for the OS dashboard
 class OSState {
@@ -455,6 +456,16 @@ class OSStateNotifier extends StateNotifier<OSState> {
   Future<void> fetchTodaySession() async {
     final hasToken = _hiveDb.getAuthToken() != null;
     if (!hasToken) return;
+
+    // Retry pending migration if exists
+    if (_hiveDb.isMigrationPending()) {
+      log('[OSStateNotifier] Pending migration detected. Retrying...');
+      GuestDataMigrationService.migrate(_ref).then((success) {
+        if (success) {
+          log('[OSStateNotifier] Pending migration successfully completed!');
+        }
+      });
+    }
 
     try {
       final dio = _ref.read(dioClientProvider);

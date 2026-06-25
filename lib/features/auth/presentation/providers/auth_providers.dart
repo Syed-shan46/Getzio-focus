@@ -4,6 +4,7 @@ import '../../../../core/storage/hive_database.dart';
 import '../../../../core/services/firebase_service.dart';
 import '../../../todo/presentation/providers/todo_providers.dart';
 import '../../domain/models/auth_user_model.dart';
+import '../../domain/services/guest_migration_service.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import 'dart:developer';
@@ -313,8 +314,15 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
     await _hiveDb.saveUserPhone(mockUser.mobile);
     await _hiveDb.saveUserName(mockUser.name);
 
-    // Sync local Hive preferences/data
-    await _syncLocalDataToServer();
+    // Guest -> Account Migration / Reload from Backend
+    final hasGuestData = GuestDataMigrationService.checkGuestDataExists(_hiveDb);
+    if (hasGuestData) {
+      log('[Auth] Guest data detected, migrating to server...');
+      await GuestDataMigrationService.migrate(_ref);
+    } else {
+      log('[Auth] No guest data, reloading from server...');
+      await GuestDataMigrationService.reloadFromBackend(_ref);
+    }
 
     state = AsyncValue.data(mockUser);
     _ref.read(syncLoadingProvider.notifier).state = false;
@@ -355,8 +363,15 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
       await _hiveDb.saveUserPhone(user.mobile);
       await _hiveDb.saveUserName(user.name);
 
-      // Sync local Hive preferences/data
-      await _syncLocalDataToServer();
+      // Guest -> Account Migration / Reload from Backend
+      final hasGuestData = GuestDataMigrationService.checkGuestDataExists(_hiveDb);
+      if (hasGuestData) {
+        log('[Auth] Guest data detected, migrating to server...');
+        await GuestDataMigrationService.migrate(_ref);
+      } else {
+        log('[Auth] No guest data, reloading from server...');
+        await GuestDataMigrationService.reloadFromBackend(_ref);
+      }
 
       state = AsyncValue.data(user);
     } catch (e) {
@@ -373,10 +388,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
         await FirebaseService.signOut();
       } catch (_) {}
       
-      // Clear all cached boxes to maintain state boundaries
+      // Only clear cached auth boxes to maintain synced focus data
       await _hiveDb.clearAuth();
-      await _hiveDb.clearTodos();
-      await _hiveDb.clearSyncQueue();
       
       state = const AsyncValue.data(null);
     } catch (e, stack) {
