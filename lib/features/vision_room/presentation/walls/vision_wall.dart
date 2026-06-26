@@ -585,59 +585,8 @@ class _VisionWallState extends ConsumerState<VisionWall> {
             ),
           ),
           
-          // Guest Mode Warning Banner and Save Room Button
-          if (isGuest)
-            Positioned(
-              top: 16,
-              left: 16,
-              right: 16,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.75),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white12, width: 1),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info_outline_rounded, color: Colors.amberAccent, size: 20),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Guest Mode — Your Vision Room will not be saved. Sign in to save it securely.',
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.87), fontSize: 11, fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        TextButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                            backgroundColor: AppColors.accentBlue,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: const Text(
-                            'Save Vision Room',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          // Guest Mode Warning Banner removed as per request
+
         ],
       ),
     );

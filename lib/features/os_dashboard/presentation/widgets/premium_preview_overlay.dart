@@ -4,7 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../auth/presentation/widgets/save_workspace_sheet.dart';
+import '../../../auth/presentation/screens/phone_login_screen.dart';
+
+
 
 class PremiumPreviewOverlay extends ConsumerWidget {
   final String featureId;
@@ -157,85 +159,246 @@ class PremiumPreviewOverlay extends ConsumerWidget {
 
   Widget _buildVisionRoomPreview() {
     return Container(
-      height: 180,
+      height: 220,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1424),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        color: const Color(0xFF131722),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: GridPaper(
-              color: Colors.blueAccent.withValues(alpha: 0.05),
-              interval: 40,
-              subdivisions: 1,
-            ),
-          ),
-          Positioned(
-            left: 20,
-            top: 20,
-            child: Transform.rotate(
-              angle: -0.05,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(19),
+        child: Stack(
+          children: [
+            // Corkboard/Wall textured background
+            Positioned.fill(
               child: Container(
-                width: 100,
-                height: 80,
-                padding: const EdgeInsets.all(8),
-                color: Colors.amberAccent,
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('📌 IDEA', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.black)),
-                    SizedBox(height: 4),
-                    Text('Launch Getzio Focus!', style: TextStyle(fontSize: 10, color: Colors.black87)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 25,
-            top: 30,
-            child: Transform.rotate(
-              angle: 0.08,
-              child: Container(
-                width: 110,
-                height: 110,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6),
-                  ],
-                ),
-                child: Container(
-                  color: Colors.blueGrey,
-                  child: const Center(
-                    child: Text('🏝️ Dream Workspace', style: TextStyle(fontSize: 8, color: Colors.white70)),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF181B26), Color(0xFF1E2230)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            left: 30,
-            bottom: 20,
-            child: Container(
-              width: 150,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white12),
-              ),
-              child: const Text(
-                '"Focus creates reality."',
-                style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic, color: Colors.white70),
+            // Decorative background lights
+            Positioned(
+              right: -30,
+              top: -30,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.amber.withValues(alpha: 0.1),
+                ),
               ),
             ),
-          ),
-        ],
+            
+            // Polaroid 1
+            Positioned(
+              left: 18,
+              top: 20,
+              child: Transform.rotate(
+                angle: -0.06,
+                child: Container(
+                  width: 90,
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 5,
+                        offset: const Offset(1, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        height: 65,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.wb_sunny_rounded, color: Colors.amber, size: 24),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Morning Routine',
+                        style: GoogleFonts.outfit(
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Polaroid 2
+            Positioned(
+              right: 18,
+              top: 15,
+              child: Transform.rotate(
+                angle: 0.08,
+                child: Container(
+                  width: 85,
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 5,
+                        offset: const Offset(1, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        height: 60,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFEC4899), Color(0xFFBE185D)],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.favorite_rounded, color: Colors.white, size: 20),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Dream Goal',
+                        style: GoogleFonts.outfit(
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Sticky Note
+            Positioned(
+              left: 24,
+              bottom: 12,
+              child: Transform.rotate(
+                angle: 0.04,
+                child: Container(
+                  width: 95,
+                  height: 75,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF08A),
+                    borderRadius: BorderRadius.circular(4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 4,
+                        offset: const Offset(1, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.push_pin_rounded, color: Colors.redAccent, size: 10),
+                          const SizedBox(width: 4),
+                          Text(
+                            'REMINDER',
+                            style: GoogleFonts.outfit(
+                              fontSize: 7,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Expanded(
+                        child: Text(
+                          'Read 20 pages\nevery morning.',
+                          style: GoogleFonts.outfit(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF78350F),
+                            height: 1.1,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Pinned Quote Frame
+            Positioned(
+              right: 28,
+              bottom: 24,
+              child: Transform.rotate(
+                angle: -0.05,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.75),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: const Color(0xFFC9A96E),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    '"Consistency is key"',
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFFC9A96E),
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.bold,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -453,44 +616,67 @@ class PremiumPreviewOverlay extends ConsumerWidget {
               const SizedBox(height: 20),
 
               _buildFeaturePreview(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              ElevatedButton(
-                onPressed: () {
-                  HapticFeedback.mediumImpact();
-                  onContinue();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accentBlue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              if (featureId == 'vision_room') ...[
+                ElevatedButton.icon(
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.phone_android_rounded, color: Colors.black, size: 20),
+                  label: const Text(
+                    'Continue with Phone Number',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
-                child: Text(
-                  isComingSoon ? 'Got it' : 'Continue',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                ),
-              ),
-              if (!isComingSoon) ...[
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () {
                     HapticFeedback.lightImpact();
-                    Navigator.pop(context);
-                    SaveWorkspaceSheet.show(context);
+                    onContinue();
                   },
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                   child: Text(
-                    'Sign In & Sync to save progress across devices',
+                    'Stored on the device locally',
                     style: GoogleFonts.outfit(
-                      color: Colors.white38,
-                      fontSize: 10.5,
+                      color: Colors.white60,
+                      fontSize: 14,
                       decoration: TextDecoration.underline,
                     ),
+                  ),
+                ),
+              ] else ...[
+                ElevatedButton(
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    onContinue();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accentBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    isComingSoon ? 'Got it' : 'Continue',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                   ),
                 ),
               ],

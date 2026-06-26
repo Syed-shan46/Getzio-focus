@@ -39,7 +39,16 @@ class TodoRepositoryImpl implements TodoRepository {
     return getLocalTodos();
   }
 
+  DateTime? _lastFetchTime;
+
   Future<void> _fetchBackground() async {
+    final now = DateTime.now();
+    if (_lastFetchTime != null && now.difference(_lastFetchTime!) < const Duration(seconds: 30)) {
+      log('[Repo] Skipped background fetch to avoid unnecessary API call (cached recently)');
+      return;
+    }
+    _lastFetchTime = now;
+
     try {
       final res = await _dio.get('/todos');
       if (res.statusCode == 200 && res.data != null) {

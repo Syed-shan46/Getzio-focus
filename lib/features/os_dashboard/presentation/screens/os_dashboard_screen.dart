@@ -365,12 +365,11 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
       final isLoggedIn = authState.hasValue && authState.value != null;
       final hiveDb = ref.read(hiveDatabaseProvider);
 
-      if (!isLoggedIn && !hiveDb.hasSeenPreview('vision_room')) {
+      if (!isLoggedIn) {
         PremiumPreviewOverlay.show(
           context: context,
           featureId: 'vision_room',
           onContinue: () {
-            hiveDb.setSeenPreview('vision_room');
             _doorOpenController.forward().then((_) {
               Navigator.push(
                 context,
@@ -571,29 +570,27 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                           ),
                         ),
 
-                      // 2. THE WINDOW (Top Left, expanded)
+                      // 2. TOP ROW: Artboard (left) | Window (center) | Watch (right)
                       Positioned(
-                        left: screenW * 0.08,
+                        left: screenW * 0.05,
+                        right: screenW * 0.05,
                         top: screenH * 0.06,
-                        child: _buildWindow(
-                          screenW,
-                          screenH,
-                          state.ambientMode,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(top: screenH * 0.03),
+                              child: _buildWallArtFrame(screenW, screenH, state),
+                            ),
+                            const Spacer(),
+                            _buildWindow(screenW, screenH, state.ambientMode),
+                            const Spacer(),
+                            Padding(
+                              padding: EdgeInsets.only(top: screenH * 0.03),
+                              child: _buildClock(),
+                            ),
+                          ],
                         ),
-                      ),
-
-                      // 4. THE WALL CLOCK (Top Right)
-                      Positioned(
-                        right: screenW * 0.08,
-                        top: screenH * 0.07,
-                        child: _buildClock(),
-                      ),
-
-                      // 4.6. AFFIRMATION CARD (shifted up 30px, left 15px)
-                      Positioned(
-                        right: screenW * 0.08 + 39,
-                        top: screenH * 0.07 + 60,
-                        child: _buildWallArtFrame(screenW, screenH, state),
                       ),
 
                       // 4.7. Right Floating Shelf (no padding on right)
@@ -608,41 +605,10 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                         ),
                       ),
 
-                      // 5. FLOATING WOODEN SHELF + MODULE OBJECTS (Center)
-                      Positioned(
-                        left: screenW * 0.06,
-                        right: screenW * 0.06,
-                        top: screenH * 0.36,
-                        child: Center(
-                          child: _buildFloatingShelf(screenW, state),
-                        ),
-                      ),
-
-                      // 5.5. PREMIUM 3D HORIZONTAL SHELF (Personalized Dashboard)
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        top: screenH * 0.36 + 100,
-                        child: PremiumShelfSection(
-                          state: state,
-                          onExpandModule: _expandModule,
-                          waterLoggedMl: _waterLoggedMl,
-                          sleepHours: _sleepHours,
-                          stepsWalked: _stepsWalked,
-                          workoutComplete: _workoutComplete,
-                          readPages: _readPages,
-                          readPagesTarget: _readPagesTarget,
-                          activeBook: _activeBook,
-                          savingsSaved: _savingsSaved,
-                          savingsTarget: _savingsTarget,
-                          journalSaved: _journalSaved,
-                        ),
-                      ),
-
-                      // 5.6. Hanging vines overlay (rendered on top of 3D cards)
+                      // 5. Hanging vines (behind shelf, shelf hides the start)
                       Positioned(
                         left: screenW * 0.06 + 2,
-                        top: screenH * 0.36 + 22,
+                        top: screenH * 0.36 + 20,
                         width: 35,
                         height: 140,
                         child: AnimatedBuilder(
@@ -659,7 +625,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                       ),
                       Positioned(
                         right: screenW * 0.06 + 2,
-                        top: screenH * 0.36 + 22,
+                        top: screenH * 0.36 + 20,
                         width: 35,
                         height: 140,
                         child: AnimatedBuilder(
@@ -672,6 +638,42 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                               ),
                             );
                           },
+                        ),
+                      ),
+
+                      // 5. FLOATING WOODEN SHELF + MODULE OBJECTS (Center)
+                      Positioned(
+                        left: screenW * 0.06,
+                        right: screenW * 0.06,
+                        top: screenH * 0.36,
+                        child: Center(
+                          child: _buildFloatingShelf(screenW, state),
+                        ),
+                      ),
+
+                      // 5.6. PREMIUM 3D HORIZONTAL SHELF (Personalized Dashboard)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        top: screenH * 0.36 + 100,
+                        child: Center(
+                          child: SizedBox(
+                            width: screenW * 0.88,
+                            child: PremiumShelfSection(
+                              state: state,
+                              onExpandModule: _expandModule,
+                              waterLoggedMl: _waterLoggedMl,
+                              sleepHours: _sleepHours,
+                              stepsWalked: _stepsWalked,
+                              workoutComplete: _workoutComplete,
+                              readPages: _readPages,
+                              readPagesTarget: _readPagesTarget,
+                              activeBook: _activeBook,
+                              savingsSaved: _savingsSaved,
+                              savingsTarget: _savingsTarget,
+                              journalSaved: _journalSaved,
+                            ),
+                          ),
                         ),
                       ),
 
@@ -688,6 +690,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                         bottom: 178,
                         child: const ThreeDCustomizeSwitch(),
                       ),
+
                     ],
                   ),
                 ),
@@ -728,48 +731,8 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                   ),
                 ),
 
-              // ─── FLOATING GUEST STORAGE NOTICE ─────────────────────────────
-              if (!isLoggedIn)
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 16,
-                  left: 16,
-                  child: SafeArea(
-                    bottom: false,
-                    top: false,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.65),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.35),
-                          width: 0.8,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.35),
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.cloud_off_rounded, size: 12, color: Colors.amber),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Stored on this device only',
-                            style: GoogleFonts.outfit(
-                              color: Colors.white.withValues(alpha: 0.85),
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+
+              // Guest storage notice removed
             ],
           ),
         );
@@ -794,16 +757,17 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
         mode = 'Night';
     }
 
+    final double windowH = screenH * 0.20;
     return Container(
       width: 145,
-      height: 195,
+      height: windowH,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           // The window frame
           Container(
             width: 145,
-            height: 195,
+            height: windowH,
             decoration: BoxDecoration(
               color: const Color(0xFF1E293B),
               borderRadius: BorderRadius.circular(12),
@@ -1030,73 +994,69 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
   Widget _buildVisionDoor(bool isUnlocked, OSState state) {
     return GestureDetector(
       onTap: () => _handleDoorTap(isUnlocked),
-      child: Column(
-        children: [
-          SizedBox(
-            width: 70,
-            height: 110,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // Door frame back portal
-                Container(
-                  width: 70,
-                  height: 110,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F1424),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(8),
-                    ),
-                    border: Border.all(
-                      color: const Color(0xFF334155),
-                      width: 3.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.45),
-                        blurRadius: 10,
-                        offset: const Offset(2, 2), // cast wall shadow
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(4),
-                    ),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (isUnlocked)
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: RadialGradient(
-                                colors: [
-                                  Colors.amber.withValues(alpha: 0.3),
-                                  Colors.transparent,
-                                ],
-                                radius: 0.8,
-                              ),
-                            ),
-                          ),
-                        AnimatedBuilder(
-                          animation: _doorOpenController,
-                          builder: (context, child) {
-                            return CustomPaint(
-                              painter: DoorPainter3D(
-                                openProgress: _doorOpenController.value,
-                                isUnlocked: isUnlocked,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
+      child: SizedBox(
+        width: 70,
+        height: 110,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Door frame back portal
+            Container(
+              width: 70,
+              height: 110,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F1424),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(8),
                 ),
-              ],
+                border: Border.all(
+                  color: const Color(0xFF334155),
+                  width: 3.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    blurRadius: 10,
+                    offset: const Offset(2, 2), // cast wall shadow
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(4),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (isUnlocked)
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            colors: [
+                              Colors.amber.withValues(alpha: 0.3),
+                              Colors.transparent,
+                            ],
+                            radius: 0.8,
+                          ),
+                        ),
+                      ),
+                    AnimatedBuilder(
+                      animation: _doorOpenController,
+                      builder: (context, child) {
+                        return CustomPaint(
+                          painter: DoorPainter3D(
+                            openProgress: _doorOpenController.value,
+                            isUnlocked: isUnlocked,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -2716,6 +2676,59 @@ class DoorPainter3D extends CustomPainter {
 
     // Bevel highlights inside slab
     canvas.drawRect(doorRect.deflate(5), borderPaint..strokeWidth = 0.8);
+
+    // Draw an elegant room number/name plate in the upper center of the door
+    final plaqueRect = Rect.fromCenter(
+      center: Offset(w / 2, h * 0.35),
+      width: w * 0.72,
+      height: 25,
+    );
+    final plaquePaint = Paint()
+      ..color = isUnlocked 
+          ? const Color(0xFF23150D) 
+          : const Color(0xFF1E293B)
+      ..style = PaintingStyle.fill;
+    final plaqueBorderPaint = Paint()
+      ..color = isUnlocked 
+          ? const Color(0xFFC9A96E).withValues(alpha: 0.5) 
+          : Colors.white12
+      ..strokeWidth = 0.8
+      ..style = PaintingStyle.stroke;
+      
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(plaqueRect, const Radius.circular(3)),
+      plaquePaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(plaqueRect, const Radius.circular(3)),
+      plaqueBorderPaint,
+    );
+
+    final textSpan = TextSpan(
+      text: 'VISION\nROOM',
+      style: TextStyle(
+        fontFamily: 'Outfit',
+        fontSize: 5.8,
+        fontWeight: FontWeight.w700,
+        color: isUnlocked 
+            ? const Color(0xFFC9A96E).withValues(alpha: 0.9) 
+            : Colors.white38,
+        letterSpacing: 1.1,
+        height: 1.2,
+      ),
+    );
+    final textPainter = TextPainter(
+      text: textSpan,
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout(
+      minWidth: 0,
+      maxWidth: plaqueRect.width,
+    );
+    final xCenter = plaqueRect.left + (plaqueRect.width - textPainter.width) / 2;
+    final yCenter = plaqueRect.top + (plaqueRect.height - textPainter.height) / 2;
+    textPainter.paint(canvas, Offset(xCenter, yCenter));
 
     // Door knob
     canvas.drawCircle(
@@ -5641,3 +5654,4 @@ class CityViewWindowPainter extends CustomPainter {
         oldDelegate.isTopWindow != isTopWindow;
   }
 }
+

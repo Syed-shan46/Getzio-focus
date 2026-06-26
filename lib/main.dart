@@ -7,6 +7,7 @@ import 'core/theme/app_theme.dart';
 import 'features/os_dashboard/presentation/screens/os_dashboard_screen.dart';
 import 'core/services/firebase_service.dart';
 import 'shared/providers/app_providers.dart';
+import 'features/onboarding/presentation/screens/premium_mvp_onboarding_screen.dart';
 
 final onboardingCompletedProvider = StateProvider<bool>((ref) {
   throw UnimplementedError();
@@ -181,12 +182,16 @@ class TodoApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final onboardingCompleted = ref.watch(onboardingCompletedProvider);
+
     return MaterialApp(
       title: 'Getzio Focus',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
       darkTheme: AppTheme.darkTheme,
-      home: const OSDashboardScreen(),
+      home: onboardingCompleted
+          ? const OSDashboardScreen()
+          : const PremiumMVPOnboardingScreen(),
     );
   }
 }

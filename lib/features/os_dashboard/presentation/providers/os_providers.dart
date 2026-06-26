@@ -53,7 +53,7 @@ class OSState {
     this.dailyQuoteAuthor = 'Focus Core',
     this.showCelebrationBanner = false,
     this.totalHabitsCompletedAllTime = 0,
-    this.woodTexture = 'Walnut',
+    this.woodTexture = 'Oak',
     this.wallColor = 'Deep Indigo',
     this.plantType = 'Bonsai',
     this.ambientMode = 'Auto',
@@ -158,7 +158,7 @@ class OSStateNotifier extends StateNotifier<OSState> {
 
     // Load workspace settings
     final settings = _hiveDb.getWorkspaceSettings();
-    final wood = settings['woodTexture'] as String? ?? 'Walnut';
+    final wood = settings['woodTexture'] as String? ?? 'Oak';
     final wall = settings['wallColor'] as String? ?? 'Deep Indigo';
     final plant = settings['plantType'] as String? ?? 'Bonsai';
     final ambient = settings['ambientMode'] as String? ?? 'Auto';

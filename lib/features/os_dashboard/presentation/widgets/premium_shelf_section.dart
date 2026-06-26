@@ -78,7 +78,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
   // Constants for card sizes
   final double cardWidth = 80.0;
   final double cardHeight = 110.0;
-  final double spacing = 60.0;
+  final double spacing = 24.0;
 
   @override
   void initState() {
@@ -167,7 +167,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
       isGold: isVisionGold,
     ));
 
-    // Card 4: Daily Reflection / Today's Inspiration (Gold on Tuesday & Friday)
+    // Card 4: Daily Reflection / Today's Inspiration
     final isReflectionGold = (day == 2 || day == 5);
     cards.add(ShelfCardData(
       id: 'suggested_reflection',
@@ -178,7 +178,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
       nextAction: 'Open Journal',
       progressValue: 0.2,
       metricLabel: 'Self reflection',
-      isGold: isReflectionGold,
+      isGold: false, // Disabled gold theme per user request
     ));
 
     // Card 5: Progress Highlight / Weekly Achievement (Gold on Sunday)
