@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getzio_todo_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../../main.dart';
 import '../../../auth/presentation/screens/phone_login_screen.dart';

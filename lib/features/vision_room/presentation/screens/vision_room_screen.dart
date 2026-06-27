@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/vision_room_providers.dart';
+import '../providers/customization_provider.dart';
+import '../providers/canvas_providers.dart';
 import '../walls/vision_wall.dart';
 import '../walls/habit_wall.dart';
 import '../walls/motivation_wall.dart';
 import '../walls/achievement_wall.dart';
 import '../walls/finance_wall.dart';
 import '../walls/timeline_wall.dart';
+import '../widgets/customization_sheet.dart';
+import '../widgets/room_scene.dart';
 
 
 class VisionRoomScreen extends ConsumerStatefulWidget {
@@ -65,9 +69,11 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
   @override
   Widget build(BuildContext context) {
     final focusMode = ref.watch(focusModeProvider);
+    final customization = ref.watch(visionCustomizationProvider);
+    final canvasState = ref.watch(canvasStateProvider);
     
     return Scaffold(
-      backgroundColor: Colors.black, // Base layer for fade
+      backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
       body: AnimatedBuilder(
         animation: _entryController,
@@ -78,52 +84,60 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
               scale: _scaleAnimation.value,
               child: Stack(
                 children: [
-                  // 1. Solid premium background color
-                  Container(color: const Color(0xFF0B101E)),
+                  // 1-10. Room Scene (walls, window, floor, lighting, particles)
+                  AnimatedBuilder(
+                    animation: _pageController,
+                    builder: (context, _) {
+                      final pageOffset = _pageController.hasClients && _pageController.position.haveDimensions
+                          ? _pageController.page! - 3
+                          : 0.0;
+                      return RoomScene(
+                        customization: customization,
+                        items: canvasState.items,
+                        pageOffset: pageOffset,
+                      child: PageView.builder(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        onPageChanged: (index) {
+                          ref.read(currentWallIndexProvider.notifier).state = index;
+                        },
+                        itemCount: _wallNames.length,
+                        itemBuilder: (context, index) {
+                          return AnimatedBuilder(
+                            animation: _pageController,
+                            builder: (context, child) {
+                              double value = 1.0;
+                              if (_pageController.position.haveDimensions) {
+                                value = _pageController.page! - index;
+                                value = (1 - (value.abs() * 0.3)).clamp(0.0, 1.0);
+                              }
 
-                  // 2. Walls (PageView)
-                  PageView.builder(
-                    controller: _pageController,
-                    physics: const NeverScrollableScrollPhysics(), // Temporarily blocked left/right scroll
-                    onPageChanged: (index) {
-                      ref.read(currentWallIndexProvider.notifier).state = index;
-                    },
-                    itemCount: _wallNames.length,
-                    itemBuilder: (context, index) {
-                      return AnimatedBuilder(
-                        animation: _pageController,
-                        builder: (context, child) {
-                          double value = 1.0;
-                          if (_pageController.position.haveDimensions) {
-                            value = _pageController.page! - index;
-                            value = (1 - (value.abs() * 0.3)).clamp(0.0, 1.0);
-                          }
+                              final tilt = _pageController.position.haveDimensions 
+                                  ? (_pageController.page! - index) * 0.1 
+                                  : 0.0;
 
-                          // Parallax + Depth Tilt
-                          final tilt = _pageController.position.haveDimensions 
-                              ? (_pageController.page! - index) * 0.1 
-                              : 0.0;
-
-                          return Transform(
-                            transform: Matrix4.identity()
-                              ..setEntry(3, 2, 0.001) // perspective
-                              ..rotateY(-tilt),
-                            alignment: Alignment.center,
-                            child: Opacity(
-                              opacity: value.clamp(0.5, 1.0),
-                              child: _buildWallContent(index),
-                            ),
+                              return Transform(
+                                transform: Matrix4.identity()
+                                  ..setEntry(3, 2, 0.001)
+                                  ..rotateY(-tilt),
+                                alignment: Alignment.center,
+                                child: Opacity(
+                                  opacity: value.clamp(0.5, 1.0),
+                                  child: _buildWallContent(index),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
+                      ),
+                    );
+                  },
                   ),
 
                   // 4. Focus Mode Overlay
                   if (focusMode)
                     Container(
                       color: Colors.black.withValues(alpha: 0.7),
-                      // Interaction blocking handled elsewhere
                     ),
 
                   // 5. UI Overlay (Top Bar)
@@ -163,6 +177,8 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
     }
   }
 
+
+
   Widget _buildTopBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
@@ -182,10 +198,38 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
               child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.white),
             ),
           ),
-          
-          // Removed Wall Label and Tune icon per user request to keep the UI minimal.
+
+          // Customize button
+          GestureDetector(
+            onTap: () => VisionCustomizationSheet.show(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.glass,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.glassBorder, width: 0.5),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.tune_rounded, size: 16, color: AppColors.accentBlue),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Customize',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
+
+

@@ -50,7 +50,7 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
       'description': _descriptionController.text.trim(),
       'progress': _progress,
       'priority': _priority,
-      'color': _selectedColor.value,
+      'color': _selectedColor.toARGB32(),
     });
     Navigator.pop(context);
   }

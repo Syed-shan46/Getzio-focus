@@ -157,11 +157,7 @@ class _TapeTornEdgesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Add zigzag torn effect at the ends
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    // For simplicity right now we use a container, but we could clip the edges here
+    // Torn edge effect placeholder
   }
 
   @override

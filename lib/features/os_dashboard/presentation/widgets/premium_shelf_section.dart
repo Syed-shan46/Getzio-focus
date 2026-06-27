@@ -648,11 +648,13 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
               if (!isActive) {
                 // Centering click
                 HapticFeedback.lightImpact();
-                _scrollController.animateTo(
-                  index * (cardWidth + spacing),
-                  duration: const Duration(milliseconds: 550),
-                  curve: Curves.easeOutBack,
-                );
+                if (_scrollController.hasClients) {
+                  _scrollController.animateTo(
+                    index * (cardWidth + spacing),
+                    duration: const Duration(milliseconds: 550),
+                    curve: Curves.easeOutBack,
+                  );
+                }
               } else {
                 if (!isLifted) {
                   // Lift card

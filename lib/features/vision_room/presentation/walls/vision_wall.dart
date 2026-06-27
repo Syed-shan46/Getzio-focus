@@ -8,10 +8,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 import '../../domain/models/vision_item.dart';
-import '../providers/vision_room_providers.dart';
+import '../../domain/models/vision_customization.dart';
 import '../providers/canvas_providers.dart';
-import '../widgets/wall_header.dart';
-import '../widgets/attachment_widgets.dart';
+import '../providers/customization_provider.dart';
 import '../widgets/attachment_widgets.dart';
 import '../widgets/premium_creation_hub.dart';
 import '../widgets/quote_builder_modal.dart';
@@ -34,17 +33,63 @@ class VisionWall extends ConsumerStatefulWidget {
   ConsumerState<VisionWall> createState() => _VisionWallState();
 }
 
-class _VisionWallState extends ConsumerState<VisionWall> {
+class _VisionWallState extends ConsumerState<VisionWall>
+    with TickerProviderStateMixin {
   final ImagePicker _picker = ImagePicker();
-  
-  // Unified Gesture State
+
   String? _interactingItemId;
-  Matrix4 _initialViewport = Matrix4.identity();
-  
-  // Per-item interaction state during gesture
+
   double _itemStartWidth = 0;
   double _itemStartHeight = 0;
   double _itemStartRotation = 0;
+
+  late AnimationController _decorController;
+  late AnimationController _springController;
+  late Animation<double> _springAnimation;
+  String? _springItemId;
+
+  String _pinStyleString(PinStyle style) {
+    return switch (style) {
+      PinStyle.gold => 'gold',
+      PinStyle.silver => 'silver',
+      PinStyle.black => 'black',
+      PinStyle.wood => 'gold',
+      PinStyle.transparent => 'gold',
+      PinStyle.modernMagnetic => 'silver',
+      PinStyle.luxuryBrass => 'gold',
+      PinStyle.colored => 'red',
+    };
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _decorController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
+    _springController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _springAnimation = _springController.drive(
+      Tween<double>(begin: 0, end: 1).chain(
+        CurveTween(curve: Curves.elasticOut),
+      ),
+    );
+    _springController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() => _springItemId = null);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _decorController.dispose();
+    _springController.dispose();
+    super.dispose();
+  }
 
   void _showPremiumAuthSheet(BuildContext context) {
     showModalBottomSheet(
@@ -59,7 +104,8 @@ class _VisionWallState extends ConsumerState<VisionWall> {
             decoration: const BoxDecoration(
               color: Color(0xFF0F172A),
               borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-              border: Border.fromBorderSide(BorderSide(color: Colors.white10, width: 1.5)),
+              border: Border.fromBorderSide(
+                  BorderSide(color: Colors.white10, width: 1.5)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -104,10 +150,12 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const PhoneLoginScreen()),
                       );
                     },
-                    icon: const Icon(Icons.phone_android_rounded, color: Colors.black, size: 24),
+                    icon: const Icon(Icons.phone_android_rounded,
+                        color: Colors.black, size: 24),
                     label: const Text(
                       'Continue with Phone',
                       style: TextStyle(
@@ -118,7 +166,8 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
                       elevation: 0,
                     ),
                   ),
@@ -128,7 +177,10 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                   onPressed: () => Navigator.pop(context),
                   child: const Text(
                     'Maybe Later',
-                    style: TextStyle(color: Colors.white30, fontSize: 14, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        color: Colors.white30,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -142,7 +194,8 @@ class _VisionWallState extends ConsumerState<VisionWall> {
   Future<void> _pickImage() async {
     final isGuest = ref.read(authProvider).value == null;
     final items = ref.read(canvasStateProvider).items;
-    final count = items.where((i) => i.type == VisionItemType.image.name).length;
+    final count =
+        items.where((i) => i.type == VisionItemType.image.name).length;
     if (isGuest && count >= 5) {
       _showPremiumAuthSheet(context);
       return;
@@ -150,22 +203,22 @@ class _VisionWallState extends ConsumerState<VisionWall> {
 
     final size = MediaQuery.of(context).size;
     final transform = ref.read(canvasStateProvider).viewportTransform;
-    
+
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       final screenCenter = Offset(size.width / 2, size.height / 2);
       final canvasCenter = _toCanvasCoordinates(screenCenter, transform);
-      
+
       final random = Random();
       final newItem = VisionItem(
         id: const Uuid().v4(),
         type: VisionItemType.image.name,
         content: image.path,
-        x: canvasCenter.dx - 125, // Center the 250 width item
+        x: canvasCenter.dx - 125,
         y: canvasCenter.dy - 125,
         width: 250,
         height: 250,
-        rotation: (random.nextDouble() - 0.5) * 0.2, // slight random rotation
+        rotation: (random.nextDouble() - 0.5) * 0.2,
       );
       ref.read(canvasStateProvider.notifier).addItem(newItem);
     }
@@ -173,14 +226,14 @@ class _VisionWallState extends ConsumerState<VisionWall> {
 
   void _showAddStickyNoteDialog(BuildContext context) {
     final textController = TextEditingController();
-    int selectedColorValue = 0xFFF59E0B; // Default Amber
+    int selectedColorValue = 0xFFF59E0B;
     final List<int> stickyColors = [
-      0xFFF59E0B, // Amber/Yellow
-      0xFFEC4899, // Pink
-      0xFF3B82F6, // Blue
-      0xFFA855F7, // Purple
-      0xFF10B981, // Green
-      0xFFF8FAFC, // White
+      0xFFF59E0B,
+      0xFFEC4899,
+      0xFF3B82F6,
+      0xFFA855F7,
+      0xFF10B981,
+      0xFFF8FAFC,
     ];
 
     showDialog(
@@ -190,7 +243,8 @@ class _VisionWallState extends ConsumerState<VisionWall> {
           builder: (context, setState) {
             return AlertDialog(
               backgroundColor: const Color(0xFF0F172A),
-              title: const Text('New Sticky Note', style: TextStyle(color: Colors.white)),
+              title: const Text('New Sticky Note',
+                  style: TextStyle(color: Colors.white)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -202,7 +256,8 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'Type your note...',
-                      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                      hintStyle:
+                          TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.1),
                       border: OutlineInputBorder(
@@ -212,23 +267,32 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Color', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  const Text('Color',
+                      style:
+                          TextStyle(color: Colors.white70, fontSize: 12)),
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: stickyColors.map((colorValue) {
                       final isSelected = selectedColorValue == colorValue;
                       return GestureDetector(
-                        onTap: () => setState(() => selectedColorValue = colorValue),
+                        onTap: () =>
+                            setState(() => selectedColorValue = colorValue),
                         child: Container(
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
                             color: Color(colorValue),
                             shape: BoxShape.circle,
-                            border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
+                            border: isSelected
+                                ? Border.all(color: Colors.white, width: 2)
+                                : null,
                             boxShadow: [
-                              if (isSelected) BoxShadow(color: Color(colorValue).withValues(alpha: 0.5), blurRadius: 8)
+                              if (isSelected)
+                                BoxShadow(
+                                    color: Color(colorValue)
+                                        .withValues(alpha: 0.5),
+                                    blurRadius: 8)
                             ],
                           ),
                         ),
@@ -240,16 +304,21 @@ class _VisionWallState extends ConsumerState<VisionWall> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+                  child: const Text('Cancel',
+                      style: TextStyle(color: Colors.white70)),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentBlue),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentBlue),
                   onPressed: () {
                     final text = textController.text.trim();
                     if (text.isNotEmpty) {
                       final isGuest = ref.read(authProvider).value == null;
                       final items = ref.read(canvasStateProvider).items;
-                      final count = items.where((i) => i.type == VisionItemType.stickyNote.name).length;
+                      final count = items
+                          .where((i) =>
+                              i.type == VisionItemType.stickyNote.name)
+                          .length;
                       if (isGuest && count >= 10) {
                         Navigator.pop(dialogContext);
                         _showPremiumAuthSheet(context);
@@ -263,7 +332,7 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                 ),
               ],
             );
-          }
+          },
         );
       },
     );
@@ -274,6 +343,7 @@ class _VisionWallState extends ConsumerState<VisionWall> {
     final size = MediaQuery.of(context).size;
     final screenCenter = Offset(size.width / 2, size.height / 2);
     final canvasCenter = _toCanvasCoordinates(screenCenter, transform);
+    final cust = ref.read(visionCustomizationProvider);
 
     final random = Random();
     final newItem = VisionItem(
@@ -281,11 +351,13 @@ class _VisionWallState extends ConsumerState<VisionWall> {
       type: VisionItemType.stickyNote.name,
       content: text,
       colorValue: colorValue,
-      x: canvasCenter.dx - 90, // Center the 180 width item
+      x: canvasCenter.dx - 90,
       y: canvasCenter.dy - 90,
       width: 180,
       height: 180,
       rotation: (random.nextDouble() - 0.5) * 0.3,
+      attachmentType: 'pin',
+      attachmentStyle: _pinStyleString(cust.defaultPinStyle),
     );
     ref.read(canvasStateProvider.notifier).addItem(newItem);
   }
@@ -293,7 +365,8 @@ class _VisionWallState extends ConsumerState<VisionWall> {
   void _addQuote(Map<String, dynamic> metadata) {
     final isGuest = ref.read(authProvider).value == null;
     final items = ref.read(canvasStateProvider).items;
-    final count = items.where((i) => i.type == VisionItemType.quote.name).length;
+    final count =
+        items.where((i) => i.type == VisionItemType.quote.name).length;
     if (isGuest && count >= 5) {
       _showPremiumAuthSheet(context);
       return;
@@ -311,7 +384,7 @@ class _VisionWallState extends ConsumerState<VisionWall> {
       content: metadata['quote'],
       secondaryContent: metadata['author'],
       metadata: metadata,
-      x: canvasCenter.dx - 140, 
+      x: canvasCenter.dx - 140,
       y: canvasCenter.dy - 80,
       width: 280,
       height: 160,
@@ -334,7 +407,7 @@ class _VisionWallState extends ConsumerState<VisionWall> {
       type: VisionItemType.goal.name,
       content: metadata['title'],
       metadata: metadata,
-      x: canvasCenter.dx - 150, 
+      x: canvasCenter.dx - 150,
       y: canvasCenter.dy - 100,
       width: 300,
       height: 200,
@@ -348,57 +421,73 @@ class _VisionWallState extends ConsumerState<VisionWall> {
   void _addPlan(Map<String, dynamic> metadata) {
     final transform = ref.read(canvasStateProvider).viewportTransform;
     final size = MediaQuery.of(context).size;
-    final canvasCenter = _toCanvasCoordinates(Offset(size.width / 2, size.height / 2), transform);
+    final canvasCenter =
+        _toCanvasCoordinates(Offset(size.width / 2, size.height / 2), transform);
     ref.read(canvasStateProvider.notifier).addItem(VisionItem(
       id: const Uuid().v4(),
       type: VisionItemType.plan.name,
       content: metadata['title'] ?? 'Plan',
       metadata: metadata,
-      x: canvasCenter.dx - 160, y: canvasCenter.dy - 120, width: 320, height: 240,
-      attachmentType: 'tape', attachmentStyle: 'blackTape',
+      x: canvasCenter.dx - 160,
+      y: canvasCenter.dy - 120,
+      width: 320,
+      height: 240,
+      attachmentType: 'tape',
+      attachmentStyle: 'blackTape',
     ));
   }
 
   void _addTask(Map<String, dynamic> metadata) {
     final transform = ref.read(canvasStateProvider).viewportTransform;
     final size = MediaQuery.of(context).size;
-    final canvasCenter = _toCanvasCoordinates(Offset(size.width / 2, size.height / 2), transform);
+    final canvasCenter =
+        _toCanvasCoordinates(Offset(size.width / 2, size.height / 2), transform);
     ref.read(canvasStateProvider.notifier).addItem(VisionItem(
       id: const Uuid().v4(),
       type: VisionItemType.task.name,
       content: metadata['title'] ?? 'Task',
       metadata: metadata,
-      x: canvasCenter.dx - 125, y: canvasCenter.dy - 60, width: 250, height: 120,
+      x: canvasCenter.dx - 125,
+      y: canvasCenter.dy - 60,
+      width: 250,
+      height: 120,
     ));
   }
 
   void _addFinance(Map<String, dynamic> metadata) {
     final transform = ref.read(canvasStateProvider).viewportTransform;
     final size = MediaQuery.of(context).size;
-    final canvasCenter = _toCanvasCoordinates(Offset(size.width / 2, size.height / 2), transform);
+    final canvasCenter =
+        _toCanvasCoordinates(Offset(size.width / 2, size.height / 2), transform);
     ref.read(canvasStateProvider.notifier).addItem(VisionItem(
       id: const Uuid().v4(),
       type: VisionItemType.financeGoal.name,
       content: metadata['title'] ?? 'Finance',
       metadata: metadata,
-      x: canvasCenter.dx - 140, y: canvasCenter.dy - 80, width: 280, height: 160,
+      x: canvasCenter.dx - 140,
+      y: canvasCenter.dy - 80,
+      width: 280,
+      height: 160,
     ));
   }
 
   void _addCountdown(Map<String, dynamic> metadata) {
     final transform = ref.read(canvasStateProvider).viewportTransform;
     final size = MediaQuery.of(context).size;
-    final canvasCenter = _toCanvasCoordinates(Offset(size.width / 2, size.height / 2), transform);
+    final canvasCenter =
+        _toCanvasCoordinates(Offset(size.width / 2, size.height / 2), transform);
     ref.read(canvasStateProvider.notifier).addItem(VisionItem(
       id: const Uuid().v4(),
       type: VisionItemType.countdown.name,
       content: metadata['title'] ?? 'Countdown',
       metadata: metadata,
-      x: canvasCenter.dx - 110, y: canvasCenter.dy - 110, width: 220, height: 220,
+      x: canvasCenter.dx - 110,
+      y: canvasCenter.dy - 110,
+      width: 220,
+      height: 220,
     ));
   }
 
-  // Convert Screen coordinates to Canvas coordinates
   Offset _toCanvasCoordinates(Offset screenPoint, Matrix4 transform) {
     final inverse = Matrix4.copy(transform);
     if (inverse.invert() == 0.0) return screenPoint;
@@ -414,37 +503,60 @@ class _VisionWallState extends ConsumerState<VisionWall> {
     final viewportTransform = canvasState.viewportTransform;
     final selectedIds = canvasState.selectedIds;
     final isGuest = ref.watch(authProvider).value == null;
+    final cust = ref.watch(visionCustomizationProvider);
+    final decorProgress = _decorController;
 
     return SafeArea(
       child: Stack(
         children: [
+          // 0. Board Style Background
+          Positioned.fill(
+            child: _BoardBackground(style: cust.boardStyle),
+          ),
+
+          // 0.5. Board Decorations (behind items)
+          if (cust.decorations.isNotEmpty)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: AnimatedBuilder(
+                  animation: decorProgress,
+                  builder: (context, _) {
+                    return CustomPaint(
+                      painter: _BoardDecorPainter(
+                        decorations: cust.decorations,
+                        boardStyle: cust.boardStyle,
+                        progress: decorProgress.value,
+                      ),
+                      size: Size.infinite,
+                    );
+                  },
+                ),
+              ),
+            ),
+
           // 1. The Unified Canvas Area
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () {
-                // Clear selection if tap on empty space
                 ref.read(canvasStateProvider.notifier).clearSelection();
-                // Dismiss keyboard
                 FocusScope.of(context).unfocus();
               },
               onScaleStart: (details) {
-                _initialViewport = viewportTransform.clone();
-                final canvasPoint = _toCanvasCoordinates(details.localFocalPoint, viewportTransform);
-                
+                final canvasPoint =
+                    _toCanvasCoordinates(details.localFocalPoint, viewportTransform);
+
                 _interactingItemId = null;
-                // Hit test from top to bottom
                 for (var item in items.reversed) {
-                  final rect = Rect.fromLTWH(item.x, item.y, item.width, item.height);
+                  final rect =
+                      Rect.fromLTWH(item.x, item.y, item.width, item.height);
                   if (rect.contains(canvasPoint)) {
                     _interactingItemId = item.id;
                     _itemStartWidth = item.width;
                     _itemStartHeight = item.height;
                     _itemStartRotation = item.rotation;
-                    
-                    // Select it
+
                     ref.read(canvasStateProvider.notifier).selectItem(item.id);
-                    // Haptic feedback on pickup
                     HapticFeedback.selectionClick();
                     break;
                   }
@@ -452,36 +564,37 @@ class _VisionWallState extends ConsumerState<VisionWall> {
               },
               onScaleUpdate: (details) {
                 if (_interactingItemId != null) {
-                  // Manipulating an item
                   final scaleX = viewportTransform.entry(0, 0);
                   final scaleY = viewportTransform.entry(1, 1);
                   final dx = details.focalPointDelta.dx / scaleX;
                   final dy = details.focalPointDelta.dy / scaleY;
 
-                  ref.read(canvasStateProvider.notifier).updatePosition(_interactingItemId!, dx, dy);
-                  
+                  ref
+                      .read(canvasStateProvider.notifier)
+                      .updatePosition(_interactingItemId!, dx, dy);
+
                   ref.read(canvasStateProvider.notifier).commitTransform(
-                    _interactingItemId!,
-                    _itemStartWidth * details.scale,
-                    _itemStartHeight * details.scale,
-                    _itemStartRotation + details.rotation,
-                  );
-                } else {
-                  // Manipulating the Board (Pan only)
-                  // Disabled as per user request to keep screen fixed
+                        _interactingItemId!,
+                        _itemStartWidth * details.scale,
+                        _itemStartHeight * details.scale,
+                        _itemStartRotation + details.rotation,
+                      );
                 }
               },
               onScaleEnd: (details) {
                 if (_interactingItemId != null) {
-                  final item = items.firstWhere((i) => i.id == _interactingItemId);
+                  final item =
+                      items.firstWhere((i) => i.id == _interactingItemId);
                   ref.read(canvasStateProvider.notifier).commitTransform(
-                    item.id,
-                    item.width,
-                    item.height,
-                    item.rotation,
-                  );
-                  // Drop haptic
+                        item.id,
+                        item.width,
+                        item.height,
+                        item.rotation,
+                      );
                   HapticFeedback.lightImpact();
+                  _springItemId = _interactingItemId;
+                  _springController.reset();
+                  _springController.forward();
                   setState(() {
                     _interactingItemId = null;
                   });
@@ -495,17 +608,19 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      // Base invisible layer to force Stack to fill screen
                       Container(
                         width: MediaQuery.of(context).size.width,
                         height: MediaQuery.of(context).size.height,
                         color: Colors.transparent,
                       ),
-                      // Items Layer
                       ...items.map((item) {
                         final isSelected = selectedIds.contains(item.id);
-                        final isInteracting = _interactingItemId == item.id;
-                        
+                        final isInteracting =
+                            _interactingItemId == item.id;
+                        final springValue = _springItemId == item.id
+                            ? _springAnimation.value
+                            : 0.0;
+
                         return Positioned(
                           left: item.x,
                           top: item.y,
@@ -513,6 +628,8 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                             item: item,
                             isSelected: isSelected,
                             isInteracting: isInteracting,
+                            boardStyle: cust.boardStyle,
+                            springValue: springValue,
                           ),
                         );
                       }),
@@ -523,7 +640,7 @@ class _VisionWallState extends ConsumerState<VisionWall> {
             ),
           ),
 
-          // 2. Floating Toolbar (Shows when item is selected)
+          // 2. Floating Toolbar
           if (selectedIds.isNotEmpty)
             Positioned(
               bottom: 100,
@@ -531,14 +648,14 @@ class _VisionWallState extends ConsumerState<VisionWall> {
               right: 20,
               child: _buildFloatingToolbar(context, selectedIds.first),
             ),
-          
-          // 2.5. Save Board Button (Bottom Left, visible to all, prompts auth for guests)
+
+          // 2.5. Save Board Button
           Positioned(
             bottom: 30,
             left: 20,
             child: FloatingActionButton.extended(
               heroTag: 'save_room_btn',
-              backgroundColor: const Color(0xFF10B981), // Emerald green
+              backgroundColor: const Color(0xFF10B981),
               onPressed: () async {
                 HapticFeedback.mediumImpact();
                 if (isGuest) {
@@ -552,7 +669,9 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                   ),
                 );
                 try {
-                  await ref.read(canvasStateProvider.notifier).saveRoomToServer();
+                  await ref
+                      .read(canvasStateProvider.notifier)
+                      .saveRoomToServer();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Vision Room saved successfully!'),
@@ -569,7 +688,9 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                 }
               },
               icon: const Icon(Icons.cloud_upload_rounded, color: Colors.white),
-              label: const Text('Save Board', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              label: const Text('Save Board',
+                  style:
+                      TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
 
@@ -581,11 +702,10 @@ class _VisionWallState extends ConsumerState<VisionWall> {
               heroTag: 'add_btn',
               backgroundColor: AppColors.accentBlue,
               onPressed: () => _showAddMenu(),
-              child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+              child:
+                  const Icon(Icons.add_rounded, color: Colors.white, size: 28),
             ),
           ),
-          
-          // Guest Mode Warning Banner removed as per request
 
         ],
       ),
@@ -611,65 +731,85 @@ class _VisionWallState extends ConsumerState<VisionWall> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.push_pin_rounded, color: Colors.redAccent, size: 20),
+                    icon: const Icon(Icons.push_pin_rounded,
+                        color: Colors.redAccent, size: 20),
                     tooltip: 'Use Pin',
                     onPressed: () {
-                      ref.read(canvasStateProvider.notifier).updateAttachment(itemId, 'pin', 'redPin');
+                      ref
+                          .read(canvasStateProvider.notifier)
+                          .updateAttachment(itemId, 'pin', 'redPin');
                       HapticFeedback.lightImpact();
                     },
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.horizontal_rule_rounded, color: Colors.orangeAccent, size: 20),
+                    icon: const Icon(Icons.horizontal_rule_rounded,
+                        color: Colors.orangeAccent, size: 20),
                     tooltip: 'Use Tape',
                     onPressed: () {
-                      ref.read(canvasStateProvider.notifier).updateAttachment(itemId, 'tape', 'beige');
+                      ref
+                          .read(canvasStateProvider.notifier)
+                          .updateAttachment(itemId, 'tape', 'beige');
                       HapticFeedback.lightImpact();
                     },
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.flip_to_front_rounded, color: Colors.white70, size: 20),
+                    icon: const Icon(Icons.flip_to_front_rounded,
+                        color: Colors.white70, size: 20),
                     tooltip: 'Bring to Front',
                     onPressed: () {
-                      ref.read(canvasStateProvider.notifier).bringToFront(itemId);
+                      ref
+                          .read(canvasStateProvider.notifier)
+                          .bringToFront(itemId);
                       HapticFeedback.lightImpact();
                     },
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.flip_to_back_rounded, color: Colors.white70, size: 20),
+                    icon: const Icon(Icons.flip_to_back_rounded,
+                        color: Colors.white70, size: 20),
                     tooltip: 'Send to Back',
                     onPressed: () {
-                      ref.read(canvasStateProvider.notifier).sendToBack(itemId);
+                      ref
+                          .read(canvasStateProvider.notifier)
+                          .sendToBack(itemId);
                       HapticFeedback.lightImpact();
                     },
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.copy_rounded, color: Colors.white, size: 20),
+                    icon: const Icon(Icons.copy_rounded,
+                        color: Colors.white, size: 20),
                     tooltip: 'Duplicate',
                     onPressed: () {
-                      // Duplicate item logic
                       final items = ref.read(canvasStateProvider).items;
-                      final item = items.firstWhere((i) => i.id == itemId);
+                      final item =
+                          items.firstWhere((i) => i.id == itemId);
                       final newItem = item.copyWith(
                         id: const Uuid().v4(),
                         x: item.x + 40,
                         y: item.y + 40,
                         zIndex: item.zIndex + 1,
                       );
-                      ref.read(canvasStateProvider.notifier).addItem(newItem);
-                      ref.read(canvasStateProvider.notifier).selectItem(newItem.id);
+                      ref
+                          .read(canvasStateProvider.notifier)
+                          .addItem(newItem);
+                      ref
+                          .read(canvasStateProvider.notifier)
+                          .selectItem(newItem.id);
                       HapticFeedback.lightImpact();
                     },
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                    icon: const Icon(Icons.delete_outline_rounded,
+                        color: Colors.redAccent, size: 20),
                     tooltip: 'Delete',
                     onPressed: () {
-                      ref.read(canvasStateProvider.notifier).removeItem(itemId);
+                      ref
+                          .read(canvasStateProvider.notifier)
+                          .removeItem(itemId);
                       HapticFeedback.heavyImpact();
                     },
                   ),
@@ -709,21 +849,550 @@ class _VisionWallState extends ConsumerState<VisionWall> {
   }
 }
 
+// ─── BOARD BACKGROUND ─────────────────────────────────────────────────────
 
+class _BoardBackground extends StatelessWidget {
+  final VisionBoardStyle style;
+
+  const _BoardBackground({required this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: _boardBoxDecor(style),
+      child: CustomPaint(
+        painter: _BoardBgPainter(style),
+        size: Size.infinite,
+      ),
+    );
+  }
+
+  BoxDecoration _boardBoxDecor(VisionBoardStyle style) {
+    switch (style) {
+      case VisionBoardStyle.classicCork:
+        return const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFD4A574), Color(0xFFC4956A), Color(0xFFB8865E)],
+          ),
+        );
+      case VisionBoardStyle.glassInspiration:
+        return BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        );
+      case VisionBoardStyle.walnutWooden:
+        return const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF6B3A2A), Color(0xFF5C3020), Color(0xFF4A2618)],
+          ),
+        );
+      case VisionBoardStyle.magneticMetal:
+        return BoxDecoration(
+          color: const Color(0xFF2A2A2E),
+          border: Border.all(
+              color: Colors.grey.withValues(alpha: 0.3), width: 1),
+        );
+      case VisionBoardStyle.canvasWall:
+        return const BoxDecoration(
+          color: Color(0xFFF5F0E8),
+        );
+      case VisionBoardStyle.floatingGallery:
+        return BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.3),
+        );
+      case VisionBoardStyle.scrapbook:
+        return const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFDF6E3), Color(0xFFF5E6CC)],
+          ),
+        );
+      case VisionBoardStyle.custom:
+        return BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.04),
+        );
+    }
+  }
+}
+
+class _BoardBgPainter extends CustomPainter {
+  final VisionBoardStyle style;
+
+  _BoardBgPainter(this.style);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.stroke;
+
+    switch (style) {
+      case VisionBoardStyle.classicCork:
+        paint.color = const Color(0xFFB8865E).withValues(alpha: 0.3);
+        for (double y = 0; y < size.height; y += 4) {
+          for (double x = 0; x < size.width; x += 4) {
+            canvas.drawCircle(Offset(x, y), 0.5, paint);
+          }
+        }
+        // Dark wood border
+        paint.color = const Color(0xFF3E1F0D).withValues(alpha: 0.6);
+        paint.strokeWidth = 6;
+        canvas.drawRect(
+            Rect.fromLTWH(3, 3, size.width - 6, size.height - 6), paint);
+        paint.strokeWidth = 2;
+        paint.color = const Color(0xFF5C3A1E).withValues(alpha: 0.4);
+        canvas.drawRect(
+            Rect.fromLTWH(6, 6, size.width - 12, size.height - 12), paint);
+        break;
+
+      case VisionBoardStyle.glassInspiration:
+        paint.color = Colors.white.withValues(alpha: 0.06);
+        paint.strokeWidth = 0.5;
+        for (double x = 0; x < size.width; x += 40) {
+          canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+        }
+        for (double y = 0; y < size.height; y += 40) {
+          canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+        }
+        // Reflection shine
+        final shine = Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.08),
+              Colors.transparent,
+              Colors.white.withValues(alpha: 0.04),
+            ],
+            stops: const [0.0, 0.5, 1.0],
+          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+        canvas.drawRect(
+            Rect.fromLTWH(0, 0, size.width, size.height), shine);
+        break;
+
+      case VisionBoardStyle.walnutWooden:
+        paint.color = const Color(0xFF8B6914).withValues(alpha: 0.15);
+        for (double y = 0; y < size.height; y += 8) {
+          double x = 0;
+          while (x < size.width) {
+            final wave = sin((x + y) * 0.03) * 3;
+            canvas.drawCircle(Offset(x, y + wave), 1, paint);
+            x += 3;
+          }
+        }
+        // Warm glow
+        final warmGlow = Paint()
+          ..shader = RadialGradient(
+            center: Alignment.topCenter,
+            radius: 1.2,
+            colors: [
+              const Color(0xFFFFD699).withValues(alpha: 0.1),
+              Colors.transparent,
+            ],
+          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+        canvas.drawRect(
+            Rect.fromLTWH(0, 0, size.width, size.height), warmGlow);
+        break;
+
+      case VisionBoardStyle.magneticMetal:
+        paint.color = Colors.grey.withValues(alpha: 0.08);
+        paint.strokeWidth = 1;
+        for (double x = 0; x < size.width; x += 80) {
+          canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+        }
+        // Subtle metallic gradient
+        final metal = Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.06),
+              Colors.transparent,
+              Colors.white.withValues(alpha: 0.03),
+            ],
+            stops: const [0.0, 0.3, 1.0],
+          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+        canvas.drawRect(
+            Rect.fromLTWH(0, 0, size.width, size.height), metal);
+        // Corner screws
+        final screwPaint = Paint()
+          ..color = Colors.grey.withValues(alpha: 0.2)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(Offset(20, 20), 6, screwPaint);
+        canvas.drawCircle(
+            Offset(size.width - 20, 20), 6, screwPaint);
+        canvas.drawCircle(
+            Offset(20, size.height - 20), 6, screwPaint);
+        canvas.drawCircle(
+            Offset(size.width - 20, size.height - 20), 6, screwPaint);
+        break;
+
+      case VisionBoardStyle.canvasWall:
+        paint.color = const Color(0xFFD4C9B8).withValues(alpha: 0.15);
+        for (double y = 0; y < size.height; y += 3) {
+          canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+        }
+        // Pin at top center
+        final pinPaint = Paint()
+          ..color = const Color(0xFF8B7355).withValues(alpha: 0.3)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(
+            Offset(size.width / 2, 15), 4, pinPaint);
+        break;
+
+      case VisionBoardStyle.floatingGallery:
+        paint.color = Colors.white.withValues(alpha: 0.03);
+        paint.style = PaintingStyle.fill;
+        canvas.drawCircle(
+            Offset(size.width * 0.8, size.height * 0.15), 80, paint);
+        canvas.drawCircle(
+            Offset(size.width * 0.2, size.height * 0.85), 60, paint);
+        canvas.drawCircle(
+            Offset(size.width * 0.7, size.height * 0.7), 40, paint);
+        break;
+
+      case VisionBoardStyle.scrapbook:
+        paint.color = const Color(0xFFE8D5B7).withValues(alpha: 0.2);
+        paint.style = PaintingStyle.fill;
+        for (int i = 0; i < 6; i++) {
+          final x = size.width *
+              (0.08 + (i % 3) * 0.35 + sin(i * 1.5) * 0.05);
+          final y = size.height *
+              (0.08 + (i ~/ 3) * 0.4 + cos(i * 1.2) * 0.05);
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromCenter(
+                  center: Offset(x, y),
+                  width: 60 + (i * 8).toDouble(),
+                  height: 40 + (i * 5).toDouble()),
+              const Radius.circular(3),
+            ),
+            paint,
+          );
+        }
+        paint.style = PaintingStyle.stroke;
+        paint.color = const Color(0xFFD4C9B8).withValues(alpha: 0.15);
+        for (int i = 0; i < 6; i++) {
+          final x = size.width *
+              (0.08 + (i % 3) * 0.35 + sin(i * 1.5) * 0.05);
+          final y = size.height *
+              (0.08 + (i ~/ 3) * 0.4 + cos(i * 1.2) * 0.05);
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromCenter(
+                  center: Offset(x, y),
+                  width: 60 + (i * 8).toDouble(),
+                  height: 40 + (i * 5).toDouble()),
+              const Radius.circular(3),
+            ),
+            paint,
+          );
+        }
+        break;
+
+      case VisionBoardStyle.custom:
+        break;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BoardBgPainter oldDelegate) =>
+      oldDelegate.style != style;
+}
+
+// ─── BOARD DECORATIONS PAINTER ────────────────────────────────────────────
+
+class _BoardDecorPainter extends CustomPainter {
+  final List<BoardDecoration> decorations;
+  final VisionBoardStyle boardStyle;
+  final double progress;
+
+  _BoardDecorPainter({
+    required this.decorations,
+    required this.boardStyle,
+    required this.progress,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final decor in decorations) {
+      switch (decor) {
+        case BoardDecoration.stringLights:
+          _drawStringLights(canvas, size);
+        case BoardDecoration.miniPlants:
+          _drawMiniPlants(canvas, size);
+        case BoardDecoration.pushPins:
+          _drawPushPins(canvas, size);
+        case BoardDecoration.washiTape:
+          _drawWashiTape(canvas, size);
+        case BoardDecoration.ribbons:
+          _drawRibbons(canvas, size);
+        case BoardDecoration.pressedFlowers:
+          _drawPressedFlowers(canvas, size);
+        case BoardDecoration.bookmarks:
+          _drawBookmarks(canvas, size);
+        case BoardDecoration.minimalShelves:
+          _drawMinimalShelves(canvas, size);
+        default:
+          break;
+      }
+    }
+  }
+
+  void _drawStringLights(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..color = Colors.brown.withValues(alpha: 0.3);
+
+    final path = Path();
+    path.moveTo(0, size.height * 0.05);
+    for (double x = 0; x <= size.width; x += 30) {
+      final y = size.height * 0.05 + sin((x / size.width) * pi + progress * 2) * 8;
+      path.lineTo(x, y);
+    }
+    canvas.drawPath(path, paint);
+
+    final bulbPaint = Paint()..style = PaintingStyle.fill;
+    for (double x = 0; x <= size.width; x += 60) {
+      final y = size.height * 0.05 + sin((x / size.width) * pi + progress * 2) * 8;
+      final glow = (sin(progress * 6 + x * 0.1) + 1) * 0.5;
+      bulbPaint.color = Color.fromRGBO(
+        255,
+        200 - (glow * 100).toInt(),
+        100 + (glow * 50).toInt(),
+        0.4 + glow * 0.4,
+      );
+      canvas.drawCircle(Offset(x, y + 5), 4, bulbPaint);
+    }
+  }
+
+  void _drawMiniPlants(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFF2D6A4F).withValues(alpha: 0.25);
+
+    final positions = [
+      Offset(size.width * 0.05, size.height * 0.6),
+      Offset(size.width * 0.95, size.height * 0.55),
+    ];
+
+    for (final pos in positions) {
+      // Pot
+      paint.color = const Color(0xFF8B6914).withValues(alpha: 0.2);
+      final potPath = Path()
+        ..moveTo(pos.dx - 8, pos.dy)
+        ..lineTo(pos.dx - 6, pos.dy + 12)
+        ..lineTo(pos.dx + 6, pos.dy + 12)
+        ..lineTo(pos.dx + 8, pos.dy)
+        ..close();
+      canvas.drawPath(potPath, paint);
+
+      // Leaves
+      paint.color = const Color(0xFF2D6A4F).withValues(alpha: 0.25);
+      for (int i = 0; i < 3; i++) {
+        final angle = pi / 4 + i * pi / 3 + sin(progress * 2 + i) * 0.1;
+        final leafEnd = Offset(
+          pos.dx + cos(angle) * 12,
+          pos.dy - 8 + sin(angle.abs()) * 8,
+        );
+        canvas.drawOval(
+          Rect.fromPoints(
+            Offset(pos.dx - 1, pos.dy - 2),
+            leafEnd,
+          ),
+          paint,
+        );
+      }
+    }
+  }
+
+  void _drawPushPins(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.red.withValues(alpha: 0.15)
+      ..style = PaintingStyle.fill;
+
+    final positions = [
+      Offset(size.width * 0.15, size.height * 0.1),
+      Offset(size.width * 0.85, size.height * 0.12),
+      Offset(size.width * 0.12, size.height * 0.45),
+      Offset(size.width * 0.88, size.height * 0.5),
+    ];
+
+    for (final pos in positions) {
+      canvas.drawCircle(pos, 4, paint);
+      paint.color = Colors.grey.withValues(alpha: 0.1);
+      canvas.drawLine(pos, Offset(pos.dx, pos.dy + 10),
+          paint..strokeWidth = 1);
+      paint.color = Colors.red.withValues(alpha: 0.15);
+    }
+  }
+
+  void _drawWashiTape(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill;
+
+    final tapeRects = [
+      Rect.fromLTWH(size.width * 0.05, size.height * 0.05, 40, 14),
+      Rect.fromLTWH(size.width * 0.88, size.height * 0.08, 40, 14),
+      Rect.fromLTWH(size.width * 0.06, size.height * 0.5, 40, 14),
+    ];
+
+    for (final rect in tapeRects) {
+      canvas.save();
+      canvas.translate(rect.center.dx, rect.center.dy);
+      canvas.rotate(-0.15);
+      paint.color = Colors.pink.withValues(alpha: 0.08);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+              center: Offset.zero,
+              width: rect.width,
+              height: rect.height),
+          const Radius.circular(1),
+        ),
+        paint,
+      );
+      canvas.restore();
+    }
+  }
+
+  void _drawRibbons(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFFFF6B6B).withValues(alpha: 0.08);
+
+    // Top-right corner ribbon
+    final path = Path()
+      ..moveTo(size.width - 20, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, 20)
+      ..close();
+    canvas.drawPath(path, paint);
+
+    // Bottom-left corner ribbon
+    paint.color = const Color(0xFF4DA3FF).withValues(alpha: 0.08);
+    final path2 = Path()
+      ..moveTo(0, size.height - 20)
+      ..lineTo(0, size.height)
+      ..lineTo(20, size.height)
+      ..close();
+    canvas.drawPath(path2, paint);
+  }
+
+  void _drawPressedFlowers(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill;
+
+    final positions = [
+      Offset(size.width * 0.25, size.height * 0.15),
+      Offset(size.width * 0.72, size.height * 0.18),
+    ];
+
+    for (final pos in positions) {
+      paint.color = const Color(0xFFFFB7C5).withValues(alpha: 0.12);
+      for (int i = 0; i < 5; i++) {
+        final angle = i * (2 * pi / 5);
+        canvas.drawCircle(
+          Offset(
+            pos.dx + cos(angle) * 4,
+            pos.dy + sin(angle) * 4,
+          ),
+          3,
+          paint,
+        );
+      }
+      paint.color = const Color(0xFFFFD700).withValues(alpha: 0.1);
+      canvas.drawCircle(pos, 2, paint);
+    }
+  }
+
+  void _drawBookmarks(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill;
+
+    final bookmarkData = [
+      Offset(size.width * 0.92, size.height * 0.25),
+      Offset(size.width * 0.08, size.height * 0.72),
+    ];
+
+    final colors = [
+      const Color(0xFFE74C3C).withValues(alpha: 0.1),
+      const Color(0xFF3498DB).withValues(alpha: 0.1),
+    ];
+
+    for (int i = 0; i < bookmarkData.length; i++) {
+      paint.color = colors[i];
+      final pos = bookmarkData[i];
+      final rect = Rect.fromCenter(
+        center: pos,
+        width: 8,
+        height: 30,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(2)),
+        paint,
+      );
+      // V-shape bottom
+      final vPath = Path()
+        ..moveTo(pos.dx - 4, pos.dy + 15)
+        ..lineTo(pos.dx, pos.dy + 20)
+        ..lineTo(pos.dx + 4, pos.dy + 15)
+        ..close();
+      canvas.drawPath(vPath, paint);
+    }
+  }
+
+  void _drawMinimalShelves(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF8B7355).withValues(alpha: 0.12)
+      ..style = PaintingStyle.fill;
+
+    // Top shelf
+    canvas.drawRect(
+      Rect.fromLTWH(size.width * 0.02, size.height * 0.25,
+          size.width * 0.25, 3),
+      paint,
+    );
+
+    // Bottom shelf
+    canvas.drawRect(
+      Rect.fromLTWH(size.width * 0.73, size.height * 0.6,
+          size.width * 0.25, 3),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _BoardDecorPainter oldDelegate) =>
+      oldDelegate.decorations != decorations ||
+      oldDelegate.boardStyle != boardStyle ||
+      oldDelegate.progress != progress;
+}
+
+// ─── CANVAS ITEM WIDGET ───────────────────────────────────────────────────
 
 class _CanvasItemWidget extends ConsumerStatefulWidget {
   final VisionItem item;
   final bool isSelected;
   final bool isInteracting;
+  final VisionBoardStyle boardStyle;
+  final double springValue;
 
   const _CanvasItemWidget({
     required this.item,
     this.isSelected = false,
     this.isInteracting = false,
+    this.boardStyle = VisionBoardStyle.classicCork,
+    this.springValue = 0.0,
   });
 
   @override
-  ConsumerState<_CanvasItemWidget> createState() => _CanvasItemWidgetState();
+  ConsumerState<_CanvasItemWidget> createState() =>
+      _CanvasItemWidgetState();
 }
 
 class _CanvasItemWidgetState extends ConsumerState<_CanvasItemWidget> {
@@ -734,7 +1403,8 @@ class _CanvasItemWidgetState extends ConsumerState<_CanvasItemWidget> {
   @override
   void initState() {
     super.initState();
-    _textController = TextEditingController(text: widget.item.content);
+    _textController =
+        TextEditingController(text: widget.item.content);
     _focusNode = FocusNode();
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && _isEditing) {
@@ -746,7 +1416,8 @@ class _CanvasItemWidgetState extends ConsumerState<_CanvasItemWidget> {
   @override
   void didUpdateWidget(covariant _CanvasItemWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_isEditing && oldWidget.item.content != widget.item.content) {
+    if (!_isEditing &&
+        oldWidget.item.content != widget.item.content) {
       _textController.text = widget.item.content;
     }
   }
@@ -760,9 +1431,10 @@ class _CanvasItemWidgetState extends ConsumerState<_CanvasItemWidget> {
 
   void _commitText() {
     if (_textController.text.trim().isNotEmpty) {
-      ref.read(canvasStateProvider.notifier).updateContent(widget.item.id, _textController.text);
+      ref
+          .read(canvasStateProvider.notifier)
+          .updateContent(widget.item.id, _textController.text);
     } else {
-      // Revert if empty
       _textController.text = widget.item.content;
     }
     setState(() {
@@ -773,73 +1445,116 @@ class _CanvasItemWidgetState extends ConsumerState<_CanvasItemWidget> {
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
+    final cust = ref.watch(visionCustomizationProvider);
+    final cardCfg = cust.cardCustomization;
+    final boardStyle = widget.boardStyle;
     Widget contentWidget;
-    
-    // Dynamic shadow and scale for lift effect
+
     final double liftScale = widget.isInteracting ? 1.05 : 1.0;
-    final double shadowBlur = widget.isInteracting ? 30.0 : 15.0;
-    final Offset shadowOffset = widget.isInteracting ? const Offset(0, 15) : const Offset(0, 8);
-    
-    // Glowing border for selection
-    final Border? selectionBorder = widget.isSelected 
+    final double baseShadow = cardCfg.shadowIntensity * 30;
+    final double shadowBlur =
+        widget.isInteracting ? baseShadow * 1.5 : baseShadow;
+    final Offset shadowOffset = widget.isInteracting
+        ? const Offset(0, 15)
+        : Offset(0, 8 * cardCfg.shadowIntensity);
+
+    final Border? selectionBorder = widget.isSelected
         ? Border.all(color: AppColors.accentBlue, width: 3)
         : null;
 
+    final double cr = cardCfg.cornerRadius;
+    final double bt = cardCfg.borderThickness;
+
     if (item.type == VisionItemType.image.name) {
-      contentWidget = Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: selectionBorder ?? Border.all(color: Colors.white, width: 1),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: shadowBlur, offset: shadowOffset)
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(15),
-          child: Image.file(
-            File(item.content),
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              color: Colors.grey[800],
-              child: const Center(
-                child: Icon(Icons.broken_image_rounded, color: Colors.white54, size: 40),
+      contentWidget = Opacity(
+        opacity: cardCfg.opacity,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius:
+                BorderRadius.circular(cardCfg.glassMode ? cr : cr.clamp(4, 20)),
+            border: selectionBorder ??
+                Border.all(
+                    color: Colors.white.withValues(alpha: 0.3), width: bt),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withValues(
+                      alpha: 0.5 * cardCfg.shadowIntensity),
+                  blurRadius: shadowBlur,
+                  offset: shadowOffset)
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(
+                cardCfg.roundedMode ? cr : cr.clamp(4, 20)),
+            child: Image.file(
+              File(item.content),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Colors.grey[800],
+                child: const Center(
+                  child: Icon(Icons.broken_image_rounded,
+                      color: Colors.white54, size: 40),
+                ),
               ),
             ),
           ),
         ),
       );
     } else if (item.type == VisionItemType.stickyNote.name) {
+      final Color noteColor = cardCfg.glassMode
+          ? Colors.white.withValues(alpha: 0.15)
+          : Color(item.colorValue).withValues(alpha: cardCfg.opacity);
       contentWidget = Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: Color(item.colorValue),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(2),
-            topRight: Radius.circular(2),
-            bottomLeft: Radius.circular(2),
-            bottomRight: Radius.circular(24),
-          ),
-          border: selectionBorder,
+          color: noteColor,
+          borderRadius: cardCfg.squareMode
+              ? BorderRadius.zero
+              : BorderRadius.only(
+                  topLeft: Radius.circular(cardCfg.roundedMode ? cr : 2),
+                  topRight: Radius.circular(cardCfg.roundedMode ? cr : 2),
+                  bottomLeft: Radius.circular(cardCfg.roundedMode ? cr : 2),
+                  bottomRight:
+                      Radius.circular(cardCfg.roundedMode ? 24 : cr),
+                ),
+          border: selectionBorder ??
+              (bt > 0
+                  ? Border.all(
+                      color: Colors.white.withValues(alpha: 0.1), width: bt)
+                  : null),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: shadowBlur, offset: shadowOffset)
+            BoxShadow(
+                color: Colors.black.withValues(
+                    alpha: 0.4 * cardCfg.shadowIntensity),
+                blurRadius: shadowBlur,
+                offset: shadowOffset)
           ],
         ),
         child: Center(
-          child: _isEditing 
-            ? TextField(
-                controller: _textController,
-                focusNode: _focusNode,
-                maxLines: null,
-                textAlign: TextAlign.center,
-                style: AppTypography.titleMedium(color: Colors.black87),
-                decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
-                onSubmitted: (_) => _commitText(),
-              )
-            : Text(
-                item.content,
-                style: AppTypography.titleMedium(color: Colors.black87),
-                textAlign: TextAlign.center,
-              ),
+          child: _isEditing
+              ? TextField(
+                  controller: _textController,
+                  focusNode: _focusNode,
+                  maxLines: null,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: cardCfg.glassMode ? Colors.white : Colors.black87,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600),
+                  decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero),
+                  onSubmitted: (_) => _commitText(),
+                )
+              : Text(
+                  item.content,
+                  style: TextStyle(
+                      color: cardCfg.glassMode ? Colors.white : Colors.black87,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.center,
+                ),
         ),
       );
     } else if (item.type == VisionItemType.quote.name) {
@@ -860,34 +1575,62 @@ class _CanvasItemWidgetState extends ConsumerState<_CanvasItemWidget> {
         child: SizedBox(
           width: 180,
           height: 180,
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: Color(item.colorValue),
-              borderRadius: BorderRadius.circular(12),
-              border: selectionBorder ?? Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
-            ),
-            child: Center(
-              child: _isEditing 
-                ? TextField(
-                    controller: _textController,
-                    focusNode: _focusNode,
-                    maxLines: null,
-                    textAlign: TextAlign.center,
-                    style: AppTypography.titleMedium(color: Colors.white).copyWith(fontSize: 14),
-                    decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
-                    onSubmitted: (_) => _commitText(),
-                  )
-                : Text(
-                    item.content,
-                    style: AppTypography.titleMedium(color: Colors.white).copyWith(fontSize: 14),
-                    textAlign: TextAlign.center,
-                  ),
+          child: Opacity(
+            opacity: cardCfg.glassMode ? 0.85 : cardCfg.opacity,
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: cardCfg.glassMode
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Color(item.colorValue)
+                        .withValues(alpha: cardCfg.opacity),
+                borderRadius: cardCfg.squareMode
+                    ? BorderRadius.zero
+                    : BorderRadius.circular(cr),
+                border: selectionBorder ??
+                    (bt > 0
+                        ? Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: bt)
+                        : null),
+              ),
+              child: Center(
+                child: _isEditing
+                    ? TextField(
+                        controller: _textController,
+                        focusNode: _focusNode,
+                        maxLines: null,
+                        textAlign: TextAlign.center,
+                        style: AppTypography.titleMedium(color: Colors.white)
+                            .copyWith(fontSize: 14),
+                        decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero),
+                        onSubmitted: (_) => _commitText(),
+                      )
+                    : Text(
+                        item.content,
+                        style: AppTypography.titleMedium(color: Colors.white)
+                            .copyWith(fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+              ),
             ),
           ),
         ),
       );
     }
+
+    final boardAdjustedWidget = boardStyle == VisionBoardStyle.floatingGallery
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular(cr),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+              child: contentWidget,
+            ),
+          )
+        : contentWidget;
 
     return AnimatedScale(
       scale: liftScale,
@@ -905,22 +1648,25 @@ class _CanvasItemWidgetState extends ConsumerState<_CanvasItemWidget> {
         child: Hero(
           tag: 'vision_item_${item.id}',
           child: Transform.rotate(
-            angle: item.rotation,
+            angle: item.rotation + sin(widget.springValue * pi) * 0.06,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 SizedBox(
                   width: item.width,
                   height: item.height,
-                  child: contentWidget,
+                  child: boardAdjustedWidget,
                 ),
-                
-                // Attachment rendering
+
                 if (item.attachmentType == 'pin')
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 150),
                     curve: Curves.easeOutCubic,
-                    top: (20 * (item.width / 200.0)) - 36 - (widget.isInteracting ? (10 * (item.width / 200.0)) : 0),
+                    top: (20 * (item.width / 200.0)) -
+                        36 -
+                        (widget.isInteracting
+                            ? (10 * (item.width / 200.0))
+                            : 0),
                     left: item.width / 2 - 12,
                     child: Transform.scale(
                       scale: item.width / 200.0,
@@ -932,7 +1678,10 @@ class _CanvasItemWidgetState extends ConsumerState<_CanvasItemWidget> {
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 150),
                     curve: Curves.easeOutCubic,
-                    top: -12 - (widget.isInteracting ? (5 * (item.width / 200.0)) : 0),
+                    top: -12 -
+                        (widget.isInteracting
+                            ? (5 * (item.width / 200.0))
+                            : 0),
                     left: item.width / 2 - 40,
                     child: Transform.scale(
                       scale: item.width / 200.0,

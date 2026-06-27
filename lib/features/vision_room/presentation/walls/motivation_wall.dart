@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../providers/vision_room_providers.dart';
 import '../widgets/wall_header.dart';
 import '../widgets/glass_card.dart';
+import '../../../os_dashboard/presentation/screens/daily_motivation_screen.dart';
 
 class MotivationWall extends ConsumerWidget {
   const MotivationWall({super.key});
@@ -27,25 +28,50 @@ class MotivationWall extends ConsumerWidget {
               physics: const BouncingScrollPhysics(),
               children: [
                 // Daily Affirmation
-                GlassCard(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'DAILY AFFIRMATION',
-                        style: AppTypography.captionSmall(color: AppColors.accentBlue)
-                            .copyWith(letterSpacing: 2),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        '"I am capable of achieving everything I set my mind to. Today is a stepping stone to my future."',
-                        style: AppTypography.titleLarge(color: Colors.white).copyWith(
-                          height: 1.4,
-                          fontWeight: FontWeight.w500,
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        transitionDuration: const Duration(milliseconds: 400),
+                        pageBuilder: (context, animation, secondaryAnimation) => DailyMotivationScreen(
+                          onClose: () => Navigator.pop(context),
                         ),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: ScaleTransition(
+                              scale: Tween<double>(begin: 0.96, end: 1.0).animate(
+                                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+                              ),
+                              child: child,
+                            ),
+                          );
+                        },
                       ),
-                    ],
+                    );
+                  },
+                  child: GlassCard(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'DAILY AFFIRMATION',
+                          style: AppTypography.captionSmall(color: AppColors.accentBlue)
+                              .copyWith(letterSpacing: 2),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          '"I am capable of achieving everything I set my mind to. Today is a stepping stone to my future."',
+                          style: AppTypography.titleLarge(color: Colors.white).copyWith(
+                            height: 1.4,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 

@@ -217,13 +217,32 @@ class HiveDatabase {
   }
 
   Future<void> saveSelectedAffirmations(List<Map<String, dynamic>> affirmations) async {
-    await _settingsBox.put('focus_selected_affirmations', affirmations);
+    final userId = getUserId() ?? 'guest';
+    await _settingsBox.put('focus_selected_affirmations_$userId', affirmations);
   }
 
   List<Map<String, dynamic>> getSelectedAffirmations() {
-    final list = _settingsBox.get('focus_selected_affirmations') as List?;
+    final userId = getUserId() ?? 'guest';
+    final list = _settingsBox.get('focus_selected_affirmations_$userId') as List?;
     if (list == null) return [];
     return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  Future<void> clearUserAffirmationsCache(String userId) async {
+    await _settingsBox.delete('focus_selected_affirmations_$userId');
+    await _settingsBox.delete('focus_pending_deletions_$userId');
+  }
+
+  Future<void> savePendingDeletions(List<String> ids) async {
+    final userId = getUserId() ?? 'guest';
+    await _settingsBox.put('focus_pending_deletions_$userId', ids);
+  }
+
+  List<String> getPendingDeletions() {
+    final userId = getUserId() ?? 'guest';
+    final list = _settingsBox.get('focus_pending_deletions_$userId') as List?;
+    if (list == null) return [];
+    return List<String>.from(list);
   }
 
   Future<void> saveUserStatistics(Map<String, dynamic> stats) async {
@@ -319,6 +338,18 @@ class HiveDatabase {
     final list = _settingsBox.get('focus_vision_items') as List?;
     if (list == null) return [];
     return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  // ─── Vision Customization ──────────────────────────────────────────────
+
+  Future<void> saveVisionCustomization(Map<String, dynamic> customization) async {
+    await _settingsBox.put('focus_vision_customization', customization);
+  }
+
+  Map<String, dynamic>? getVisionCustomization() {
+    final map = _settingsBox.get('focus_vision_customization') as Map?;
+    if (map == null) return null;
+    return Map<String, dynamic>.from(map);
   }
 
   bool hasSeenPreview(String feature) {

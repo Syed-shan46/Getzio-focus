@@ -887,11 +887,10 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
     return GestureDetector(
       onTap: () {
         HapticFeedback.mediumImpact();
-        PremiumPreviewOverlay.show(
-          context: context,
-          featureId: 'affirmations',
-          onContinue: () {},
-        );
+        setState(() {
+          _motivationOpen = true;
+          _motivationController.forward();
+        });
       },
       child: SizedBox(
         width: screenW * 0.24,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vector_math/vector_math_64.dart' show Vector3;
 import '../../../../core/theme/app_theme.dart';
 
 class RoomNavDots extends StatelessWidget {
@@ -58,7 +59,7 @@ class RoomNavDots extends StatelessWidget {
                       )
                     ] : null,
                   ),
-                  transform: Matrix4.identity()..scale(scale),
+                  transform: Matrix4.identity()..scaleByVector3(Vector3(scale, scale, 1)),
                 ),
               );
             }),

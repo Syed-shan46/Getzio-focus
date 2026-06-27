@@ -14,7 +14,7 @@ class GoalCardWidget extends StatelessWidget {
     final description = metadata['description'] as String? ?? '';
     final progress = (metadata['progress'] as num?)?.toDouble() ?? 0.0;
     final priority = metadata['priority'] as String? ?? 'Medium';
-    final colorValue = metadata['color'] as int? ?? Colors.blueAccent.value;
+    final colorValue = metadata['color'] as int? ?? Colors.blueAccent.toARGB32();
     final themeColor = Color(colorValue);
 
     return FittedBox(

@@ -4,6 +4,7 @@ import '../../../../shared/providers/app_providers.dart';
 import '../../../../core/storage/hive_database.dart';
 import '../../../../core/services/firebase_service.dart';
 import '../../../todo/presentation/providers/todo_providers.dart';
+import '../../../affirmations/presentation/providers/affirmations_provider.dart';
 import '../../domain/models/auth_user_model.dart';
 import '../../domain/services/guest_migration_service.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -394,7 +395,16 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
       try {
         await FirebaseService.signOut();
       } catch (_) {}
-      
+
+      // Purge affirmations cache before clearing user id
+      final userId = _hiveDb.getUserId();
+      if (userId != null) {
+        await _hiveDb.clearUserAffirmationsCache(userId);
+      }
+
+      // Reset the affirmations provider state
+      _ref.read(affirmationsProvider.notifier).clearAll();
+
       // Only clear cached auth boxes to maintain synced focus data
       await _hiveDb.clearAuth();
       
@@ -408,6 +418,15 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
   Future<void> deleteAccount() async {
     state = const AsyncValue.loading();
     try {
+      // Wipe affirmations user cache before deleting profile
+      final userId = _hiveDb.getUserId();
+      if (userId != null) {
+        await _hiveDb.clearUserAffirmationsCache(userId);
+      }
+
+      // Reset the affirmations provider state
+      _ref.read(affirmationsProvider.notifier).clearAll();
+
       // 1. Call backend to delete profile
       await _repo.deleteAccount();
 
