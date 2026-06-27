@@ -6,10 +6,8 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/models/onboarding_models.dart';
 import '../providers/onboarding_providers.dart';
-import '../widgets/premium_chip.dart';
 import '../widgets/affirmation_room_background.dart';
 
-/// Screen 8 — Daily Affirmations with premium room background
 class AffirmationsScreen extends ConsumerStatefulWidget {
   const AffirmationsScreen({super.key});
 
@@ -17,21 +15,78 @@ class AffirmationsScreen extends ConsumerStatefulWidget {
   ConsumerState<AffirmationsScreen> createState() => _AffirmationsScreenState();
 }
 
+class _CategoryData {
+  final String id;
+  final String name;
+  final String emoji;
+  final Color color;
+  final List<DailyAffirmation> templates;
+
+  const _CategoryData({
+    required this.id,
+    required this.name,
+    required this.emoji,
+    required this.color,
+    required this.templates,
+  });
+}
+
 class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
   final TextEditingController _customController = TextEditingController();
+  late PageController _categoryPageController;
+  int _currentCategoryIndex = 0;
 
-  static final List<DailyAffirmation> _templates = [
-    DailyAffirmation(id: 't1', text: 'Discipline creates freedom.', author: 'Focus Core', isPinned: true),
-    DailyAffirmation(id: 't2', text: 'I am matching my potential daily.', author: 'Focus Core'),
-    DailyAffirmation(id: 't3', text: 'Focus is my superpower.', author: 'Focus Core'),
-    DailyAffirmation(id: 't4', text: 'Consistency is my key to growth.', author: 'Focus Core'),
-    DailyAffirmation(id: 't5', text: 'I choose consistency over convenience.', author: 'Focus Core'),
-    DailyAffirmation(id: 't6', text: 'Today\'s actions build tomorrow\'s identity.', author: 'Focus Core'),
+  static final List<_CategoryData> _categories = [
+    _CategoryData(
+      id: 'discipline',
+      name: 'Discipline',
+      emoji: '🎯',
+      color: const Color(0xFF4DA3FF),
+      templates: [
+        DailyAffirmation(id: 't1', text: 'Discipline creates freedom.', author: 'Focus Core', isPinned: true),
+      ],
+    ),
+    _CategoryData(
+      id: 'growth',
+      name: 'Growth',
+      emoji: '🌱',
+      color: const Color(0xFF2CE38C),
+      templates: [
+        DailyAffirmation(id: 't2', text: 'I am matching my potential daily.', author: 'Focus Core'),
+        DailyAffirmation(id: 't4', text: 'Consistency is my key to growth.', author: 'Focus Core'),
+        DailyAffirmation(id: 't6', text: 'Today\'s actions build tomorrow\'s identity.', author: 'Focus Core'),
+      ],
+    ),
+    _CategoryData(
+      id: 'focus',
+      name: 'Focus',
+      emoji: '⚡',
+      color: const Color(0xFFF59E0B),
+      templates: [
+        DailyAffirmation(id: 't3', text: 'Focus is my superpower.', author: 'Focus Core'),
+      ],
+    ),
+    _CategoryData(
+      id: 'mindset',
+      name: 'Mindset',
+      emoji: '🧠',
+      color: const Color(0xFFA78BFA),
+      templates: [
+        DailyAffirmation(id: 't5', text: 'I choose consistency over convenience.', author: 'Focus Core'),
+      ],
+    ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _categoryPageController = PageController();
+  }
 
   @override
   void dispose() {
     _customController.dispose();
+    _categoryPageController.dispose();
     super.dispose();
   }
 
@@ -61,6 +116,27 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
     ref.read(onboardingProvider.notifier).setPinnedAffirmation(id);
   }
 
+  void _toggleTemplate(DailyAffirmation template) {
+    final selected = ref.read(onboardingProvider).selectedAffirmations;
+    final existingIndex = selected.indexWhere((a) => a.text == template.text);
+    if (existingIndex >= 0) {
+      final wasPinned = selected[existingIndex].isPinned;
+      ref.read(onboardingProvider.notifier).toggleAffirmation(selected[existingIndex]);
+      if (wasPinned) {
+        final remaining = ref.read(onboardingProvider).selectedAffirmations;
+        if (remaining.isNotEmpty) {
+          ref.read(onboardingProvider.notifier).setPinnedAffirmation(remaining.first.id);
+        }
+      }
+    } else {
+      ref.read(onboardingProvider.notifier).toggleAffirmation(template);
+      final current = ref.read(onboardingProvider).selectedAffirmations;
+      if (!current.any((a) => a.isPinned)) {
+        ref.read(onboardingProvider.notifier).setPinnedAffirmation(template.id);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final onboardingState = ref.watch(onboardingProvider);
@@ -68,19 +144,16 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
 
     return Stack(
       children: [
-        // ── Room Background ──
         const Positioned.fill(
           child: AffirmationRoomBackground(child: SizedBox.expand()),
         ),
 
-        // ── Content ──
         Positioned.fill(
           child: SafeArea(
             bottom: false,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Glass Header ──
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                   child: _GlassCard(
@@ -110,79 +183,93 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
 
                 const SizedBox(height: 12),
 
-                // ── Scrollable Content ──
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ── Templates Section ──
-                        _GlassCard(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'AFFIRMATION TEMPLATES',
-                                style: AppTypography.captionSmall(color: AppColors.accentBlue).copyWith(
-                                  letterSpacing: 1.5,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: PageView.builder(
+                          controller: _categoryPageController,
+                          onPageChanged: (index) {
+                            setState(() => _currentCategoryIndex = index);
+                          },
+                          itemCount: _categories.length,
+                          itemBuilder: (context, catIndex) {
+                            final cat = _categories[catIndex];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _GlassCard(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(cat.emoji, style: const TextStyle(fontSize: 18)),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              cat.name.toUpperCase(),
+                                              style: AppTypography.captionSmall(color: cat.color).copyWith(
+                                                letterSpacing: 1.5,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            Text(
+                                              '${cat.templates.length} affirmation${cat.templates.length == 1 ? '' : 's'}',
+                                              style: AppTypography.captionSmall(
+                                                color: Colors.white.withValues(alpha: 0.35),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 14),
+                                        ...cat.templates.map((template) {
+                                          final isSelected = selected.any((a) => a.text == template.text);
+                                          return Padding(
+                                            padding: const EdgeInsets.only(bottom: 8),
+                                            child: _AffirmationItem(
+                                              text: template.text,
+                                              isSelected: isSelected,
+                                              activeColor: cat.color,
+                                              onTap: () => _toggleTemplate(template),
+                                            ),
+                                          );
+                                        }),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 12),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: _templates.map((template) {
-                                  final isSelected = selected.any((a) => a.text == template.text);
-                                  return PremiumChip(
-                                    emoji: '✨',
-                                    title: template.text,
-                                    isSelected: isSelected,
-                                    onTap: () {
-                                      final existingIndex = selected.indexWhere((a) => a.text == template.text);
-                                      if (existingIndex >= 0) {
-                                        final wasPinned = selected[existingIndex].isPinned;
-                                        ref.read(onboardingProvider.notifier).toggleAffirmation(selected[existingIndex]);
-                                        if (wasPinned) {
-                                          final remaining = ref.read(onboardingProvider).selectedAffirmations;
-                                          if (remaining.isNotEmpty) {
-                                            ref.read(onboardingProvider.notifier).setPinnedAffirmation(remaining.first.id);
-                                          }
-                                        }
-                                      } else {
-                                        ref.read(onboardingProvider.notifier).toggleAffirmation(template);
-                                        final current = ref.read(onboardingProvider).selectedAffirmations;
-                                        if (!current.any((a) => a.isPinned)) {
-                                          ref.read(onboardingProvider.notifier).setPinnedAffirmation(template.id);
-                                        }
-                                      }
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
+                      ),
 
-                        const SizedBox(height: 8),
+                      const SizedBox(height: 8),
 
-                        // ── Custom Input Section ──
-                        _GlassCard(
+                      _buildDots(),
+
+                      const SizedBox(height: 8),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: _GlassCard(
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'CREATE CUSTOM AFFIRMATION',
+                                'CREATE CUSTOM',
                                 style: AppTypography.captionSmall(color: AppColors.accentBlue).copyWith(
                                   letterSpacing: 1.5,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 10),
                               Row(
                                 children: [
                                   Expanded(
@@ -216,11 +303,13 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                             ],
                           ),
                         ),
+                      ),
 
-                        // ── Pinned Selection Section ──
-                        if (selected.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          _GlassCard(
+                      if (selected.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: _GlassCard(
                             padding: const EdgeInsets.all(16),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,7 +321,7 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 10),
                                 ListView.builder(
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
@@ -240,7 +329,7 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                                   itemBuilder: (context, idx) {
                                     final aff = selected[idx];
                                     return Container(
-                                      margin: const EdgeInsets.only(bottom: 8),
+                                      margin: const EdgeInsets.only(bottom: 6),
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
                                         color: Colors.white.withValues(alpha: 0.04),
@@ -306,11 +395,11 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                               ],
                             ),
                           ),
-                        ],
-
-                        const SizedBox(height: 120),
+                        ),
                       ],
-                    ),
+
+                      const SizedBox(height: 24),
+                    ],
                   ),
                 ),
               ],
@@ -320,9 +409,102 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
       ],
     );
   }
+
+  Widget _buildDots() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(_categories.length, (i) {
+        final isActive = i == _currentCategoryIndex;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: isActive ? 20 : 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: isActive
+                ? _categories[i].color.withValues(alpha: 0.8)
+                : Colors.white.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        );
+      }),
+    );
+  }
 }
 
-/// A frosted glass card overlay for the affirmation room background.
+class _AffirmationItem extends StatelessWidget {
+  final String text;
+  final bool isSelected;
+  final Color activeColor;
+  final VoidCallback onTap;
+
+  const _AffirmationItem({
+    required this.text,
+    required this.isSelected,
+    required this.activeColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? activeColor.withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? activeColor.withValues(alpha: 0.5)
+                : Colors.white.withValues(alpha: 0.06),
+            width: isSelected ? 1.5 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: activeColor.withValues(alpha: 0.12),
+                    blurRadius: 12,
+                    spreadRadius: 0,
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+              size: 18,
+              color: isSelected ? activeColor : Colors.white.withValues(alpha: 0.3),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
+                  fontSize: 13.5,
+                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;

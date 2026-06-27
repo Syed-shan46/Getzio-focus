@@ -94,13 +94,14 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
                         animation: _pageController,
                         builder: (context, child) {
                           double value = 1.0;
-                          if (_pageController.position.haveDimensions) {
+                          final hasClients = _pageController.hasClients;
+                          if (hasClients && _pageController.position.haveDimensions) {
                             value = _pageController.page! - index;
                             value = (1 - (value.abs() * 0.3)).clamp(0.0, 1.0);
                           }
 
                           // Parallax + Depth Tilt
-                          final tilt = _pageController.position.haveDimensions 
+                          final tilt = hasClients && _pageController.position.haveDimensions 
                               ? (_pageController.page! - index) * 0.1 
                               : 0.0;
 
