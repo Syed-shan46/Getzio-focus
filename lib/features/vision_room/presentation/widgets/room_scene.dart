@@ -991,12 +991,11 @@ class CeilingBulbLayer extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      const Color(0xFFFFFBEB).withValues(alpha: 0.42 * brightness),
                       const Color(0xFFFBBF24).withValues(alpha: 0.22 * brightness),
                       const Color(0xFFF59E0B).withValues(alpha: 0.08 * brightness),
                       Colors.transparent,
                     ],
-                    stops: const [0.0, 0.25, 0.65, 1.0],
+                    stops: const [0.0, 0.45, 1.0],
                   ),
                 ),
               ),
@@ -1014,31 +1013,6 @@ class CeilingBulbLayer extends StatelessWidget {
                 height: bulbSize,
                 fit: BoxFit.contain,
                 filterQuality: FilterQuality.high,
-              ),
-            ),
-
-            // Highlight core bloom (filament glare)
-            Positioned(
-              top: bulbTop + bulbSize * 0.15,
-              left: screenWidth / 2 - 15,
-              width: 30,
-              height: 30,
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFFFBEB),
-                      blurRadius: 20,
-                      spreadRadius: 2 * brightness,
-                    ),
-                    BoxShadow(
-                      color: const Color(0xFFFBBF24).withValues(alpha: 0.8),
-                      blurRadius: 40,
-                      spreadRadius: 10 * brightness,
-                    ),
-                  ],
-                ),
               ),
             ),
           ],
