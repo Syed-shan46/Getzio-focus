@@ -971,10 +971,10 @@ class CeilingBulbLayer extends StatelessWidget {
 
             // Volumetric light cone extending downward from the bulb base
             Positioned(
-              top: bulbTop + bulbSize * 0.25,
-              left: screenWidth / 2 - screenWidth * 0.35,
-              width: screenWidth * 0.7,
-              height: screenHeight * 0.52, // Stretches down to the window level
+              top: bulbTop + bulbSize * 0.65, // Positioned strictly below the bulb neck
+              left: screenWidth / 2 - screenWidth * 0.48,
+              width: screenWidth * 0.96, // Expanded width for a wider light flare
+              height: screenHeight * 0.52,
               child: CustomPaint(
                 painter: _LightConePainter(brightness: brightness),
               ),
@@ -1045,8 +1045,8 @@ class _LightConePainter extends CustomPainter {
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28); // Symmetrical feathered coning
 
     final path = Path()
-      ..moveTo(size.width * 0.47, 0)
-      ..lineTo(size.width * 0.53, 0)
+      ..moveTo(size.width * 0.485, 0)
+      ..lineTo(size.width * 0.515, 0)
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();
