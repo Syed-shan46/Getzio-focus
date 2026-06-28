@@ -336,4 +336,6 @@ final Map<VisionTheme, _ThemeConfig> _themeConfigs = {
   ),
 };
 
+final lightOnProvider = StateProvider<bool>((ref) => true);
+
 

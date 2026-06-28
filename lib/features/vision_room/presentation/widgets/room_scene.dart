@@ -1,6 +1,9 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/customization_provider.dart';
 import '../../domain/models/vision_customization.dart';
 import '../../domain/models/vision_item.dart';
 
@@ -915,15 +918,18 @@ class _ForegroundLayer extends StatelessWidget {
 
 // ─── LAYER 8.5: CEILING BULB (Premium Hanging Pendant Light) ──────────────────
 
-class CeilingBulbLayer extends StatelessWidget {
+// ─── LAYER 8.5: CEILING BULB (Premium Hanging Pendant Light) ──────────────────
+
+class CeilingBulbLayer extends ConsumerWidget {
   final VisionCustomization customization;
   const CeilingBulbLayer({super.key, required this.customization});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final brightness = customization.ambientBrightness;
+    final isLightOn = ref.watch(lightOnProvider);
 
     // Position: centered horizontally, ~12% down from top
     final bulbTop = screenHeight * 0.12;
@@ -934,49 +940,60 @@ class CeilingBulbLayer extends StatelessWidget {
       left: 0,
       right: 0,
       bottom: 0,
-      child: IgnorePointer(
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.topCenter,
-          children: [
-            // Ceiling mount (matte black cylinder)
-            Positioned(
-              top: 0,
-              width: bulbSize * 0.38,
-              height: 14,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF111111),
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(6)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
+        children: [
+          // 1. Ceiling mount & wire (background non-interactive)
+          IgnorePointer(
+            child: Stack(
+              alignment: Alignment.topCenter,
+              children: [
+                // Ceiling mount (matte black cylinder)
+                Positioned(
+                  top: 0,
+                  width: bulbSize * 0.38,
+                  height: 14,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF111111),
+                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(6)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
 
-            // Thin black hanging wire extending from the top to the bulb position
-            Positioned(
-              top: 14,
-              width: 1.8,
-              height: bulbTop - 14,
-              child: Container(
-                color: const Color(0xFF161616),
-              ),
+                // Thin black hanging wire extending from the top to the bulb position
+                Positioned(
+                  top: 14,
+                  width: 1.8,
+                  height: bulbTop - 14,
+                  child: Container(
+                    color: const Color(0xFF161616),
+                  ),
+                ),
+              ],
             ),
+          ),
 
+          // 2. Volumetric lighting and radial bloom (only shown if isLightOn is true)
+          if (isLightOn) ...[
             // Volumetric light cone extending downward from the bulb base
             Positioned(
               top: bulbTop + bulbSize * 0.65, // Positioned strictly below the bulb neck
               left: screenWidth / 2 - screenWidth * 0.48,
               width: screenWidth * 0.96, // Expanded width for a wider light flare
               height: screenHeight * 0.52,
-              child: CustomPaint(
-                painter: _LightConePainter(brightness: brightness),
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: _LightConePainter(brightness: brightness),
+                ),
               ),
             ),
 
@@ -986,37 +1003,48 @@ class CeilingBulbLayer extends StatelessWidget {
               left: screenWidth / 2 - bulbSize * 1.1,
               width: bulbSize * 2.2,
               height: bulbSize * 2.2,
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFFFBBF24).withValues(alpha: 0.22 * brightness),
-                      const Color(0xFFF59E0B).withValues(alpha: 0.08 * brightness),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.45, 1.0],
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        const Color(0xFFFBBF24).withValues(alpha: 0.22 * brightness),
+                        const Color(0xFFF59E0B).withValues(alpha: 0.08 * brightness),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.45, 1.0],
+                    ),
                   ),
                 ),
               ),
             ),
+          ],
 
-            // Bulb image (using the asset image bulb.png)
-            Positioned(
-              top: bulbTop - bulbSize * 0.1,
-              left: screenWidth / 2 - bulbSize / 2,
-              width: bulbSize,
-              height: bulbSize,
+          // 3. Bulb image (Interactive!)
+          Positioned(
+            top: bulbTop - bulbSize * 0.1,
+            left: screenWidth / 2 - bulbSize / 2,
+            width: bulbSize,
+            height: bulbSize,
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                ref.read(lightOnProvider.notifier).state = !ref.read(lightOnProvider);
+              },
+              behavior: HitTestBehavior.opaque,
               child: Image.asset(
                 'assets/images/bulb.png',
                 width: bulbSize,
                 height: bulbSize,
                 fit: BoxFit.contain,
                 filterQuality: FilterQuality.high,
+                color: isLightOn ? null : Colors.black.withValues(alpha: 0.55),
+                colorBlendMode: isLightOn ? null : BlendMode.srcATop,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1061,14 +1089,180 @@ class _LightConePainter extends CustomPainter {
 
 // ─── LAYER 9: LIGHTING ────────────────────────────────────────────────────
 
-class LightingLayer extends StatelessWidget {
+class LightingLayer extends ConsumerWidget {
   final VisionCustomization customization;
   const LightingLayer({super.key, required this.customization});
 
   @override
-  Widget build(BuildContext context) {
-    // Disabled screen-wide ambient overlays as requested to focus lighting locally around the bulb
-    return const SizedBox.shrink();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isLightOn = ref.watch(lightOnProvider);
+    if (!isLightOn) return const SizedBox.shrink();
+
+    final lighting = customization.lighting;
+    final brightness = customization.ambientBrightness;
+
+    Color overlayColor;
+    double opacity;
+    switch (lighting) {
+      case VisionLighting.warm:
+        overlayColor = const Color(0xFFFBBF24); // Beautiful amber glow
+        opacity = 0.12;
+      case VisionLighting.neutral:
+        overlayColor = const Color(0xFFE8E0D0);
+        opacity = 0.05;
+      case VisionLighting.cool:
+        overlayColor = const Color(0xFF89CFF0);
+        opacity = 0.06;
+      case VisionLighting.morning:
+        overlayColor = const Color(0xFFFFC194);
+        opacity = 0.1;
+      case VisionLighting.goldenHour:
+        overlayColor = const Color(0xFFFF8C42);
+        opacity = 0.12;
+      case VisionLighting.sunset:
+        overlayColor = const Color(0xFFFF6B6B);
+        opacity = 0.1;
+      case VisionLighting.evening:
+        overlayColor = const Color(0xFF6C5B7B);
+        opacity = 0.1;
+      case VisionLighting.night:
+        overlayColor = const Color(0xFF1A1A40);
+        opacity = 0.2;
+    }
+    final adjustedOpacity = opacity * brightness;
+
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Stack(
+          children: [
+            // Ambient room light (soft glow from ceiling)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.topCenter,
+                    radius: 1.5,
+                    colors: [
+                      overlayColor.withValues(alpha: adjustedOpacity),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Ceiling bulb primary light cone (main pendant illumination)
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.12, // Align with new bulb position
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Center(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 1.5,
+                  height: MediaQuery.of(context).size.height * 0.95,
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.topCenter,
+                      radius: 1.15,
+                      colors: [
+                        const Color(0xFFFBBF24).withValues(alpha: 0.15 * brightness),
+                        const Color(0xFFF59E0B).withValues(alpha: 0.08 * brightness),
+                        const Color(0xFFD97706).withValues(alpha: 0.03 * brightness),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.3, 0.7, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Floor pool of light (warm spot from ceiling bulb)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: MediaQuery.of(context).size.height * 0.35,
+              child: Center(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.85,
+                  height: MediaQuery.of(context).size.height * 0.35,
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.topCenter,
+                      radius: 0.9,
+                      colors: [
+                        const Color(0xFFFFD54F).withValues(alpha: 0.1 * brightness),
+                        const Color(0xFFFFB300).withValues(alpha: 0.06 * brightness),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.45, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Wall wash - subtle vertical illumination on side walls
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      const Color(0xFFFFE082).withValues(alpha: 0.03 * brightness),
+                      Colors.transparent,
+                      Colors.transparent,
+                      const Color(0xFFFFB300).withValues(alpha: 0.02 * brightness),
+                    ],
+                    stops: const [0.0, 0.3, 0.7, 1.0],
+                  ),
+                ),
+              ),
+            ),
+
+            // Warm floor light (soft glow from below - existing)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: MediaQuery.of(context).size.height * 0.3,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.bottomCenter,
+                    radius: 1.2,
+                    colors: [
+                      const Color(0xFFFF8C42).withValues(alpha: 0.06 * brightness),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Subtle shelf/wall object highlights from bulb
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(-0.3, -0.15),
+                    radius: 1.8,
+                    colors: [
+                      const Color(0xFFFFF8E1).withValues(alpha: 0.04 * brightness),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
