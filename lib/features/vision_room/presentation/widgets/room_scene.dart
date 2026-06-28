@@ -969,6 +969,17 @@ class CeilingBulbLayer extends StatelessWidget {
               ),
             ),
 
+            // Volumetric light cone extending downward from the bulb base
+            Positioned(
+              top: bulbTop + bulbSize * 0.40,
+              left: screenWidth / 2 - screenWidth * 0.35,
+              width: screenWidth * 0.7,
+              height: screenHeight * 0.38,
+              child: CustomPaint(
+                painter: _LightConePainter(brightness: brightness),
+              ),
+            ),
+
             // Soft radial glow bloom around the bulb (ambient warm glow)
             Positioned(
               top: bulbTop - bulbSize * 0.3,
@@ -1035,6 +1046,43 @@ class CeilingBulbLayer extends StatelessWidget {
       ),
     );
   }
+}
+
+class _LightConePainter extends CustomPainter {
+  final double brightness;
+  _LightConePainter({required this.brightness});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const Color(0xFFFFFBEB).withValues(alpha: 0.32 * brightness),
+          const Color(0xFFFBBF24).withValues(alpha: 0.16 * brightness),
+          const Color(0xFFD97706).withValues(alpha: 0.04 * brightness),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.3, 0.75, 1.0],
+      ).createShader(rect)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28); // Symmetrical feathered coning
+
+    final path = Path()
+      ..moveTo(size.width * 0.47, 0)
+      ..lineTo(size.width * 0.53, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LightConePainter oldDelegate) =>
+      oldDelegate.brightness != brightness;
 }
 
 // ─── LAYER 9: LIGHTING ────────────────────────────────────────────────────
