@@ -63,12 +63,6 @@ class RoomScene extends StatelessWidget {
         // Layer 8: Foreground objects
         RepaintBoundary(child: parallaxLayer(_ForegroundLayer(customization: customization), 0.14)),
 
-        // Layer 8.5: Hanging ceiling bulb (premium pendant light)
-        RepaintBoundary(child: parallaxLayer(CeilingBulbLayer(customization: customization), 0.02)),
-
-        // Layer 9: Lighting
-        RepaintBoundary(child: parallaxLayer(LightingLayer(customization: customization), 0.02)),
-
         // Layer 10: Ambient particles
         RepaintBoundary(child: parallaxLayer(_ParticleLayer(customization: customization), 0.12)),
       ],

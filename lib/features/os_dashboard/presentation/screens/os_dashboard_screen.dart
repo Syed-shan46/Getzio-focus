@@ -766,11 +766,6 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                         child: const ThreeDCustomizeSwitch(),
                       ),
 
-                      // 9. Ceiling Bulb Layer (pendant hanging light)
-                      CeilingBulbLayer(customization: customization),
-
-                      // 10. Ambient room lighting and light coning
-                      LightingLayer(customization: customization),
                     ],
                   ),
                 ),
