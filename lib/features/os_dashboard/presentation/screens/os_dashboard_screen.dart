@@ -658,11 +658,12 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                         ),
                       ),
                       */
+                      // 5. Hanging vines (tucked under bottom right fish bowl shelf)
                       Positioned(
-                        right: screenW * 0.06 + 2,
-                        top: screenH * 0.08 + 30,
+                        right: 36, // aligned to plant pot on bottom shelf
+                        bottom: 125, // adjusted so top stays aligned at 220
                         width: 35,
-                        height: 140,
+                        height: 95, // reduced height
                         child: AnimatedBuilder(
                           animation: _ambientController,
                           builder: (context, _) {
@@ -676,61 +677,37 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                         ),
                       ),
 
-                      // 5. TOP RIGHT FLOATING SIDE SHELF
+                      // 5. TOP RIGHT GLASS SHOWCASE CONTAINER (Ferrari)
                       Positioned(
-                        right: 0,
-                        width: (screenW * 0.24).clamp(95.0, 135.0),
-                        top: screenH * 0.08 - 31,
-                        child: LeftFloatingShelf(
-                          alignLeft: false,
-                          woodTexture: state.woodTexture,
-                          showDecorations: false,
-                          shelfWidth: (screenW * 0.24).clamp(95.0, 135.0),
-                          children: leftItems.map((item) {
-                            final double shelfW = (screenW * 0.24).clamp(
-                              95.0,
-                              135.0,
-                            );
-                            final double itemSize = ((shelfW - 18) / 3.0).clamp(
-                              24.0,
-                              42.0,
-                            );
-                            return _buildShelfItem(
-                              item.id,
-                              item.label,
-                              item.painter,
-                              itemSize,
-                            );
-                          }).toList(),
+                        right: 12,
+                        top: screenH * 0.04 + 46, // shifted up
+                        child: GlassDisplayCase(
+                          label: 'Ferrari 488 GTB',
+                          wallColor: state.wallColor,
+                          child: const MiniatureCarWidget(
+                            carType: 'ferrari',
+                            carColor: Color(0xFFE11D48),
+                            label: 'Ferrari 488 GTB',
+                            width: 76,
+                            height: 38,
+                          ),
                         ),
                       ),
 
-                      // 5.5. BOTTOM RIGHT FLOATING SIDE SHELF
+                      // 5.5. BOTTOM RIGHT GLASS SHOWCASE CONTAINER (Below top showcase)
                       Positioned(
-                        right: 0,
-                        width: (screenW * 0.24).clamp(95.0, 135.0),
-                        top: screenH * 0.04 + 177 - 31,
-                        child: LeftFloatingShelf(
-                          alignLeft: false,
-                          woodTexture: state.woodTexture,
-                          showDecorations: false,
-                          shelfWidth: (screenW * 0.24).clamp(95.0, 135.0),
-                          children: rightItems.map((item) {
-                            final double shelfW = (screenW * 0.24).clamp(
-                              95.0,
-                              135.0,
-                            );
-                            final double itemSize = ((shelfW - 18) / 3.0).clamp(
-                              24.0,
-                              42.0,
-                            );
-                            return _buildShelfItem(
-                              item.id,
-                              item.label,
-                              item.painter,
-                              itemSize,
-                            );
-                          }).toList(),
+                        right: 12,
+                        top: screenH * 0.04 + 128, // shifted up, keeping gap
+                        child: GlassDisplayCase(
+                          label: 'Mercedes-Benz G-Wagon',
+                          wallColor: state.wallColor,
+                          child: const MiniatureCarWidget(
+                            carType: 'gwagon',
+                            carColor: Color(0xFF0F172A),
+                            label: 'Mercedes-Benz G-Wagon',
+                            width: 76,
+                            height: 38,
+                          ),
                         ),
                       ),
 
@@ -5849,6 +5826,7 @@ class CityViewWindowPainter extends CustomPainter {
 }
 
 // Data class containing definition for shelf miniature items
+// Data class containing definition for shelf miniature items
 class _ShelfItemData {
   final String id;
   final String label;
@@ -5856,3 +5834,348 @@ class _ShelfItemData {
 
   _ShelfItemData(this.id, this.label, this.painter);
 }
+
+// 🧊 Transparent Glass Die-Cast Display Case for individual cars
+class GlassDisplayCase extends StatelessWidget {
+  final Widget child;
+  final String label;
+  final String wallColor;
+
+  const GlassDisplayCase({
+    super.key,
+    required this.child,
+    required this.label,
+    required this.wallColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Color glassBorderColor;
+
+    // Tint glass container borders to reflect the dashboard theme highlights
+    switch (wallColor) {
+      case 'Classic Navy':
+        glassBorderColor = const Color(0xFF38BDF8).withOpacity(0.18); // Blue tint
+        break;
+      case 'Emerald':
+        glassBorderColor = const Color(0xFF34D399).withOpacity(0.18); // Emerald tint
+        break;
+      case 'Warm Terracotta':
+        glassBorderColor = const Color(0xFFF87171).withOpacity(0.18); // Terracotta tint
+        break;
+      case 'Charcoal':
+        glassBorderColor = const Color(0xFF94A3B8).withOpacity(0.18); // Slate grey tint
+        break;
+      case 'Deep Indigo':
+      default:
+        glassBorderColor = const Color(0xFF818CF8).withOpacity(0.18); // Indigo tint
+        break;
+    }
+
+    return Container(
+      width: 96,
+      height: 60,
+      margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.025),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: glassBorderColor,
+          width: 0.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.42),
+            blurRadius: 5.0,
+            offset: const Offset(1.5, 3.5),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(5),
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            // 1. Black Display Stand Base at the bottom of the case
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 8,
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF27272A), Color(0xFF09090B)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  border: Border(
+                    top: BorderSide(color: Colors.white10, width: 0.5),
+                  ),
+                ),
+              ),
+            ),
+            // 1.5. Spotlight Source & Cone Beam (painted behind the car)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 8,
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: SpotlightBeamPainter(
+                    color: _getSpotlightColor(wallColor),
+                  ),
+                ),
+              ),
+            ),
+            // 2. The car itself
+            Positioned(
+              bottom: 8,
+              child: child,
+            ),
+            // 3. Diagonal glass reflection highlights
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withOpacity(0.16),
+                        Colors.white.withOpacity(0.04),
+                        Colors.transparent,
+                        Colors.white.withOpacity(0.02),
+                        Colors.white.withOpacity(0.12),
+                      ],
+                      stops: const [0.0, 0.15, 0.45, 0.55, 0.75],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // 4. Metallic screw mounts
+            Positioned(
+              top: 2.5,
+              left: 2.5,
+              child: Container(
+                width: 2,
+                height: 2,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF94A3B8),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 2.5,
+              right: 2.5,
+              child: Container(
+                width: 2,
+                height: 2,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF94A3B8),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getSpotlightColor(String wallColor) {
+    switch (wallColor) {
+      case 'Classic Navy':
+        return const Color(0xFF38BDF8);
+      case 'Emerald':
+        return const Color(0xFF34D399);
+      case 'Warm Terracotta':
+        return const Color(0xFFF87171);
+      case 'Charcoal':
+        return const Color(0xFFF1F5F9);
+      case 'Deep Indigo':
+      default:
+        return const Color(0xFFC084FC);
+    }
+  }
+}
+
+// 🎨 Spotlight Light Cone Beam Custom Painter
+class SpotlightBeamPainter extends CustomPainter {
+  final Color color;
+
+  SpotlightBeamPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double w = size.width;
+    final double h = size.height;
+
+    final Path beamPath = Path()
+      ..moveTo(w * 0.43, 0)
+      ..lineTo(w * 0.57, 0)
+      ..lineTo(w * 0.88, h)
+      ..lineTo(w * 0.12, h)
+      ..close();
+
+    final Paint paint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          color.withOpacity(0.24),
+          color.withOpacity(0.04),
+          Colors.transparent,
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, w, h))
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(beamPath, paint);
+
+    final Paint sourcePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(w * 0.5, 0.5), width: 10, height: 1.5),
+        const Radius.circular(0.5),
+      ),
+      sourcePaint,
+    );
+
+    final Paint sourceGlow = Paint()
+      ..color = color.withOpacity(0.65)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(w * 0.5, 0.5), 3.5, sourceGlow);
+  }
+
+  @override
+  bool shouldRepaint(covariant SpotlightBeamPainter oldDelegate) {
+    return oldDelegate.color != color;
+  }
+}
+
+// 🚗 Miniature Super Cars Widget (featuring spring-bounce haptic tap feedback and custom image assets)
+class MiniatureCarWidget extends StatefulWidget {
+  final String carType;
+  final Color carColor;
+  final String label;
+  final double width;
+  final double height;
+
+  const MiniatureCarWidget({
+    super.key,
+    required this.carType,
+    required this.carColor,
+    required this.label,
+    required this.width,
+    required this.height,
+  });
+
+  @override
+  State<MiniatureCarWidget> createState() => _MiniatureCarWidgetState();
+}
+
+class _MiniatureCarWidgetState extends State<MiniatureCarWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _bounceController;
+
+  @override
+  void initState() {
+    super.initState();
+    _bounceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+  }
+
+  @override
+  void dispose() {
+    _bounceController.dispose();
+    super.dispose();
+  }
+
+  void _triggerBounce() {
+    if (!_bounceController.isAnimating) {
+      _bounceController.forward(from: 0.0);
+    }
+  }
+
+  String _getCarAssetPath(String carType) {
+    switch (carType) {
+      case 'gwagon':
+        return 'assets/images/cars/file_000000004f6072069c82ec1cb03af157.png';
+      case 'ferrari':
+        return 'assets/images/cars/file_000000009dc87209a34f6fdb889c73d3.png';
+      case 'bugatti':
+        return 'assets/images/cars/file_000000000ce072068179cd3f1729e1c0.png';
+      case 'volkswagen':
+        return 'assets/images/cars/file_00000000aaec7209aafb236e4993c4f0.png';
+      case 'vintage':
+      default:
+        return 'assets/images/cars/file_00000000de647206ba0f05f8c90980a2.png';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _triggerBounce,
+      child: AnimatedBuilder(
+        animation: _bounceController,
+        builder: (context, child) {
+          final double value = _bounceController.value;
+          final double translateY = -10.0 * math.sin(value * math.pi);
+
+          return Transform(
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.002) // perspective depth
+              ..rotateX(0.06)          // tilt forward to see the hood/roof
+              ..rotateY(-0.12)         // rotate slightly in Y to see 3D side profile
+              ..rotateZ(-0.06)         // tilt front side down, back side up!
+              ..translate(0.0, translateY, 0.0), // add bounce translation
+            alignment: Alignment.bottomCenter, // anchor to base stand
+            child: SizedBox(
+              width: widget.width,
+              height: widget.height,
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    bottom: 0,
+                    left: widget.width * 0.1,
+                    right: widget.width * 0.1,
+                    height: 2,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.45),
+                            blurRadius: 1.5,
+                            spreadRadius: 0.5,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Image.asset(
+                    _getCarAssetPath(widget.carType),
+                    width: widget.width,
+                    height: widget.height,
+                    fit: BoxFit.contain,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+

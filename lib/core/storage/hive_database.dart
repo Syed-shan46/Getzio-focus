@@ -180,6 +180,12 @@ class HiveDatabase {
     await _settingsBox.delete('user_phone');
   }
 
+  Future<void> clearAll() async {
+    await _todosBox.clear();
+    await _syncBox.clear();
+    await _settingsBox.clear();
+  }
+
   // ─── Getzio Focus Onboarding & Dashboard ──────────────────────────────
 
   Future<void> saveSelectedIdentity(String identity) async {

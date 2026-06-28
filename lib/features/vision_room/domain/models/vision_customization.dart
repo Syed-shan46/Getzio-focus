@@ -222,10 +222,10 @@ class VisionCustomization {
   final double ambientBrightness;
 
   const VisionCustomization({
-    this.background = VisionBackground.scandinavianWall,
+    this.background = VisionBackground.matteBlack,
     this.boardStyle = VisionBoardStyle.classicCork,
-    this.lighting = VisionLighting.warm,
-    this.windowScene = VisionWindowScene.ocean,
+    this.lighting = VisionLighting.neutral,
+    this.windowScene = VisionWindowScene.nightSky,
     this.layoutMode = VisionLayoutMode.freeform,
     this.defaultPinStyle = PinStyle.gold,
     this.defaultStickyNoteStyle = StickyNoteStyle.classicYellow,
@@ -234,7 +234,7 @@ class VisionCustomization {
     this.decorations = const [],
     this.theme,
     this.cardCustomization = const CardCustomization(),
-    this.ambientBrightness = 0.5,
+    this.ambientBrightness = 0.6,
   });
 
   VisionCustomization copyWith({

@@ -8,6 +8,8 @@ class LeftFloatingShelf extends StatefulWidget {
   final bool showDecorations;
   final List<Widget>? children;
   final double? shelfWidth;
+  final bool showFishTank;
+  final bool showPlant;
 
   const LeftFloatingShelf({
     super.key,
@@ -15,6 +17,8 @@ class LeftFloatingShelf extends StatefulWidget {
     this.woodTexture = 'Mahogany',
     this.plantType = 'Bonsai',
     this.showDecorations = true,
+    this.showFishTank = true,
+    this.showPlant = true,
     this.children,
     this.shelfWidth,
   });
@@ -68,6 +72,8 @@ class _LeftFloatingShelfState extends State<LeftFloatingShelf>
                         woodTexture: widget.woodTexture,
                         plantType: widget.plantType,
                         showDecorations: widget.showDecorations,
+                        showFishTank: widget.showFishTank,
+                        showPlant: widget.showPlant,
                         shelfWidth: widget.shelfWidth,
                       ),
                     );
@@ -76,12 +82,12 @@ class _LeftFloatingShelfState extends State<LeftFloatingShelf>
               ),
               if (widget.children != null)
                 Positioned(
-                  top: 55 - itemSize,
-                  left: widget.alignLeft ? startX + 6 : startX + 12,
-                  width: shelfW - 18,
-                  height: itemSize,
+                  top: 55 - itemSize * 1.6,
+                  left: startX,
+                  width: shelfW,
+                  height: itemSize * 1.6,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: widget.children!,
                   ),
@@ -100,6 +106,8 @@ class _LeftShelfPainter extends CustomPainter {
   final String woodTexture;
   final String plantType;
   final bool showDecorations;
+  final bool showFishTank;
+  final bool showPlant;
   final double? shelfWidth;
 
   _LeftShelfPainter({
@@ -108,6 +116,8 @@ class _LeftShelfPainter extends CustomPainter {
     required this.woodTexture,
     required this.plantType,
     this.showDecorations = true,
+    this.showFishTank = true,
+    this.showPlant = true,
     this.shelfWidth,
   });
 
@@ -134,26 +144,6 @@ class _LeftShelfPainter extends CustomPainter {
 
     final startX = alignLeft ? 0.0 : w - shelfW;
 
-    // Ambient LED Backlight / Glow on the wall behind the shelf
-    final Paint ledGlowPaint = Paint()
-      ..color = const Color(0xFFFFE082).withValues(alpha: 0.12)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-
-    // Downward soft light beam
-    final Path glowPath = Path()
-      ..moveTo(startX + 8, shelfY + 6)
-      ..lineTo(startX + shelfW - 8, shelfY + 6)
-      ..lineTo(startX + shelfW - 14, shelfY + 24)
-      ..lineTo(startX + 14, shelfY + 24)
-      ..close();
-    canvas.drawPath(glowPath, ledGlowPaint);
-
-    // Upward subtle glow
-    final Paint ledGlowUpPaint = Paint()
-      ..color = const Color(0xFFFFD54F).withValues(alpha: 0.08)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-    canvas.drawRect(Rect.fromLTWH(startX + 8, shelfY - 8, shelfW - 16, 8), ledGlowUpPaint);
-
     // 1. Wood Shelf Base
     final shelfPaint = Paint()
       ..shader = LinearGradient(
@@ -163,10 +153,6 @@ class _LeftShelfPainter extends CustomPainter {
       ).createShader(Rect.fromLTWH(startX, shelfY, shelfW, 8));
 
     canvas.drawRect(Rect.fromLTWH(startX, shelfY, shelfW, 7), shelfPaint);
-    canvas.drawRect(
-      Rect.fromLTWH(startX, shelfY + 7, shelfW, 2),
-      Paint()..color = const Color(0xFF1E0E0A).withValues(alpha: 0.8),
-    );
 
     // Subtle shelf top highlight line
     final topHighlightPaint = Paint()
@@ -174,68 +160,54 @@ class _LeftShelfPainter extends CustomPainter {
       ..strokeWidth = 1.0;
     canvas.drawLine(Offset(startX, shelfY), Offset(startX + shelfW, shelfY), topHighlightPaint);
 
-    // Subtle neon LED strip light directly on the under-edge for a cool 3D hardware look
-    final Paint ledStripPaint = Paint()
-      ..color = const Color(0xFFFFFDE7).withValues(alpha: 0.95)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2)
-      ..strokeWidth = 1.6
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(Offset(startX + 4, shelfY + 7), Offset(startX + shelfW - 4, shelfY + 7), ledStripPaint);
+
 
     if (!showDecorations) return;
 
     // 2. Fish Tank (increased width and height for a spacious premium feel)
-    final tankX = alignLeft ? 8.0 : w - shelfW + 8.0;
-    final tankW = 52.0;
-    final tankH = 32.0;
-    final tankY = shelfY - tankH - 2;
+    if (showFishTank) {
+      final tankX = alignLeft ? 8.0 : w - shelfW + 8.0;
+      final tankW = 52.0;
+      final tankH = 32.0;
+      final tankY = shelfY - tankH - 2;
 
-    // Tank shadow
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(tankX + 1, tankY + 1, tankW, tankH),
-        const Radius.circular(5),
-      ),
-      Paint()..color = Colors.black.withValues(alpha: 0.15),
-    );
+      // Tank glass body
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(tankX, tankY, tankW, tankH),
+          const Radius.circular(4),
+        ),
+        Paint()..color = Colors.white.withValues(alpha: 0.08),
+      );
 
-    // Tank glass body
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(tankX, tankY, tankW, tankH),
-        const Radius.circular(4),
-      ),
-      Paint()..color = Colors.white.withValues(alpha: 0.08),
-    );
+      // Tank border
+      final tankBorder = Paint()
+        ..color = Colors.cyan.withValues(alpha: 0.35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(tankX, tankY, tankW, tankH),
+          const Radius.circular(4),
+        ),
+        tankBorder,
+      );
 
-    // Tank border
-    final tankBorder = Paint()
-      ..color = Colors.cyan.withValues(alpha: 0.35)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(tankX, tankY, tankW, tankH),
-        const Radius.circular(4),
-      ),
-      tankBorder,
-    );
+      // Water fill
+      final waterTop = tankY + tankH * 0.25;
+      canvas.drawRect(
+        Rect.fromLTWH(tankX, waterTop, tankW, tankH * 0.75),
+        Paint()..color = Colors.blue.withValues(alpha: 0.12),
+      );
 
-    // Water fill
-    final waterTop = tankY + tankH * 0.25;
-    canvas.drawRect(
-      Rect.fromLTWH(tankX, waterTop, tankW, tankH * 0.75),
-      Paint()..color = Colors.blue.withValues(alpha: 0.12),
-    );
-
-    // Water surface line
-    canvas.drawLine(
-      Offset(tankX + 2, waterTop),
-      Offset(tankX + tankW - 2, waterTop),
-      Paint()
-        ..color = Colors.cyan.withValues(alpha: 0.25)
-        ..strokeWidth = 0.5,
-    );
+      // Water surface line
+      canvas.drawLine(
+        Offset(tankX + 2, waterTop),
+        Offset(tankX + tankW - 2, waterTop),
+        Paint()
+          ..color = Colors.cyan.withValues(alpha: 0.25)
+          ..strokeWidth = 0.5,
+      );
 
     // Gravel at bottom (increased count to span the wider tank width)
     final gravelPaint = Paint()..color = const Color(0xFFD4A574);
@@ -350,16 +322,19 @@ class _LeftShelfPainter extends CustomPainter {
       Paint()..color = const Color(0xFF26C6DA),
     );
 
-    // Eye
-    canvas.drawCircle(Offset(1.5, -0.4), 0.5, Paint()..color = Colors.white);
-    canvas.drawCircle(Offset(1.7, -0.4), 0.3, Paint()..color = Colors.black);
-    canvas.restore();
+      // 5. Eye
+      canvas.drawCircle(Offset(1.5, -0.4), 0.5, Paint()..color = Colors.white);
+      canvas.drawCircle(Offset(1.7, -0.4), 0.3, Paint()..color = Colors.black);
+      canvas.restore();
+    }
 
-    // 3. Active Plant Type (replaces previous plants, positioned cleanly with breathing room)
-    final double potX = alignLeft ? 74.0 : w - shelfW + 74.0;
-    _drawPlantPot(canvas, potX, shelfY, const Color(0xFF4DB6AC), const Color(0xFF00897B));
-    _drawMiniPlant(canvas, potX + 5.5, shelfY, plantType, progress);
-  }
+      // 3. Active Plant Type (replaces previous plants, positioned cleanly with breathing room)
+      if (showPlant) {
+        final double potX = alignLeft ? 74.0 : w - shelfW + 74.0;
+        _drawPlantPot(canvas, potX, shelfY, const Color(0xFF4DB6AC), const Color(0xFF00897B));
+        _drawMiniPlant(canvas, potX + 5.5, shelfY, plantType, progress);
+      }
+    }
 
   void _drawMiniPlant(Canvas canvas, double cx, double shelfY, String type, double p) {
     final stemColor = Paint()
@@ -417,31 +392,6 @@ class _LeftShelfPainter extends CustomPainter {
       Rect.fromLTWH(x - 1, shelfY - 10, 13, 2),
       Paint()..color = rimColor,
     );
-  }
-
-  void _drawVines(Canvas canvas, double rootX, double shelfY, double p, double phaseOffset,
-      double amp1, double amp2, double amp3) {
-    final stemPaint = Paint()
-      ..color = const Color(0xFF065F46)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    final leafPaint = Paint()..color = const Color(0xFF10B981);
-
-    final s1 = math.sin(p * 2 * math.pi + 1.0 + phaseOffset) * amp1;
-    final s2 = math.cos(p * 2 * math.pi + 2.0 + phaseOffset) * amp2;
-    final s3 = math.sin(p * 2 * math.pi + 3.0 + phaseOffset) * amp3;
-
-    final vinePath = Path()
-      ..moveTo(rootX, shelfY - 4)
-      ..quadraticBezierTo(rootX + 3 + s1, shelfY + 12, rootX - 2 + s2, shelfY + 24)
-      ..quadraticBezierTo(rootX - 5 + s3, shelfY + 34, rootX - 1 + s1, shelfY + 46);
-
-    canvas.drawPath(vinePath, stemPaint);
-
-    canvas.drawCircle(Offset(rootX + 3 + s1, shelfY + 8), 2.8, leafPaint);
-    canvas.drawCircle(Offset(rootX - 3 + s2, shelfY + 18), 2.2, leafPaint);
-    canvas.drawCircle(Offset(rootX - 1 + s3, shelfY + 30), 3.0, leafPaint);
-    canvas.drawCircle(Offset(rootX - 4 + s1, shelfY + 42), 2.0, leafPaint);
   }
 
   @override

@@ -24,7 +24,7 @@ import '../widgets/countdown_builder_modal.dart';
 import '../widgets/premium_cards.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
-import '../../../auth/presentation/screens/phone_login_screen.dart';
+import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 
 class VisionWall extends ConsumerStatefulWidget {
   const VisionWall({super.key});
@@ -92,103 +92,7 @@ class _VisionWallState extends ConsumerState<VisionWall>
   }
 
   void _showPremiumAuthSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            padding: const EdgeInsets.all(28),
-            decoration: const BoxDecoration(
-              color: Color(0xFF0F172A),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-              border: Border.fromBorderSide(
-                  BorderSide(color: Colors.white10, width: 1.5)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 48,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Save Your Vision Forever',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontFamily: 'Outfit',
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Create a free account to unlock unlimited Vision Boards, securely back up your workspace and sync across all your devices.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 28),
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const PhoneLoginScreen()),
-                      );
-                    },
-                    icon: const Icon(Icons.phone_android_rounded,
-                        color: Colors.black, size: 24),
-                    label: const Text(
-                      'Continue with Phone',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Maybe Later',
-                    style: TextStyle(
-                        color: Colors.white30,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    PremiumAuthSheet.show(context);
   }
 
   Future<void> _pickImage() async {
@@ -196,7 +100,7 @@ class _VisionWallState extends ConsumerState<VisionWall>
     final items = ref.read(canvasStateProvider).items;
     final count =
         items.where((i) => i.type == VisionItemType.image.name).length;
-    if (isGuest && count >= 5) {
+    if (isGuest && count >= 2) {
       _showPremiumAuthSheet(context);
       return;
     }
@@ -319,7 +223,7 @@ class _VisionWallState extends ConsumerState<VisionWall>
                           .where((i) =>
                               i.type == VisionItemType.stickyNote.name)
                           .length;
-                      if (isGuest && count >= 10) {
+                      if (isGuest && count >= 3) {
                         Navigator.pop(dialogContext);
                         _showPremiumAuthSheet(context);
                         return;
@@ -367,7 +271,7 @@ class _VisionWallState extends ConsumerState<VisionWall>
     final items = ref.read(canvasStateProvider).items;
     final count =
         items.where((i) => i.type == VisionItemType.quote.name).length;
-    if (isGuest && count >= 5) {
+    if (isGuest && count >= 2) {
       _showPremiumAuthSheet(context);
       return;
     }
@@ -505,6 +409,13 @@ class _VisionWallState extends ConsumerState<VisionWall>
     final isGuest = ref.watch(authProvider).value == null;
     final cust = ref.watch(visionCustomizationProvider);
     final decorProgress = _decorController;
+
+    ref.listen<String?>(premiumAuthTriggerProvider, (previous, next) {
+      if (next != null) {
+        _showPremiumAuthSheet(context);
+        ref.read(premiumAuthTriggerProvider.notifier).state = null;
+      }
+    });
 
     return SafeArea(
       child: Stack(

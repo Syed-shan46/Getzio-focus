@@ -1,10 +1,14 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../../core/storage/hive_database.dart';
 import '../../../../core/services/firebase_service.dart';
 import '../../../todo/presentation/providers/todo_providers.dart';
 import '../../../affirmations/presentation/providers/affirmations_provider.dart';
+import '../../../vision_room/presentation/providers/canvas_providers.dart';
+import '../../../os_dashboard/presentation/providers/os_providers.dart';
+import '../../../os_dashboard/presentation/providers/daily_motivation_provider.dart';
 import '../../domain/models/auth_user_model.dart';
 import '../../domain/services/guest_migration_service.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -17,6 +21,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 final syncLoadingProvider = StateProvider<bool>((ref) => false);
+final premiumAuthTriggerProvider = StateProvider<String?>((ref) => null);
 
 class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
   final AuthRepository _repo;
@@ -405,8 +410,25 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
       // Reset the affirmations provider state
       _ref.read(affirmationsProvider.notifier).clearAll();
 
-      // Only clear cached auth boxes to maintain synced focus data
-      await _hiveDb.clearAuth();
+      // Clear all local Hive databases/boxes
+      await _hiveDb.clearAll();
+
+      // Clean up temporary files
+      try {
+        final cacheDir = await getTemporaryDirectory();
+        if (cacheDir.existsSync()) {
+          cacheDir.deleteSync(recursive: true);
+        }
+      } catch (e) {
+        log('[Auth] Error clearing temp files: $e');
+      }
+
+      // Invalidate/reset all core Riverpod providers
+      _ref.invalidate(todosProvider);
+      _ref.invalidate(canvasStateProvider);
+      _ref.invalidate(affirmationsProvider);
+      _ref.invalidate(osStateProvider);
+      _ref.invalidate(dailyMotivationProvider);
       
       state = const AsyncValue.data(null);
     } catch (e, stack) {
@@ -435,10 +457,25 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
         await FirebaseService.deleteAccount();
       } catch (_) {}
 
-      // 3. Clear local storage cache
-      await _hiveDb.clearAuth();
-      await _hiveDb.clearTodos();
-      await _hiveDb.clearSyncQueue();
+      // 3. Clear all local Hive storage cache
+      await _hiveDb.clearAll();
+
+      // Clean up temporary files
+      try {
+        final cacheDir = await getTemporaryDirectory();
+        if (cacheDir.existsSync()) {
+          cacheDir.deleteSync(recursive: true);
+        }
+      } catch (e) {
+        log('[Auth] Error clearing temp files: $e');
+      }
+
+      // Invalidate/reset all core Riverpod providers
+      _ref.invalidate(todosProvider);
+      _ref.invalidate(canvasStateProvider);
+      _ref.invalidate(affirmationsProvider);
+      _ref.invalidate(osStateProvider);
+      _ref.invalidate(dailyMotivationProvider);
 
       state = const AsyncValue.data(null);
     } catch (e, stack) {

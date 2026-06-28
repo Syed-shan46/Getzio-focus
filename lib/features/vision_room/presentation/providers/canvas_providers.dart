@@ -184,6 +184,29 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   }
 
   void addItem(VisionItem item) {
+    final isGuest = _hiveDb.getAuthToken() == null;
+    if (isGuest) {
+      if (item.type == 'stickyNote') {
+        final count = state.items.where((i) => i.type == 'stickyNote').length;
+        if (count >= 3) {
+          _ref.read(premiumAuthTriggerProvider.notifier).state = 'stickyNote';
+          return;
+        }
+      } else if (item.type == 'image') {
+        final count = state.items.where((i) => i.type == 'image').length;
+        if (count >= 2) {
+          _ref.read(premiumAuthTriggerProvider.notifier).state = 'image';
+          return;
+        }
+      } else if (item.type == 'quote') {
+        final count = state.items.where((i) => i.type == 'quote').length;
+        if (count >= 2) {
+          _ref.read(premiumAuthTriggerProvider.notifier).state = 'quote';
+          return;
+        }
+      }
+    }
+
     int maxZ = 0;
     for (var i in state.items) {
       if (i.zIndex > maxZ) maxZ = i.zIndex;

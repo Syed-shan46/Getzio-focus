@@ -173,6 +173,15 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
 
   // Add a new affirmation
   Future<void> addAffirmation(DailyAffirmation aff) async {
+    final isGuest = _ref.read(authProvider).value == null;
+    if (isGuest) {
+      final createdCount = state.affirmations.where((a) => !a.id.startsWith('def_') && !a.id.startsWith('a_seed_')).length;
+      if (createdCount >= 2) {
+        _ref.read(premiumAuthTriggerProvider.notifier).state = 'affirmation';
+        return;
+      }
+    }
+
     final pendingAff = aff.copyWith(syncStatus: SyncStatus.pending);
     final list = [...state.affirmations, pendingAff];
     state = state.copyWith(affirmations: list);
@@ -247,6 +256,15 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
 
   // Duplicate card
   Future<void> duplicateAffirmation(String id) async {
+    final isGuest = _ref.read(authProvider).value == null;
+    if (isGuest) {
+      final createdCount = state.affirmations.where((a) => !a.id.startsWith('def_') && !a.id.startsWith('a_seed_')).length;
+      if (createdCount >= 2) {
+        _ref.read(premiumAuthTriggerProvider.notifier).state = 'affirmation';
+        return;
+      }
+    }
+
     final original = state.affirmations.firstWhere((a) => a.id == id);
     final copy = original.copyWith(
       id: const Uuid().v4(),

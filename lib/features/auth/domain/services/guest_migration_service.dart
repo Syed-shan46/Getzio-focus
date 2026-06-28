@@ -110,14 +110,8 @@ class GuestDataMigrationService {
         'sleepGoal': healthPrefs['sleepTarget'] ?? 8,
         'exerciseGoal': healthPrefs['exerciseTarget'] ?? 30,
       },
-      'affirmations': selectedAffirmations.map((a) => {
-        'localId': a['localId'] ?? a['id'] ?? a['_id'] ?? 'a_${a.hashCode}',
-        'title': a['text'] ?? 'Affirmation',
-        'author': a['author'] ?? 'Anonymous',
-        'category': a['category'] ?? 'General',
-        'favorite': a['isPinned'] ?? false,
-      }).toList(),
-      'visionRoom': {
+      'affirmations': const [],
+      'visionRoom': const {
         'items': [],
       },
       'habitLogs': logsList,

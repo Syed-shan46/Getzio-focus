@@ -31,10 +31,7 @@ class _CustomizationSheetContentState
 
   final List<_SectionInfo> _sections = [
     _SectionInfo('Themes', Icons.palette_rounded),
-    _SectionInfo('Background', Icons.wallpaper_rounded),
     _SectionInfo('Board Style', Icons.grid_view_rounded),
-    _SectionInfo('Lighting', Icons.light_mode_rounded),
-    _SectionInfo('Window', Icons.window_rounded),
     _SectionInfo('Cards', Icons.style_rounded),
     _SectionInfo('Pins', Icons.push_pin_rounded),
     _SectionInfo('Sticky Notes', Icons.sticky_note_2_rounded),
@@ -100,10 +97,7 @@ class _CustomizationSheetContentState
                           },
                           children: [
                             _buildThemesPage(),
-                            _buildBackgroundPage(),
                             _buildBoardStylePage(),
-                            _buildLightingPage(),
-                            _buildWindowPage(),
                             _buildCardCustomizationPage(),
                             _buildPinsPage(),
                             _buildStickyNotesPage(),

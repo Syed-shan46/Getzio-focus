@@ -605,10 +605,10 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
     final bool isLifted = _liftedIndex == index;
 
     // Cover flow 3D transformations parameters
-    double scale = 1.0 - 0.14 * normalizedDistance.abs().clamp(0.0, 1.0);
-    double rotationY = -0.32 * normalizedDistance.clamp(-1.5, 1.5);
-    double translateZ = -75.0 * normalizedDistance.abs().clamp(0.0, 1.5);
-    double translateX = -14.0 * normalizedDistance;
+    double scale = 1.0 - 0.16 * normalizedDistance.abs().clamp(0.0, 1.0);
+    double rotationY = -0.48 * normalizedDistance.clamp(-1.2, 1.2);
+    double translateZ = -85.0 * normalizedDistance.abs().clamp(0.0, 1.2);
+    double translateX = -18.0 * normalizedDistance;
 
     // Extra lifts for focus
     if (isActive) {
@@ -625,6 +625,11 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
       darkenOpacity = 0.0;
     }
 
+    // Dynamic shadow shift based on Y rotation/offset
+    final double shadowX = -12.0 * normalizedDistance.clamp(-1.2, 1.2);
+    final double shadowY = 8.0 - (normalizedDistance.abs() * 2.0);
+    final double shadowBlur = 10.0 + (normalizedDistance.abs() * 4.0);
+
     return Container(
       width: cardWidth,
       margin: EdgeInsets.only(right: spacing),
@@ -632,7 +637,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
         alignment: Alignment.topCenter,
         child: Transform(
           transform: Matrix4.identity()
-            ..setEntry(3, 2, 0.0018) // 3D Perspective intensity
+            ..setEntry(3, 2, 0.0024) // 3D Perspective intensity
             ..multiply(
               Matrix4.translationValues(
                 translateX,
@@ -643,109 +648,112 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
             ..rotateY(rotationY)
             ..multiply(Matrix4.diagonal3Values(scale, scale, 1.0)),
           alignment: Alignment.bottomCenter,
-          child: GestureDetector(
-            onTap: () {
-              if (!isActive) {
-                // Centering click
-                HapticFeedback.lightImpact();
-                if (_scrollController.hasClients) {
-                  _scrollController.animateTo(
-                    index * (cardWidth + spacing),
-                    duration: const Duration(milliseconds: 550),
-                    curve: Curves.easeOutBack,
-                  );
-                }
-              } else {
-                if (!isLifted) {
-                  // Lift card
-                  HapticFeedback.mediumImpact();
-                  setState(() {
-                    _liftedIndex = index;
-                  });
-                } else {
-                  // Double tap / tap active card: Expand full screen
-                  HapticFeedback.heavyImpact();
-                  if (card.moduleType == 'cloud_save_promo') {
-                    SaveWorkspaceSheet.show(context);
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.bottomCenter,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  if (!isActive) {
+                    // Centering click
+                    HapticFeedback.lightImpact();
+                    if (_scrollController.hasClients) {
+                      _scrollController.animateTo(
+                        index * (cardWidth + spacing),
+                        duration: const Duration(milliseconds: 550),
+                        curve: Curves.easeOutBack,
+                      );
+                    }
                   } else {
-                    widget.onExpandModule(card.moduleType);
+                    if (!isLifted) {
+                      // Lift card
+                      HapticFeedback.mediumImpact();
+                      setState(() {
+                        _liftedIndex = index;
+                      });
+                    } else {
+                      // Double tap / tap active card: Expand full screen
+                      HapticFeedback.heavyImpact();
+                      if (card.moduleType == 'cloud_save_promo') {
+                        SaveWorkspaceSheet.show(context);
+                      } else {
+                        widget.onExpandModule(card.moduleType);
+                      }
+                      setState(() {
+                        _liftedIndex = -1;
+                      });
+                    }
                   }
-                  setState(() {
-                    _liftedIndex = -1;
-                  });
-                }
-              }
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOutCubic,
-              width: cardWidth,
-              height: cardHeight,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                gradient: card.isGold
-                    ? const LinearGradient(
-                        colors: [
-                          Color(0xFFFFF7C2),
-                          Color(0xFFD4AF37),
-                          Color(0xFFAA7C11),
-                          Color(0xFFD4AF37),
-                        ],
-                        stops: [0.0, 0.35, 0.7, 1.0],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : LinearGradient(
-                        colors: [
-                          Colors.white.withValues(alpha: 0.06),
-                          Colors.white.withValues(alpha: 0.02),
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  width: cardWidth,
+                  height: cardHeight,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: card.isGold
+                        ? const LinearGradient(
+                            colors: [
+                              Color(0xFFFFF7C2),
+                              Color(0xFFD4AF37),
+                              Color(0xFFAA7C11),
+                              Color(0xFFD4AF37),
+                            ],
+                            stops: [0.0, 0.35, 0.7, 1.0],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : LinearGradient(
+                            colors: [
+                              Colors.white.withValues(alpha: 0.06),
+                              Colors.white.withValues(alpha: 0.02),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                border: Border.all(
-                  color: card.isGold
-                      ? const Color(0xFFFFE082).withValues(alpha: 0.6)
-                      : Colors.white.withValues(alpha: 0.08),
-                  width: card.isGold ? 1.2 : 0.5,
-                ),
-                boxShadow: [
-                  if (!isActive)
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.25),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+                    border: Border.all(
+                      color: card.isGold
+                          ? const Color(0xFFFFE082).withValues(alpha: 0.6)
+                          : Colors.white.withValues(alpha: 0.08),
+                      width: card.isGold ? 1.2 : 0.5,
                     ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // 0. Frosted Glassmorphism Backdrop Blur
-                    if (!card.isGold)
-                      Positioned.fill(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
-                          child: Container(color: Colors.transparent),
-                        ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isActive ? 0.35 : 0.45),
+                        blurRadius: shadowBlur,
+                        offset: Offset(shadowX, shadowY),
                       ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // 0. Frosted Glassmorphism Backdrop Blur
+                        if (!card.isGold)
+                          Positioned.fill(
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
+                              child: Container(color: Colors.transparent),
+                            ),
+                          ),
 
-                    // 1. Diagonal glossy glare reflection line
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: _GlossyReflectionPainter(isActive: isActive),
-                      ),
-                    ),
-
-                    // 2. Depth shading to make cards look receded in dark room when scrolled away
-                    if (darkenOpacity > 0.0)
-                      Positioned.fill(
-                        child: Container(
-                          color: Colors.black.withValues(alpha: darkenOpacity),
+                        // 1. Diagonal glossy glare reflection line
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: _GlossyReflectionPainter(isActive: isActive),
+                          ),
                         ),
-                      ),
+
+                        // 2. Depth shading to make cards look receded in dark room when scrolled away
+                        if (darkenOpacity > 0.0)
+                          Positioned.fill(
+                            child: Container(
+                              color: Colors.black.withValues(alpha: darkenOpacity),
+                            ),
+                          ),
 
                     // 3. Card Content
                     Padding(
@@ -913,11 +921,40 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                 ),
               ),
             ),
-          ),
+            ),
+            // Support Bracket/Mount at the bottom of the card holding it realistic
+            Positioned(
+              bottom: -2,
+              left: cardWidth * 0.22,
+              right: cardWidth * 0.22,
+              height: 5,
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF475569), Color(0xFF1E293B)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(1.5),
+                    border: Border.all(color: Colors.white.withOpacity(0.12), width: 0.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.4),
+                        blurRadius: 1,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
