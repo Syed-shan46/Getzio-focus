@@ -61,10 +61,10 @@ class RoomScene extends StatelessWidget {
         RepaintBoundary(child: parallaxLayer(_ForegroundLayer(customization: customization), 0.14)),
 
         // Layer 8.5: Hanging ceiling bulb (premium pendant light)
-        RepaintBoundary(child: parallaxLayer(_CeilingBulbLayer(customization: customization), 0.02)),
+        RepaintBoundary(child: parallaxLayer(CeilingBulbLayer(customization: customization), 0.02)),
 
         // Layer 9: Lighting
-        RepaintBoundary(child: parallaxLayer(_LightingLayer(customization: customization), 0.02)),
+        RepaintBoundary(child: parallaxLayer(LightingLayer(customization: customization), 0.02)),
 
         // Layer 10: Ambient particles
         RepaintBoundary(child: parallaxLayer(_ParticleLayer(customization: customization), 0.12)),
@@ -915,9 +915,9 @@ class _ForegroundLayer extends StatelessWidget {
 
 // ─── LAYER 8.5: CEILING BULB (Premium Hanging Pendant Light) ──────────────────
 
-class _CeilingBulbLayer extends StatelessWidget {
+class CeilingBulbLayer extends StatelessWidget {
   final VisionCustomization customization;
-  const _CeilingBulbLayer({required this.customization});
+  const CeilingBulbLayer({super.key, required this.customization});
 
   @override
   Widget build(BuildContext context) {
@@ -1086,9 +1086,9 @@ class _LightConePainter extends CustomPainter {
 
 // ─── LAYER 9: LIGHTING ────────────────────────────────────────────────────
 
-class _LightingLayer extends StatelessWidget {
+class LightingLayer extends StatelessWidget {
   final VisionCustomization customization;
-  const _LightingLayer({required this.customization});
+  const LightingLayer({super.key, required this.customization});
 
   @override
   Widget build(BuildContext context) {

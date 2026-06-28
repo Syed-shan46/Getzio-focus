@@ -18,6 +18,8 @@ import '../../../vision_room/presentation/screens/vision_room_screen.dart';
 import '../../../todo/presentation/widgets/left_floating_shelf.dart';
 import '../../../todo/presentation/widgets/floor_glass_panel.dart';
 import 'daily_motivation_screen.dart';
+import '../../../vision_room/presentation/providers/customization_provider.dart';
+import '../../../vision_room/presentation/widgets/room_scene.dart';
 import '../widgets/classic_dashboard_widget.dart';
 import '../widgets/premium_preview_overlay.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -471,6 +473,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
     final state = ref.watch(osStateProvider);
     final authState = ref.watch(authProvider);
     final isLoggedIn = authState.hasValue && authState.value != null;
+    final customization = ref.watch(visionCustomizationProvider);
 
     if (state.homeExperience == 'classic') {
       return const ClassicDashboardWidget();
@@ -762,6 +765,12 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                         bottom: 178,
                         child: const ThreeDCustomizeSwitch(),
                       ),
+
+                      // 9. Ceiling Bulb Layer (pendant hanging light)
+                      CeilingBulbLayer(customization: customization),
+
+                      // 10. Ambient room lighting and light coning
+                      LightingLayer(customization: customization),
                     ],
                   ),
                 ),
