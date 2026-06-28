@@ -925,8 +925,8 @@ class CeilingBulbLayer extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     final brightness = customization.ambientBrightness;
 
-    // Position: centered horizontally, ~18% down from top
-    final bulbTop = screenHeight * 0.18;
+    // Position: centered horizontally, ~12% down from top
+    final bulbTop = screenHeight * 0.12;
     final bulbSize = screenWidth * 0.22; // ~22% of screen width
 
     return Positioned(
