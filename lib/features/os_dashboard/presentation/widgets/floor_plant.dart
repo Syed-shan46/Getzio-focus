@@ -104,6 +104,8 @@ class _FloorPlantPainter extends CustomPainter {
 
     if (plantType == 'Coconut Tree') {
       _drawCoconutTree(canvas, w, h, baseOrigin);
+    } else if (plantType == 'Snake Plant') {
+      _drawSnakePlant(canvas, w, h, baseOrigin);
     } else {
       _drawStemsAndLeaves(canvas, w, h, baseOrigin);
     }
@@ -411,6 +413,62 @@ class _FloorPlantPainter extends CustomPainter {
 
       canvas.restore();
     }
+  }
+
+  void _drawSnakePlant(Canvas canvas, double w, double h, Offset origin) {
+    // Draw several tall spiky leaves cluster starting from origin
+    final borderPaint = Paint()..style = PaintingStyle.fill;
+    final centerPaint = Paint()..style = PaintingStyle.fill;
+
+    void drawSpike(Offset base, double height, double width, double curveX, double angle) {
+      canvas.save();
+      canvas.translate(base.dx, base.dy);
+      canvas.rotate(angle);
+
+      final Path path = Path()
+        ..moveTo(-width / 2, 0)
+        ..quadraticBezierTo(curveX, -height * 0.5, curveX, -height)
+        ..quadraticBezierTo(curveX + width * 0.2, -height * 0.4, width / 2, 0)
+        ..close();
+
+      // Yellow border
+      borderPaint.color = const Color(0xFFD4E157);
+      canvas.drawPath(path, borderPaint);
+
+      // Inner green center
+      final Path innerPath = Path()
+        ..moveTo(-width * 0.3, 0)
+        ..quadraticBezierTo(curveX, -height * 0.48, curveX, -height * 0.92)
+        ..quadraticBezierTo(curveX + width * 0.1, -height * 0.38, width * 0.3, 0)
+        ..close();
+      centerPaint.color = const Color(0xFF1B5E20);
+      canvas.drawPath(innerPath, centerPaint);
+
+      // Variegation stripes
+      final stripePaint = Paint()
+        ..color = const Color(0xFF81C784).withValues(alpha: 0.35)
+        ..strokeWidth = 1.2
+        ..style = PaintingStyle.stroke;
+      for (double yRatio = 0.15; yRatio < 0.85; yRatio += 0.15) {
+        final double cy = -height * yRatio;
+        final double cx = curveX * yRatio;
+        final double wAtY = width * 0.32 * (1.0 - yRatio * 0.4);
+        canvas.drawLine(Offset(cx - wAtY, cy), Offset(cx + wAtY, cy), stripePaint);
+      }
+
+      canvas.restore();
+    }
+
+    // A cluster of 6-7 snake plant leaves radiating from origin
+    drawSpike(origin + const Offset(-12, 0), 105.0, 15.0, -10.0, -0.22);
+    drawSpike(origin + const Offset(-6, 0), 130.0, 17.5, -6.0, -0.10);
+    drawSpike(origin, 150.0, 19.0, -2.0, -0.02);
+    drawSpike(origin + const Offset(6, 0), 125.0, 16.5, 5.0, 0.08);
+    drawSpike(origin + const Offset(12, 0), 95.0, 14.0, 9.0, 0.20);
+    
+    // Front smaller outer leaves
+    drawSpike(origin + const Offset(-18, 0), 75.0, 12.0, -12.0, -0.35);
+    drawSpike(origin + const Offset(18, 0), 70.0, 11.5, 11.0, 0.32);
   }
 }
 

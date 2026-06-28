@@ -6,6 +6,8 @@ class LeftFloatingShelf extends StatefulWidget {
   final String woodTexture;
   final String plantType;
   final bool showDecorations;
+  final List<Widget>? children;
+  final double? shelfWidth;
 
   const LeftFloatingShelf({
     super.key,
@@ -13,6 +15,8 @@ class LeftFloatingShelf extends StatefulWidget {
     this.woodTexture = 'Mahogany',
     this.plantType = 'Bonsai',
     this.showDecorations = true,
+    this.children,
+    this.shelfWidth,
   });
 
   @override
@@ -40,23 +44,52 @@ class _LeftFloatingShelfState extends State<LeftFloatingShelf>
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 120,
-      width: double.infinity,
-      child: AnimatedBuilder(
-        animation: _swayController,
-        builder: (context, child) {
-          return CustomPaint(
-            painter: _LeftShelfPainter(
-              progress: _swayController.value,
-              alignLeft: widget.alignLeft,
-              woodTexture: widget.woodTexture,
-              plantType: widget.plantType,
-              showDecorations: widget.showDecorations,
-            ),
-          );
-        },
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double w = constraints.maxWidth;
+        final double shelfW = widget.shelfWidth ?? (w * 0.24).clamp(95.0, 135.0);
+        final double startX = widget.alignLeft ? 0.0 : w - shelfW;
+        final double itemSize = ((shelfW - 18) / 3.0).clamp(24.0, 42.0);
+
+        return SizedBox(
+          height: 120,
+          width: double.infinity,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: _swayController,
+                  builder: (context, child) {
+                    return CustomPaint(
+                      painter: _LeftShelfPainter(
+                        progress: _swayController.value,
+                        alignLeft: widget.alignLeft,
+                        woodTexture: widget.woodTexture,
+                        plantType: widget.plantType,
+                        showDecorations: widget.showDecorations,
+                        shelfWidth: widget.shelfWidth,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              if (widget.children != null)
+                Positioned(
+                  top: 55 - itemSize,
+                  left: widget.alignLeft ? startX + 6 : startX + 12,
+                  width: shelfW - 18,
+                  height: itemSize,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: widget.children!,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -67,6 +100,7 @@ class _LeftShelfPainter extends CustomPainter {
   final String woodTexture;
   final String plantType;
   final bool showDecorations;
+  final double? shelfWidth;
 
   _LeftShelfPainter({
     required this.progress,
@@ -74,6 +108,7 @@ class _LeftShelfPainter extends CustomPainter {
     required this.woodTexture,
     required this.plantType,
     this.showDecorations = true,
+    this.shelfWidth,
   });
 
   @override
@@ -81,7 +116,7 @@ class _LeftShelfPainter extends CustomPainter {
     final w = size.width;
     final shelfY = 55.0;
     // Shelf width is 24% of screen width, minimum 95px, maximum 135px
-    final shelfW = (w * 0.24).clamp(95.0, 135.0);
+    final shelfW = shelfWidth ?? (w * 0.24).clamp(95.0, 135.0);
 
     // Resolve wood colors based on selected texture
     Color woodTopColor;
@@ -99,7 +134,25 @@ class _LeftShelfPainter extends CustomPainter {
 
     final startX = alignLeft ? 0.0 : w - shelfW;
 
+    // Ambient LED Backlight / Glow on the wall behind the shelf
+    final Paint ledGlowPaint = Paint()
+      ..color = const Color(0xFFFFE082).withValues(alpha: 0.12)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
+    // Downward soft light beam
+    final Path glowPath = Path()
+      ..moveTo(startX + 8, shelfY + 6)
+      ..lineTo(startX + shelfW - 8, shelfY + 6)
+      ..lineTo(startX + shelfW - 14, shelfY + 24)
+      ..lineTo(startX + 14, shelfY + 24)
+      ..close();
+    canvas.drawPath(glowPath, ledGlowPaint);
+
+    // Upward subtle glow
+    final Paint ledGlowUpPaint = Paint()
+      ..color = const Color(0xFFFFD54F).withValues(alpha: 0.08)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawRect(Rect.fromLTWH(startX + 8, shelfY - 8, shelfW - 16, 8), ledGlowUpPaint);
 
     // 1. Wood Shelf Base
     final shelfPaint = Paint()
@@ -120,6 +173,14 @@ class _LeftShelfPainter extends CustomPainter {
       ..color = const Color(0xFFD7CCC8).withValues(alpha: 0.5)
       ..strokeWidth = 1.0;
     canvas.drawLine(Offset(startX, shelfY), Offset(startX + shelfW, shelfY), topHighlightPaint);
+
+    // Subtle neon LED strip light directly on the under-edge for a cool 3D hardware look
+    final Paint ledStripPaint = Paint()
+      ..color = const Color(0xFFFFFDE7).withValues(alpha: 0.95)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2)
+      ..strokeWidth = 1.6
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(startX + 4, shelfY + 7), Offset(startX + shelfW - 4, shelfY + 7), ledStripPaint);
 
     if (!showDecorations) return;
 

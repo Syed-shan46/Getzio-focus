@@ -365,17 +365,72 @@ class GuestDataMigrationService {
       dev.log('$_logTag Reloading Affirmations from backend...');
       final affirmationsRes = await dio.get('/focus/affirmations');
       if (affirmationsRes.statusCode == 200 && affirmationsRes.data != null) {
-        final affirmationsList = affirmationsRes.data['data'] as List?;
-        if (affirmationsList != null) {
-          final mapped = affirmationsList.map((a) => {
-            'localId': a['localId'] ?? a['_id'],
-            'serverId': a['_id'],
-            'text': a['title'],
-            'author': a['author'],
-            'category': a['category'],
-            'isPinned': a['favorite'] ?? false,
-            'syncStatus': 'synced'
-          }).toList();
+        final data = affirmationsRes.data['data'] as List?;
+        if (data != null) {
+          final List<Map<String, dynamic>> mapped = [];
+          for (var groupJson in data) {
+            final dynamic rawGroupCat = groupJson['category'] ?? groupJson['name'] ?? groupJson['_id'];
+            String groupCategory = 'General';
+            if (rawGroupCat is Map) {
+              groupCategory = rawGroupCat['name'] as String? ?? rawGroupCat['title'] as String? ?? 'General';
+            } else if (rawGroupCat != null) {
+              groupCategory = rawGroupCat.toString();
+            }
+
+            final affs = groupJson['affirmations'] as List?;
+            if (affs != null) {
+              for (var affJson in affs) {
+                final Map<String, dynamic> mutable = Map<String, dynamic>.from(affJson);
+                final String id = mutable['id'] ?? (mutable['_id'] ?? '');
+                final String title = mutable['title'] ?? 'Affirmation';
+                final String text = mutable['text'] ?? '';
+                final String? author = mutable['author'];
+
+                final dynamic rawAffCat = mutable['category'];
+                String? affCategory;
+                if (rawAffCat is Map) {
+                  affCategory = rawAffCat['name'] as String? ?? rawAffCat['title'] as String? ?? 'General';
+                } else if (rawAffCat != null) {
+                  affCategory = rawAffCat.toString();
+                }
+
+                final String category = (affCategory != null && affCategory.trim().isNotEmpty) ? affCategory : groupCategory;
+                final String colorTheme = mutable['colorTheme'] ?? 'Minimal White';
+                final bool isPinned = mutable['isPinned'] ?? mutable['pinned'] ?? false;
+                final bool isFavorite = mutable['isFavorite'] ?? mutable['favorite'] ?? false;
+                final String? emoji = mutable['emoji'];
+
+                mapped.add({
+                  'id': id,
+                  'title': title,
+                  'text': text,
+                  'author': author,
+                  'category': category,
+                  'colorTheme': colorTheme,
+                  'fontStyle': 'Serif',
+                  'backgroundStyle': colorTheme,
+                  'isPinned': isPinned,
+                  'isFavorite': isFavorite,
+                  'schedule': ['Morning'],
+                  'woodFinish': 'Walnut',
+                  'frameStyle': 'Classic Wood',
+                  'frameColor': 'Natural Walnut',
+                  'glassReflection': 'Slight Gloss',
+                  'fontWeight': 'Normal',
+                  'quoteAlignment': 'Center',
+                  'quoteSize': 15.0,
+                  'accentColor': 'Amber',
+                  'bgBlur': 5.0,
+                  'borderDecoration': 'None',
+                  'emoji': emoji,
+                  'icon': null,
+                  'createdAt': mutable['createdAt'] ?? DateTime.now().toIso8601String(),
+                  'updatedAt': mutable['updatedAt'] ?? DateTime.now().toIso8601String(),
+                  'syncStatus': 'synced',
+                });
+              }
+            }
+          }
           await hiveDb.saveSelectedAffirmations(mapped);
         }
       }

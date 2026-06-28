@@ -11,6 +11,7 @@ import '../providers/os_providers.dart';
 import '../widgets/living_plant.dart';
 import '../widgets/workspace_customization.dart';
 import '../widgets/todays_checklist.dart';
+import '../widgets/floor_plant.dart';
 import '../widgets/celebration_banner.dart';
 import '../widgets/premium_shelf_section.dart';
 import '../../../vision_room/presentation/screens/vision_room_screen.dart';
@@ -144,7 +145,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
     // Setup base controllers
     _ambientController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 10),
+      duration: const Duration(seconds: 40),
     )..repeat();
 
     _expandController = AnimationController(
@@ -453,7 +454,9 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<AuthUserModel?>>(authProvider, (previous, next) {
-      if (next.hasValue && next.value != null && (previous == null || !previous.hasValue || previous.value == null)) {
+      if (next.hasValue &&
+          next.value != null &&
+          (previous == null || !previous.hasValue || previous.value == null)) {
         final hiveDb = ref.read(hiveDatabaseProvider);
         final habits = hiveDb.getSelectedHabits();
         final goals = hiveDb.getSelectedGoals();
@@ -480,6 +483,35 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
       builder: (context, constraints) {
         final double screenH = constraints.maxHeight;
         final double screenW = constraints.maxWidth;
+
+        final activeItems = [
+          _ShelfItemData('routine', 'Routine', CalendarMiniaturePainter()),
+          if (state.selectedLifeAreas.contains('health'))
+            _ShelfItemData('health', 'Health', DumbbellMiniaturePainter()),
+          _ShelfItemData('goals', 'Goals', TargetMiniaturePainter()),
+          if (state.selectedLifeAreas.contains('reading'))
+            _ShelfItemData('learning', 'Learning', BookstackMiniaturePainter()),
+          if (state.selectedLifeAreas.contains('finance'))
+            _ShelfItemData('finance', 'Finance', WalletMiniaturePainter()),
+          if (state.selectedLifeAreas.contains('journaling'))
+            _ShelfItemData('journal', 'Journal', NotebookMiniaturePainter()),
+          _ShelfItemData(
+            'achievements',
+            'Achievements',
+            GlassTrophyMiniaturePainter(),
+          ),
+        ];
+
+        // Left shelf gets first 2 items
+        final leftItems = activeItems.sublist(
+          0,
+          math.min(2, activeItems.length),
+        );
+        // Right shelf gets next 2 items (up to 4 total)
+        final rightItems = activeItems.sublist(
+          math.min(2, activeItems.length),
+          math.min(4, activeItems.length),
+        );
 
         // Animations interpolating scale & blur
         final double scaleFactor =
@@ -570,45 +602,47 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                           ),
                         ),
 
-                      // 2. TOP ROW: Artboard (left) | Window (center) | Watch (right)
+                      // 2. TOP ROW: Clock + Artboard (left)
                       Positioned(
                         left: screenW * 0.05,
-                        right: screenW * 0.05,
-                        top: screenH * 0.06,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        top: screenH * 0.08,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Padding(
-                              padding: EdgeInsets.only(top: screenH * 0.03),
-                              child: _buildWallArtFrame(screenW, screenH, state),
-                            ),
-                            const Spacer(),
-                            _buildWindow(screenW, screenH, state.ambientMode),
-                            const Spacer(),
-                            Padding(
-                              padding: EdgeInsets.only(top: screenH * 0.03),
-                              child: _buildClock(),
-                            ),
+                            _buildClock(),
+                            const SizedBox(height: 28),
+                            _buildWallArtFrame(screenW, screenH, state),
                           ],
                         ),
+                      ),
+
+                      // 3. PANORAMIC WINDOW BELOW THE FIRST SHELF (Full Width, Small Height)
+                      Positioned(
+                        left: 16,
+                        right: 16,
+                        top: screenH * 0.36 + 32,
+                        child: _buildLowerWindow(screenW - 32, screenH, state),
                       ),
 
                       // 4.7. Right Floating Shelf (no padding on right)
                       Positioned(
                         right: 0,
-                        width: screenW,
+                        width: (screenW * 0.24).clamp(95.0, 135.0),
                         bottom: 155,
                         child: LeftFloatingShelf(
                           alignLeft: false,
                           woodTexture: state.woodTexture,
                           plantType: state.plantType,
+                          shelfWidth: (screenW * 0.24).clamp(95.0, 135.0),
                         ),
                       ),
 
                       // 5. Hanging vines (behind shelf, shelf hides the start)
+                      // Left vine disabled since left shelf is removed
+                      /*
                       Positioned(
                         left: screenW * 0.06 + 2,
-                        top: screenH * 0.36 + 20,
+                        top: screenH * 0.04 + 177 + 45,
                         width: 35,
                         height: 140,
                         child: AnimatedBuilder(
@@ -623,9 +657,10 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                           },
                         ),
                       ),
+                      */
                       Positioned(
                         right: screenW * 0.06 + 2,
-                        top: screenH * 0.36 + 20,
+                        top: screenH * 0.08 + 30,
                         width: 35,
                         height: 140,
                         child: AnimatedBuilder(
@@ -641,16 +676,65 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                         ),
                       ),
 
-                      // 5. FLOATING WOODEN SHELF + MODULE OBJECTS (Center)
+                      // 5. TOP RIGHT FLOATING SIDE SHELF
                       Positioned(
-                        left: screenW * 0.06,
-                        right: screenW * 0.06,
-                        top: screenH * 0.36,
-                        child: Center(
-                          child: _buildFloatingShelf(screenW, state),
+                        right: 0,
+                        width: (screenW * 0.24).clamp(95.0, 135.0),
+                        top: screenH * 0.08 - 31,
+                        child: LeftFloatingShelf(
+                          alignLeft: false,
+                          woodTexture: state.woodTexture,
+                          showDecorations: false,
+                          shelfWidth: (screenW * 0.24).clamp(95.0, 135.0),
+                          children: leftItems.map((item) {
+                            final double shelfW = (screenW * 0.24).clamp(
+                              95.0,
+                              135.0,
+                            );
+                            final double itemSize = ((shelfW - 18) / 3.0).clamp(
+                              24.0,
+                              42.0,
+                            );
+                            return _buildShelfItem(
+                              item.id,
+                              item.label,
+                              item.painter,
+                              itemSize,
+                            );
+                          }).toList(),
                         ),
                       ),
 
+                      // 5.5. BOTTOM RIGHT FLOATING SIDE SHELF
+                      Positioned(
+                        right: 0,
+                        width: (screenW * 0.24).clamp(95.0, 135.0),
+                        top: screenH * 0.04 + 177 - 31,
+                        child: LeftFloatingShelf(
+                          alignLeft: false,
+                          woodTexture: state.woodTexture,
+                          showDecorations: false,
+                          shelfWidth: (screenW * 0.24).clamp(95.0, 135.0),
+                          children: rightItems.map((item) {
+                            final double shelfW = (screenW * 0.24).clamp(
+                              95.0,
+                              135.0,
+                            );
+                            final double itemSize = ((shelfW - 18) / 3.0).clamp(
+                              24.0,
+                              42.0,
+                            );
+                            return _buildShelfItem(
+                              item.id,
+                              item.label,
+                              item.painter,
+                              itemSize,
+                            );
+                          }).toList(),
+                        ),
+                      ),
+
+                      /*
                       // 5.6. PREMIUM 3D HORIZONTAL SHELF (Personalized Dashboard)
                       Positioned(
                         left: 0,
@@ -676,6 +760,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                           ),
                         ),
                       ),
+                      */
 
                       // 7. VISION ROOM WOODEN DOOR (Bottom Left, aligned to floor skirting)
                       Positioned(
@@ -684,13 +769,22 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                         child: _buildVisionDoor(isUnlockedVision, state),
                       ),
 
+                      // Floor Plant (Coconut Tree, smaller scale)
+                      Positioned(
+                        left: 155,
+                        bottom: 146,
+                        child: const FloorPlant(
+                          plantType: 'Coconut Tree',
+                          scale: 0.35,
+                        ),
+                      ),
+
                       // 8. CUSTOMIZATION MINI PAINTING (right of the vision door)
                       Positioned(
                         left: 106,
                         bottom: 178,
                         child: const ThreeDCustomizeSwitch(),
                       ),
-
                     ],
                   ),
                 ),
@@ -731,7 +825,6 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                   ),
                 ),
 
-
               // Guest storage notice removed
             ],
           ),
@@ -757,16 +850,17 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
         mode = 'Night';
     }
 
-    final double windowH = screenH * 0.20;
+    final double windowH = screenH * 0.30;
+    final double windowW = (screenW * 0.55).clamp(180.0, 240.0);
     return Container(
-      width: 145,
+      width: windowW,
       height: windowH,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           // The window frame
           Container(
-            width: 145,
+            width: windowW,
             height: windowH,
             decoration: BoxDecoration(
               color: const Color(0xFF1E293B),
@@ -805,6 +899,94 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Panoramic slot window below the shelf stretching full width of the screen
+  Widget _buildLowerWindow(double screenW, double screenH, OSState state) {
+    String mode = state.ambientMode;
+    if (mode == 'Auto') {
+      final hour = _currentTime.hour;
+      if (hour >= 5 && hour < 12)
+        mode = 'Morning';
+      else if (hour >= 12 && hour < 17)
+        mode = 'Afternoon';
+      else if (hour >= 17 && hour < 21)
+        mode = 'Evening';
+      else
+        mode = 'Night';
+    }
+
+    // Dynamic 3D frame colors matching the wallpaper background to make it blend organically
+    Color frameColor;
+    Color highlightColor;
+    switch (state.wallColor) {
+      case 'Classic Navy':
+        frameColor = const Color(0xFF040A12);
+        highlightColor = const Color(0xFF132235);
+        break;
+      case 'Emerald':
+        frameColor = const Color(0xFF020E0B);
+        highlightColor = const Color(0xFF0A2B22);
+        break;
+      case 'Warm Terracotta':
+        frameColor = const Color(0xFF150A08);
+        highlightColor = const Color(0xFF351A14);
+        break;
+      case 'Charcoal':
+        frameColor = const Color(0xFF0B0B0C);
+        highlightColor = const Color(0xFF222225);
+        break;
+      case 'Deep Indigo':
+      default:
+        frameColor = const Color(0xFF070B14);
+        highlightColor = const Color(0xFF141F35);
+        break;
+    }
+
+    const double windowH = 180.0;
+    return Container(
+      height: windowH,
+      decoration: BoxDecoration(
+        color: frameColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          // Ambient shadow on the wall
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.55),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Container(
+        // Outer 3D bevel effect
+        margin: const EdgeInsets.all(4.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: highlightColor, width: 4.0),
+        ),
+        child: Container(
+          // Inner recessed shadow / seal frame
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Colors.black.withValues(alpha: 0.75),
+              width: 2.0,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: CustomPaint(
+              painter: CityViewWindowPainter(
+                resolvedMode: mode,
+                animationValue: _ambientController.value,
+                isTopWindow: false,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -930,22 +1112,22 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                   ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F1424), // dark canvas board
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: state.woodTexture == 'Oak'
-                            ? const Color(0xFFD7CCC8)
-                            : state.woodTexture == 'Mahogany'
-                            ? const Color(0xFF5D4037)
-                            : const Color(0xFF2E1912), // walnut
-                        width: 2.0,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: state.woodTexture == 'Oak'
+                          ? const Color(0xFFD7CCC8)
+                          : state.woodTexture == 'Mahogany'
+                          ? const Color(0xFF5D4037)
+                          : const Color(0xFF2E1912), // walnut
+                      width: 2.0,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.55),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.55),
-                          blurRadius: 5,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
+                    ],
                   ),
                   child: Opacity(
                     opacity: (1.0 - _motivationController.value).clamp(
@@ -1008,10 +1190,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(8),
                 ),
-                border: Border.all(
-                  color: const Color(0xFF334155),
-                  width: 3.5,
-                ),
+                border: Border.all(color: const Color(0xFF334155), width: 3.5),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.45),
@@ -1056,175 +1235,6 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // Floating Wooden Shelf with custom vector miniatures
-  Widget _buildFloatingShelf(double screenW, OSState state) {
-    Color woodColor;
-    if (state.woodTexture == 'Oak') {
-      woodColor = const Color(0xFFC7B3A3);
-    } else if (state.woodTexture == 'Mahogany') {
-      woodColor = const Color(0xFF4A2C22);
-    } else {
-      woodColor = const Color(0xFF2E1912); // classic walnut
-    }
-
-    final double shelfWidth = screenW * 0.88;
-    // Calculate miniature size dynamically based on available shelf width
-    final double itemSize = ((shelfWidth - 24) / 7.8).clamp(24.0, 42.0);
-
-    return Container(
-      width: shelfWidth,
-      height: 90,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // 1. Soft wall drop shadow underneath the shelf
-          Positioned(
-            top: 24,
-            left: 20,
-            right: 20,
-            height: 35,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [
-                    Colors.black.withValues(alpha: 0.35),
-                    Colors.transparent,
-                  ],
-                  radius: 1.8,
-                ),
-              ),
-            ),
-          ),
-
-          // 2. Custom wall support brackets
-          Positioned(
-            top: 24,
-            left: shelfWidth * 0.15,
-            child: _buildShelfBracket(),
-          ),
-          Positioned(
-            top: 24,
-            right: shelfWidth * 0.15,
-            child: _buildShelfBracket(),
-          ),
-
-          // 3. 3D Wooden Plank
-          // Top Slant Surface
-          Positioned(
-            top: 18,
-            left: 2,
-            right: 2,
-            height: 6,
-            child: Container(
-              decoration: BoxDecoration(
-                color: woodColor.withValues(alpha: 0.85),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(3),
-                ),
-              ),
-            ),
-          ),
-          // Front Edge Thickness
-          Positioned(
-            top: 24,
-            left: 0,
-            right: 0,
-            height: 8,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color.lerp(woodColor, Colors.black, 0.22),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(3),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    blurRadius: 6,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // 4. Custom Miniature Objects sitting spaced out (Dynamic scaling)
-          Positioned(
-            top: 24 - itemSize,
-            left: 12,
-            right: 12,
-            height: itemSize,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _buildShelfItem(
-                  'routine',
-                  'Routine',
-                  CalendarMiniaturePainter(),
-                  itemSize,
-                ),
-                if (state.selectedLifeAreas.contains('health'))
-                  _buildShelfItem(
-                    'health',
-                    'Health',
-                    DumbbellMiniaturePainter(),
-                    itemSize,
-                  ),
-                _buildShelfItem(
-                  'goals',
-                  'Goals',
-                  TargetMiniaturePainter(),
-                  itemSize,
-                ),
-                if (state.selectedLifeAreas.contains('reading'))
-                  _buildShelfItem(
-                    'learning',
-                    'Learning',
-                    BookstackMiniaturePainter(),
-                    itemSize,
-                  ),
-                if (state.selectedLifeAreas.contains('finance'))
-                  _buildShelfItem(
-                    'finance',
-                    'Finance',
-                    WalletMiniaturePainter(),
-                    itemSize,
-                  ),
-                if (state.selectedLifeAreas.contains('journaling'))
-                  _buildShelfItem(
-                    'journal',
-                    'Journal',
-                    NotebookMiniaturePainter(),
-                    itemSize,
-                  ),
-                _buildShelfItem(
-                  'achievements',
-                  'Achievements',
-                  GlassTrophyMiniaturePainter(),
-                  itemSize,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildShelfBracket() {
-    return Container(
-      width: 6,
-      height: 18,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(1.5),
-        boxShadow: const [
-          BoxShadow(color: Colors.black38, blurRadius: 2, offset: Offset(1, 1)),
-        ],
       ),
     );
   }
@@ -1280,7 +1290,10 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
               top: -4,
               right: -4,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFFD97706), const Color(0xFFB45309)],
@@ -2683,17 +2696,15 @@ class DoorPainter3D extends CustomPainter {
       height: 25,
     );
     final plaquePaint = Paint()
-      ..color = isUnlocked 
-          ? const Color(0xFF23150D) 
-          : const Color(0xFF1E293B)
+      ..color = isUnlocked ? const Color(0xFF23150D) : const Color(0xFF1E293B)
       ..style = PaintingStyle.fill;
     final plaqueBorderPaint = Paint()
-      ..color = isUnlocked 
-          ? const Color(0xFFC9A96E).withValues(alpha: 0.5) 
+      ..color = isUnlocked
+          ? const Color(0xFFC9A96E).withValues(alpha: 0.5)
           : Colors.white12
       ..strokeWidth = 0.8
       ..style = PaintingStyle.stroke;
-      
+
     canvas.drawRRect(
       RRect.fromRectAndRadius(plaqueRect, const Radius.circular(3)),
       plaquePaint,
@@ -2709,8 +2720,8 @@ class DoorPainter3D extends CustomPainter {
         fontFamily: 'Outfit',
         fontSize: 5.8,
         fontWeight: FontWeight.w700,
-        color: isUnlocked 
-            ? const Color(0xFFC9A96E).withValues(alpha: 0.9) 
+        color: isUnlocked
+            ? const Color(0xFFC9A96E).withValues(alpha: 0.9)
             : Colors.white38,
         letterSpacing: 1.1,
         height: 1.2,
@@ -2721,12 +2732,11 @@ class DoorPainter3D extends CustomPainter {
       textAlign: TextAlign.center,
       textDirection: TextDirection.ltr,
     );
-    textPainter.layout(
-      minWidth: 0,
-      maxWidth: plaqueRect.width,
-    );
-    final xCenter = plaqueRect.left + (plaqueRect.width - textPainter.width) / 2;
-    final yCenter = plaqueRect.top + (plaqueRect.height - textPainter.height) / 2;
+    textPainter.layout(minWidth: 0, maxWidth: plaqueRect.width);
+    final xCenter =
+        plaqueRect.left + (plaqueRect.width - textPainter.width) / 2;
+    final yCenter =
+        plaqueRect.top + (plaqueRect.height - textPainter.height) / 2;
     textPainter.paint(canvas, Offset(xCenter, yCenter));
 
     // Door knob
@@ -4288,10 +4298,7 @@ class FloatingCrystalPainter extends CustomPainter {
   final double floatPhase;
   final double burstProgress;
 
-  FloatingCrystalPainter({
-    required this.floatPhase,
-    this.burstProgress = 0.0,
-  });
+  FloatingCrystalPainter({required this.floatPhase, this.burstProgress = 0.0});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -4331,12 +4338,12 @@ class FloatingCrystalPainter extends CustomPainter {
     canvas.drawOval(
       Rect.fromCenter(center: Offset(cx, baseY + 4), width: 26, height: 6),
       Paint()
-        ..shader = RadialGradient(
-          colors: [
-            Colors.black.withValues(alpha: 0.3),
-            Colors.transparent,
-          ],
-        ).createShader(Rect.fromCircle(center: Offset(cx, baseY + 8), radius: 16)),
+        ..shader =
+            RadialGradient(
+              colors: [Colors.black.withValues(alpha: 0.3), Colors.transparent],
+            ).createShader(
+              Rect.fromCircle(center: Offset(cx, baseY + 8), radius: 16),
+            ),
     );
 
     // ── 3. Painting frame ──
@@ -4379,7 +4386,12 @@ class FloatingCrystalPainter extends CustomPainter {
     final matInset = 2.5;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(frameX + matInset, frameY + matInset, frameW - matInset * 2, frameH - matInset * 2),
+        Rect.fromLTWH(
+          frameX + matInset,
+          frameY + matInset,
+          frameW - matInset * 2,
+          frameH - matInset * 2,
+        ),
         const Radius.circular(1.5),
       ),
       Paint()..color = const Color(0xFF1A1A2E),
@@ -4411,13 +4423,16 @@ class FloatingCrystalPainter extends CustomPainter {
       Offset(cx, canY + canH * 0.3),
       4.5,
       Paint()
-        ..shader = RadialGradient(
-          colors: const [
-            Color(0xFFFFE082),
-            Color(0xFFFFB300),
-            Colors.transparent,
-          ],
-        ).createShader(Rect.fromCircle(center: Offset(cx, canY + canH * 0.3), radius: 6)),
+        ..shader =
+            RadialGradient(
+              colors: const [
+                Color(0xFFFFE082),
+                Color(0xFFFFB300),
+                Colors.transparent,
+              ],
+            ).createShader(
+              Rect.fromCircle(center: Offset(cx, canY + canH * 0.3), radius: 6),
+            ),
     );
 
     // Mountains
@@ -4435,10 +4450,7 @@ class FloatingCrystalPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: const [
-          Color(0xFF2D1B69),
-          Color(0xFF1A0533),
-        ],
+        colors: const [Color(0xFF2D1B69), Color(0xFF1A0533)],
       ).createShader(Rect.fromLTWH(canX, canY + canH * 0.2, canW, canH * 0.8));
     canvas.drawPath(mountainPath, backMountainPaint);
 
@@ -4454,14 +4466,14 @@ class FloatingCrystalPainter extends CustomPainter {
     canvas.drawPath(
       frontMountainPath,
       Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: const [
-            Color(0xFF4A2C8A),
-            Color(0xFF2D1B69),
-          ],
-        ).createShader(Rect.fromLTWH(canX, canY + canH * 0.4, canW, canH * 0.6)),
+        ..shader =
+            LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: const [Color(0xFF4A2C8A), Color(0xFF2D1B69)],
+            ).createShader(
+              Rect.fromLTWH(canX, canY + canH * 0.4, canW, canH * 0.6),
+            ),
     );
 
     // Stars
@@ -4472,7 +4484,10 @@ class FloatingCrystalPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(sx, sy),
         0.7,
-        Paint()..color = Colors.white.withValues(alpha: 0.5 + math.sin(sa * 2 + float * 3) * 0.3),
+        Paint()
+          ..color = Colors.white.withValues(
+            alpha: 0.5 + math.sin(sa * 2 + float * 3) * 0.3,
+          ),
       );
     }
 
@@ -4505,7 +4520,10 @@ class FloatingCrystalPainter extends CustomPainter {
         final angle = i * 1.57 + b * 2.0;
         final dist = b * 28;
         canvas.drawCircle(
-          Offset(cx + math.cos(angle) * dist, cy + math.sin(angle) * dist * 0.7),
+          Offset(
+            cx + math.cos(angle) * dist,
+            cy + math.sin(angle) * dist * 0.7,
+          ),
           1.5 * (1.0 - b * 0.6),
           Paint()
             ..color = Color.lerp(
@@ -4738,6 +4756,35 @@ class CityViewWindowPainter extends CustomPainter {
     canvas.drawRect(bottomRect, cloudPaint);
   }
 
+  void _drawRooftopPine(
+    Canvas canvas,
+    Offset bottomCenter,
+    double height,
+    double width,
+    Color color,
+  ) {
+    final Paint paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final Path path = Path()
+      ..moveTo(bottomCenter.dx, bottomCenter.dy - height)
+      ..lineTo(bottomCenter.dx - width / 2, bottomCenter.dy)
+      ..lineTo(bottomCenter.dx + width / 2, bottomCenter.dy)
+      ..close();
+    canvas.drawPath(path, paint);
+
+    // Draw trunk
+    canvas.drawRect(
+      Rect.fromLTRB(
+        bottomCenter.dx - 0.8,
+        bottomCenter.dy,
+        bottomCenter.dx + 0.8,
+        bottomCenter.dy + 3.0,
+      ),
+      paint,
+    );
+  }
+
   void _drawLeaf(
     Canvas canvas,
     Offset position,
@@ -4795,7 +4842,7 @@ class CityViewWindowPainter extends CustomPainter {
         // Deterministic flicker per window
         final double windowIndex = (r * columns + c + seed).toDouble();
         final double flicker =
-            math.sin(animVal * 2.5 * math.pi + windowIndex * 1.5) * 0.5 + 0.5;
+            math.sin(animVal * 4.0 * math.pi + windowIndex * 1.5) * 0.5 + 0.5;
 
         // Skip some windows randomly to look realistic (occupancy rates)
         final double occupancyRandom = math.sin(windowIndex * 4.3) * 0.5 + 0.5;
@@ -4924,12 +4971,13 @@ class CityViewWindowPainter extends CustomPainter {
               ? const Color(0xFFFFB0B0).withValues(alpha: 0.18)
               : Colors.white.withValues(alpha: 0.15));
 
-    final double cloudX1 =
-        ((w * 0.25) + (animationValue * w * 0.3)) % (w + 40) - 20;
+    // Time-based horizontal positions for clouds (very slow, continuous, and seamless movement)
+    final double timeSecs = DateTime.now().millisecondsSinceEpoch * 0.001;
+    final double cloudX1 = ((timeSecs * 2.0) % (w + 80)) - 40;
     _drawCloud(canvas, Offset(cloudX1, h * 0.2), 6.0, cloudColor);
 
     final double cloudX2 =
-        ((w * 0.7) + (animationValue * w * 0.25)) % (w + 50) - 25;
+        (((timeSecs * 1.2) + (w + 100) * 0.5) % (w + 100)) - 50;
     _drawCloud(canvas, Offset(cloudX2, h * 0.12), 8.0, cloudColor);
 
     // 5. Draw Sun/Moon
@@ -5024,7 +5072,7 @@ class CityViewWindowPainter extends CustomPainter {
           ..strokeWidth = 0.9,
       );
 
-      final double blink = math.sin(animationValue * 4.5 * math.pi) * 0.5 + 0.5;
+      final double blink = math.sin(animationValue * 4 * math.pi) * 0.5 + 0.5;
       final Paint beaconPaint = Paint()
         ..color = const Color(0xFFFF1744).withValues(alpha: 0.3 + 0.7 * blink)
         ..style = PaintingStyle.fill;
@@ -5153,6 +5201,68 @@ class CityViewWindowPainter extends CustomPainter {
     nearPath.lineTo(w, h);
     nearPath.close();
     canvas.drawPath(nearPath, buildingPaint);
+
+    // Rooftop trees on Near City buildings for a cozy green urban feel
+    final Color rooftopTreeColor = nearCityColor;
+    final double roof1Y = h - 0.32 * h * heightScale;
+    _drawRooftopPine(
+      canvas,
+      Offset(0.50 * w, roof1Y),
+      9.0 * heightScale,
+      6.0,
+      rooftopTreeColor,
+    );
+    _drawRooftopPine(
+      canvas,
+      Offset(0.53 * w, roof1Y),
+      12.0 * heightScale,
+      7.5,
+      rooftopTreeColor,
+    );
+    _drawRooftopPine(
+      canvas,
+      Offset(0.56 * w, roof1Y),
+      8.0 * heightScale,
+      5.0,
+      rooftopTreeColor,
+    );
+
+    final double roof2Y = h - 0.22 * h * heightScale;
+    _drawRooftopPine(
+      canvas,
+      Offset(0.60 * w, roof2Y),
+      10.0 * heightScale,
+      6.5,
+      rooftopTreeColor,
+    );
+    _drawRooftopPine(
+      canvas,
+      Offset(0.63 * w, roof2Y),
+      7.0 * heightScale,
+      5.0,
+      rooftopTreeColor,
+    );
+    _drawRooftopPine(
+      canvas,
+      Offset(0.67 * w, roof2Y),
+      13.0 * heightScale,
+      8.0,
+      rooftopTreeColor,
+    );
+    _drawRooftopPine(
+      canvas,
+      Offset(0.75 * w, roof2Y),
+      11.0 * heightScale,
+      7.0,
+      rooftopTreeColor,
+    );
+    _drawRooftopPine(
+      canvas,
+      Offset(0.78 * w, roof2Y),
+      8.0 * heightScale,
+      5.5,
+      rooftopTreeColor,
+    );
 
     // Bright window lights on Near layer
     if (isNight || resolvedMode == 'Evening') {
@@ -5311,6 +5421,30 @@ class CityViewWindowPainter extends CustomPainter {
       trunkLeft.close();
       canvas.drawPath(trunkLeft, treePaint);
 
+      // B. Right Street Tree Trunk (balanced street perspective)
+      final Path trunkRight = Path();
+      final double rBotLeft = w - 4.0;
+      final double rBotRight = w + 4.0;
+      final double rTopLeft = w * 0.92 + swayRight - 1.4;
+      final double rTopRight = w * 0.92 + swayRight + 1.4;
+
+      trunkRight.moveTo(rBotLeft, h);
+      trunkRight.quadraticBezierTo(
+        w * 0.91 + swayRight * 0.4 - 2.8,
+        h * 0.65,
+        rTopLeft,
+        h * 0.35,
+      );
+      trunkRight.lineTo(rTopRight, h * 0.35);
+      trunkRight.quadraticBezierTo(
+        w * 0.91 + swayRight * 0.4 + 2.8,
+        h * 0.65,
+        rBotRight,
+        h,
+      );
+      trunkRight.close();
+      canvas.drawPath(trunkRight, treePaint);
+
       // Left tree branches and leaves framing the top-left corner
       final Offset leftCrown = Offset(w * 0.09 + swayLeft, h * 0.35);
 
@@ -5362,6 +5496,64 @@ class CityViewWindowPainter extends CustomPainter {
 
       drawLeafPair(leftCrown + (lbEnd - leftCrown) * 0.5, -2.0);
       drawLeafPair(leftCrown + (rbEnd - leftCrown) * 0.5, -0.8);
+
+      // Right tree branches and leaves framing the top-right corner
+      final Offset rightCrown = Offset(w * 0.92 + swayRight, h * 0.35);
+
+      final Offset rlbEnd = rightCrown + Offset(-15 + swayRight * 0.28, -7);
+      canvas.drawLine(rightCrown, rlbEnd, twigPaint..strokeWidth = 1.3);
+
+      final Offset rrbEnd = rightCrown + Offset(15 + swayRight * 0.38, -13);
+      canvas.drawLine(rightCrown, rrbEnd, twigPaint..strokeWidth = 1.5);
+
+      final Offset rmbEnd = rightCrown + Offset(-1.5 + swayRight * 0.48, -19);
+      canvas.drawLine(rightCrown, rmbEnd, twigPaint..strokeWidth = 1.1);
+
+      // Right Tree leaves
+      _drawLeaf(canvas, rlbEnd, -0.6, 0.85, leafBaseColor);
+      _drawLeaf(
+        canvas,
+        rlbEnd + const Offset(-3, -2),
+        -0.2,
+        0.75,
+        leafHighlightColor,
+      );
+      _drawLeaf(canvas, rlbEnd + const Offset(2, 3), -1.0, 0.80, leafBaseColor);
+
+      _drawLeaf(canvas, rrbEnd, -2.4, 0.85, leafBaseColor);
+      _drawLeaf(
+        canvas,
+        rrbEnd + const Offset(3, -2),
+        -2.8,
+        0.75,
+        leafHighlightColor,
+      );
+      _drawLeaf(
+        canvas,
+        rrbEnd + const Offset(-2, 3),
+        -1.85,
+        0.80,
+        leafBaseColor,
+      );
+
+      _drawLeaf(canvas, rmbEnd, -1.6, 0.80, leafBaseColor);
+      _drawLeaf(
+        canvas,
+        rmbEnd + const Offset(2, -3),
+        -2.0,
+        0.70,
+        leafHighlightColor,
+      );
+      _drawLeaf(
+        canvas,
+        rmbEnd + const Offset(-2, 2),
+        -1.2,
+        0.75,
+        leafBaseColor,
+      );
+
+      drawLeafPair(rightCrown + (rlbEnd - rightCrown) * 0.5, -0.8);
+      drawLeafPair(rightCrown + (rrbEnd - rightCrown) * 0.5, -2.0);
     } else {
       // Left leafy branch hanging in from top-left (balanced elevated framing, no trunk)
       canvas.save();
@@ -5622,12 +5814,14 @@ class CityViewWindowPainter extends CustomPainter {
     canvas.drawLine(Offset(w * 0.5, 0), Offset(w * 0.5, h), gridPaint);
     canvas.drawLine(Offset(0, h * 0.45), Offset(w, h * 0.45), gridPaint);
 
-    // 9. Recessed Border Shadow
+    // 9. Recessed Border Shadow (Removed)
+    /*
     final Paint borderShadowPaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.35)
       ..strokeWidth = 3.0
       ..style = PaintingStyle.stroke;
     canvas.drawRect(Rect.fromLTRB(0, 0, w, h), borderShadowPaint);
+    */
 
     // 10. Diagonal Glass glare lines
     final Paint glarePaint = Paint()
@@ -5654,3 +5848,11 @@ class CityViewWindowPainter extends CustomPainter {
   }
 }
 
+// Data class containing definition for shelf miniature items
+class _ShelfItemData {
+  final String id;
+  final String label;
+  final CustomPainter painter;
+
+  _ShelfItemData(this.id, this.label, this.painter);
+}

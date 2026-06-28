@@ -38,10 +38,33 @@ class AffirmationsRepository {
         final data = response.data['data'] as List?;
         if (data != null) {
           for (var groupJson in data) {
+            final dynamic rawGroupCat = groupJson['category'] ?? groupJson['name'] ?? groupJson['_id'];
+            String groupCategory = 'General';
+            if (rawGroupCat is Map) {
+              groupCategory = rawGroupCat['name'] as String? ?? rawGroupCat['title'] as String? ?? 'General';
+            } else if (rawGroupCat != null) {
+              groupCategory = rawGroupCat.toString();
+            }
+
             final affs = groupJson['affirmations'] as List?;
             if (affs != null) {
               for (var affJson in affs) {
-                fetched.add(DailyAffirmation.fromMap(Map<String, dynamic>.from(affJson)));
+                final Map<String, dynamic> mutable = Map<String, dynamic>.from(affJson);
+                
+                final dynamic rawAffCat = mutable['category'];
+                String? affCategory;
+                if (rawAffCat is Map) {
+                  affCategory = rawAffCat['name'] as String? ?? rawAffCat['title'] as String? ?? 'General';
+                } else if (rawAffCat != null) {
+                  affCategory = rawAffCat.toString();
+                }
+
+                if (affCategory == null || affCategory.trim().isEmpty) {
+                  mutable['category'] = groupCategory;
+                } else {
+                  mutable['category'] = affCategory;
+                }
+                fetched.add(DailyAffirmation.fromMap(mutable));
               }
             }
           }
