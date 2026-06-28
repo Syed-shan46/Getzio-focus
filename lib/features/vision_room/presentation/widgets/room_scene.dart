@@ -971,10 +971,10 @@ class CeilingBulbLayer extends StatelessWidget {
 
             // Volumetric light cone extending downward from the bulb base
             Positioned(
-              top: bulbTop + bulbSize * 0.40,
+              top: bulbTop + bulbSize * 0.25,
               left: screenWidth / 2 - screenWidth * 0.35,
               width: screenWidth * 0.7,
-              height: screenHeight * 0.38,
+              height: screenHeight * 0.52, // Stretches down to the window level
               child: CustomPaint(
                 painter: _LightConePainter(brightness: brightness),
               ),
@@ -982,21 +982,21 @@ class CeilingBulbLayer extends StatelessWidget {
 
             // Soft radial glow bloom around the bulb (ambient warm glow)
             Positioned(
-              top: bulbTop - bulbSize * 0.3,
-              left: screenWidth / 2 - bulbSize * 0.8,
-              width: bulbSize * 1.6,
-              height: bulbSize * 1.6,
+              top: bulbTop - bulbSize * 0.6,
+              left: screenWidth / 2 - bulbSize * 1.1,
+              width: bulbSize * 2.2,
+              height: bulbSize * 2.2,
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      const Color(0xFFF59E0B).withValues(alpha: 0.35 * brightness),
-                      const Color(0xFFD97706).withValues(alpha: 0.15 * brightness),
-                      const Color(0xFFB45309).withValues(alpha: 0.05 * brightness),
+                      const Color(0xFFFFFBEB).withValues(alpha: 0.42 * brightness),
+                      const Color(0xFFFBBF24).withValues(alpha: 0.22 * brightness),
+                      const Color(0xFFF59E0B).withValues(alpha: 0.08 * brightness),
                       Colors.transparent,
                     ],
-                    stops: const [0.0, 0.3, 0.7, 1.0],
+                    stops: const [0.0, 0.25, 0.65, 1.0],
                   ),
                 ),
               ),
@@ -1061,12 +1061,12 @@ class _LightConePainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFFFFFBEB).withValues(alpha: 0.32 * brightness),
-          const Color(0xFFFBBF24).withValues(alpha: 0.16 * brightness),
-          const Color(0xFFD97706).withValues(alpha: 0.04 * brightness),
+          const Color(0xFFFBBF24).withValues(alpha: 0.40 * brightness),
+          const Color(0xFFF59E0B).withValues(alpha: 0.20 * brightness),
+          const Color(0xFFD97706).withValues(alpha: 0.05 * brightness),
           Colors.transparent,
         ],
-        stops: const [0.0, 0.3, 0.75, 1.0],
+        stops: const [0.0, 0.28, 0.70, 1.0],
       ).createShader(rect)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28); // Symmetrical feathered coning
 
