@@ -999,10 +999,10 @@ class CeilingBulbLayer extends ConsumerWidget {
 
             // Soft radial glow bloom around the bulb (ambient warm glow)
             Positioned(
-              top: bulbTop - bulbSize * 0.6,
-              left: screenWidth / 2 - bulbSize * 1.1,
-              width: bulbSize * 2.2,
-              height: bulbSize * 2.2,
+              top: bulbTop - bulbSize * 0.15,
+              left: screenWidth / 2 - bulbSize * 0.65,
+              width: bulbSize * 1.3,
+              height: bulbSize * 1.3,
               child: IgnorePointer(
                 child: Container(
                   decoration: BoxDecoration(
@@ -1098,6 +1098,11 @@ class LightingLayer extends ConsumerWidget {
     final isLightOn = ref.watch(lightOnProvider);
     if (!isLightOn) return const SizedBox.shrink();
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final bulbTop = screenHeight * 0.12;
+    final bulbSize = screenWidth * 0.22;
+
     final lighting = customization.lighting;
     final brightness = customization.ambientBrightness;
 
@@ -1150,29 +1155,24 @@ class LightingLayer extends ConsumerWidget {
                 ),
               ),
             ),
-
-            // Ceiling bulb primary light cone (main pendant illumination)
+            // Ceiling bulb primary light cone (main pendant illumination covering top to bottom)
             Positioned(
-              top: MediaQuery.of(context).size.height * 0.12, // Align with new bulb position
+              top: 0,
               left: 0,
               right: 0,
               bottom: 0,
-              child: Center(
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 1.5,
-                  height: MediaQuery.of(context).size.height * 0.95,
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment.topCenter,
-                      radius: 1.15,
-                      colors: [
-                        const Color(0xFFFBBF24).withValues(alpha: 0.15 * brightness),
-                        const Color(0xFFF59E0B).withValues(alpha: 0.08 * brightness),
-                        const Color(0xFFD97706).withValues(alpha: 0.03 * brightness),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.3, 0.7, 1.0],
-                    ),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(0, -1.0 + (bulbTop + bulbSize * 0.55) / (screenHeight * 0.5)), // Centered at bulb
+                    radius: 1.35,
+                    colors: [
+                      const Color(0xFFFBBF24).withValues(alpha: 0.16 * brightness),
+                      const Color(0xFFF59E0B).withValues(alpha: 0.08 * brightness),
+                      const Color(0xFFD97706).withValues(alpha: 0.02 * brightness),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.40, 0.80, 1.0],
                   ),
                 ),
               ),
