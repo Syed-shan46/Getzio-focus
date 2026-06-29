@@ -87,7 +87,52 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
 
   void _loadLocalCached() {
     final cached = _hiveDb.getVisionItems();
-    final items = cached.map((json) => VisionItem.fromJson(json)).toList();
+    var items = cached.map((json) => VisionItem.fromJson(json)).toList();
+    if (items.isEmpty) {
+      items = [
+        VisionItem(
+          id: 'sample_note_1',
+          type: VisionItemType.stickyNote.name,
+          content: 'Focus on daily progress ✨',
+          x: 50,
+          y: 160,
+          width: 170,
+          height: 160,
+          rotation: -0.04,
+          colorValue: 0xFF3B82F6,
+          attachmentType: 'pin',
+          attachmentStyle: 'redPin',
+        ),
+        VisionItem(
+          id: 'sample_quote_1',
+          type: VisionItemType.quote.name,
+          content: '"Small steps every day leads to massive results."',
+          x: 230,
+          y: 190,
+          width: 180,
+          height: 140,
+          rotation: 0.03,
+          attachmentType: 'pin',
+          attachmentStyle: 'redPin',
+          metadata: const {'author': 'Daily Discipline'},
+        ),
+        VisionItem(
+          id: 'sample_goal_1',
+          type: VisionItemType.goal.name,
+          content: 'Master My Habits',
+          x: 100,
+          y: 350,
+          width: 220,
+          height: 150,
+          rotation: -0.02,
+          attachmentType: 'pin',
+          attachmentStyle: 'redPin',
+          metadata: const {'targetDate': '2026-12-31', 'category': 'Growth'},
+        ),
+      ];
+      final serialized = items.map((i) => i.toJson()).toList();
+      _hiveDb.saveVisionItems(serialized);
+    }
     state = CanvasState(items: items);
   }
 
@@ -316,6 +361,28 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
             ? {'imageUrl': newContent} 
             : {'text': newContent};
         _debouncePatchItem(id, patchData);
+        return updated;
+      }
+      return item;
+    }).toList();
+    commitState(state.copyWith(items: updatedItems));
+  }
+
+  void updateItemDetails(String id, {String? content, int? colorValue, Map<String, dynamic>? metadata}) {
+    final updatedItems = state.items.map((item) {
+      if (item.id == id) {
+        final newMetadata = metadata != null
+            ? {...?item.metadata, ...metadata}
+            : item.metadata;
+        final updated = item.copyWith(
+          content: content ?? item.content,
+          colorValue: colorValue ?? item.colorValue,
+          metadata: newMetadata,
+        );
+        _debouncePatchItem(id, {
+          if (content != null) (updated.type == 'image' ? 'imageUrl' : 'text'): content,
+          if (colorValue != null) 'color': colorValue.toRadixString(16),
+        });
         return updated;
       }
       return item;

@@ -1,9 +1,5 @@
-import 'dart:math';
-import 'dart:ui';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/customization_provider.dart';
 import '../../domain/models/vision_customization.dart';
 import '../../domain/models/vision_item.dart';
 
@@ -33,1322 +29,773 @@ class RoomScene extends StatelessWidget {
       );
     }
 
+    final wallGradient = _getWallGradient(customization.background);
+
     return Stack(
       children: [
-        // Layer 1: Background Wall
-        RepaintBoundary(child: parallaxLayer(_WallLayer(customization: customization), 0.03)),
+        // 1. Living room background: wall gradient, skirting board & perspective wooden floorboards
+        Positioned.fill(
+          child: RepaintBoundary(
+            child: parallaxLayer(
+              CustomPaint(
+                painter: RoomBackgroundPainter(
+                  wallGradient: wallGradient,
+                  floorHeight: 90,
+                ),
+                size: Size.infinite,
+              ),
+              0.03,
+            ),
+          ),
+        ),
 
-        // Layer 2: Window
-        RepaintBoundary(child: parallaxLayer(_WindowLayer(customization: customization), 0.02)),
+        // 2. Full-Width Wooden Shelf sitting on lower wall above floorboards
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 105,
+          child: RepaintBoundary(
+            child: parallaxLayer(
+              const _FullWidthFloatingShelf(),
+              0.05,
+            ),
+          ),
+        ),
 
-        // Layer 3: Outside World View (through window)
-        RepaintBoundary(child: parallaxLayer(_OutsideViewLayer(customization: customization), 0.01)),
+        // 3. Realistic Cozy Candle sitting on the left side of the bottom shelf
+        Positioned(
+          left: 44,
+          bottom: 136,
+          child: RepaintBoundary(
+            child: parallaxLayer(
+              const _RealisticCandle(),
+              0.05,
+            ),
+          ),
+        ),
 
-        // Layer 4: Wall Decor
-        RepaintBoundary(child: parallaxLayer(_WallDecorLayer(customization: customization), 0.04)),
+        // 4. Living Workspace Fish Tank sitting cleanly on the right side of the bottom shelf
+        Positioned(
+          right: 36,
+          bottom: 136,
+          child: RepaintBoundary(
+            child: parallaxLayer(
+              const _WorkspaceFishTank(),
+              0.05,
+            ),
+          ),
+        ),
 
-        // Layer 5: Shelf
-        RepaintBoundary(child: parallaxLayer(_ShelfLayer(customization: customization), 0.06)),
-
-        // Layer 6: Floor
-        RepaintBoundary(child: parallaxLayer(_FloorLayer(customization: customization), 0.05)),
-
-        // Layer 6.5: Item floor shadows (items near floor cast shadows)
-        if (items.isNotEmpty)
-          RepaintBoundary(child: parallaxLayer(_ItemShadowLayer(items: items), 0.08)),
-
-        // Layer 7: The actual wall content (VisionBoard, etc.)
+        // 5. The actual wall content (VisionBoard, items, etc.)
         Positioned.fill(child: child),
-
-        // Layer 8: Foreground objects
-        RepaintBoundary(child: parallaxLayer(_ForegroundLayer(customization: customization), 0.14)),
-
-        // Layer 10: Ambient particles
-        RepaintBoundary(child: parallaxLayer(_ParticleLayer(customization: customization), 0.12)),
       ],
     );
   }
-}
 
-// ─── LAYER 1: WALL ─────────────────────────────────────────────────────────
-
-class _WallLayer extends StatelessWidget {
-  final VisionCustomization customization;
-  const _WallLayer({required this.customization});
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = customization.background;
-    return Positioned.fill(
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: _wallGradient(bg),
-        ),
-        child: CustomPaint(
-          painter: _WallTexturePainter(bg),
-          size: Size.infinite,
-        ),
-      ),
-    );
-  }
-
-  LinearGradient _wallGradient(VisionBackground bg) {
+  LinearGradient _getWallGradient(VisionBackground bg) {
     return switch (bg) {
       VisionBackground.scandinavianWall => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF5F0E8), Color(0xFFE8E0D0), Color(0xFFD4C9B8)],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFFAF9F6), Color(0xFFF1EFEA), Color(0xFFE7E4DF)],
+      ),
       VisionBackground.oceanView => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF0F4C75), Color(0xFF1A7BA0), Color(0xFF0B2E4A)],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF0F4C75), Color(0xFF1A7BA0), Color(0xFF0B2E4A)],
+      ),
       VisionBackground.forestCabin => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1B4332), Color(0xFF2D6A4F), Color(0xFF0D2818)],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF1B4332), Color(0xFF2D6A4F), Color(0xFF0D2818)],
+      ),
       VisionBackground.sunsetStudio => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFF6B6B), Color(0xFFFFA751), Color(0xFFFFD93D)],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF3B151E), Color(0xFF2A0E14), Color(0xFF160609)],
+      ),
       VisionBackground.rainWindow => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF374151), Color(0xFF4A5568), Color(0xFF2D3748)],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF374151), Color(0xFF4A5568), Color(0xFF2D3748)],
+      ),
       VisionBackground.modernLoft => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1A202C), Color(0xFF2D3748), Color(0xFF1A202C)],
-        ),
-      VisionBackground.softClouds => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFD6E4F0), Color(0xFFE8F0F8), Color(0xFFC8D8E8)],
-        ),
-      VisionBackground.walnutWood => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF5C4033), Color(0xFF6B4A3A), Color(0xFF4A3328)],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFF5F5F2), Color(0xFFEBEBE6), Color(0xFFDDDCD6)],
+      ),
       VisionBackground.matteBlack => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0F0F0F), Color(0xFF1A1A1A), Color(0xFF000000)],
-        ),
-      VisionBackground.minimalWhite => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9), Color(0xFFE2E8F0)],
-        ),
-      VisionBackground.concreteWall => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF9CA3AF), Color(0xFF8B929A), Color(0xFF6B7280)],
-        ),
-      VisionBackground.stoneWall => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF78716C), Color(0xFF8B8280), Color(0xFF6B6560)],
-        ),
-      VisionBackground.softGradient => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF667eea), Color(0xFF764ba2), Color(0xFF8E54E9)],
-        ),
-      VisionBackground.customImage => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF374151), Color(0xFF4B5563), Color(0xFF1F2937)],
-        ),
-    };
-  }
-}
-
-class _WallTexturePainter extends CustomPainter {
-  final VisionBackground bg;
-  _WallTexturePainter(this.bg);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Subtle noise texture for wall
-    final paint = Paint();
-    final random = Random(42);
-    final isLight = switch (bg) {
-      VisionBackground.scandinavianWall => true,
-      VisionBackground.softClouds => true,
-      VisionBackground.minimalWhite => true,
-      _ => false,
-    };
-
-    paint.color = (isLight ? Colors.black : Colors.white).withValues(alpha: 0.02);
-    for (int i = 0; i < 200; i++) {
-      final x = random.nextDouble() * size.width;
-      final y = random.nextDouble() * size.height;
-      canvas.drawCircle(Offset(x, y), random.nextDouble() * 3 + 1, paint);
-    }
-
-    // Ambient glow from top (like a soft window light)
-    final glow = Paint()
-      ..shader = RadialGradient(
-        center: Alignment.topCenter,
-        radius: 2.0,
-        colors: [
-          Colors.white.withValues(alpha: isLight ? 0.06 : 0.04),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), glow);
-
-    // Bottom vignette
-    final vignette = Paint()
-      ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          Colors.transparent,
-          Colors.transparent,
-          Colors.black.withValues(alpha: 0.15),
-        ],
-        stops: const [0.0, 0.6, 1.0],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), vignette);
-  }
-
-  @override
-  bool shouldRepaint(_WallTexturePainter old) => old.bg != bg;
-}
-
-// ─── LAYER 2: WINDOW ──────────────────────────────────────────────────────
-
-class _WindowLayer extends StatelessWidget {
-  final VisionCustomization customization;
-  const _WindowLayer({required this.customization});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      height: MediaQuery.of(context).size.height * 0.45,
-      child: ClipRect(
-        child: Stack(
-          children: [
-            // Glass pane with blur
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(40),
-                  bottomRight: Radius.circular(40),
-                ),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.06),
-                          Colors.white.withValues(alpha: 0.02),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Window frame top/bottom bars
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Vertical frame dividers
-            Positioned(
-              left: MediaQuery.of(context).size.width * 0.33,
-              top: 0,
-              bottom: 8,
-              child: Container(
-                width: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            Positioned(
-              left: MediaQuery.of(context).size.width * 0.66,
-              top: 0,
-              bottom: 8,
-              child: Container(
-                width: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            // Diagonal reflection streaks
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _WindowReflectionPainter(),
-                size: Size.infinite,
-              ),
-            ),
-          ],
-        ),
+        colors: [Color(0xFFFAF9F6), Color(0xFFF1EFEA), Color(0xFFE7E4DF)],
       ),
-    );
-  }
-}
-
-class _WindowReflectionPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill;
-
-    // Diagonal highlight streak
-    paint.color = Colors.white.withValues(alpha: 0.04);
-    final path = Path()
-      ..moveTo(size.width * 0.1, 0)
-      ..lineTo(size.width * 0.35, 0)
-      ..lineTo(size.width * 0.15, size.height)
-      ..lineTo(size.width * -0.1, size.height)
-      ..close();
-    canvas.drawPath(path, paint);
-
-    // Second streak
-    paint.color = Colors.white.withValues(alpha: 0.025);
-    final path2 = Path()
-      ..moveTo(size.width * 0.6, 0)
-      ..lineTo(size.width * 0.75, 0)
-      ..lineTo(size.width * 0.55, size.height)
-      ..lineTo(size.width * 0.4, size.height)
-      ..close();
-    canvas.drawPath(path2, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
-}
-
-// ─── LAYER 3: OUTSIDE VIEW ────────────────────────────────────────────────
-
-class _OutsideViewLayer extends StatelessWidget {
-  final VisionCustomization customization;
-  const _OutsideViewLayer({required this.customization});
-
-  @override
-  Widget build(BuildContext context) {
-    final scene = customization.windowScene;
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      height: MediaQuery.of(context).size.height * 0.45,
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(40),
-          bottomRight: Radius.circular(40),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: _sceneGradient(scene),
-          ),
-          child: const SizedBox.expand(),
-        ),
+      _ => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFFAF9F6), Color(0xFFF1EFEA), Color(0xFFE7E4DF)],
       ),
-    );
-  }
-
-  LinearGradient _sceneGradient(VisionWindowScene scene) {
-    return switch (scene) {
-      VisionWindowScene.ocean => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF87CEEB), Color(0xFF1E90FF), Color(0xFF006994)],
-        ),
-      VisionWindowScene.forest => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF87CEEB), Color(0xFF228B22), Color(0xFF006400)],
-        ),
-      VisionWindowScene.mountains => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF4A90D9), Color(0xFF6B8E23), Color(0xFF556B2F)],
-        ),
-      VisionWindowScene.rain => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF4A5568), Color(0xFF6B7280), Color(0xFF374151)],
-        ),
-      VisionWindowScene.snow => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFE8F0F8), Color(0xFFD6E4F0), Color(0xFFB0C4DE)],
-        ),
-      VisionWindowScene.city => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF2C3E50), Color(0xFF34495E), Color(0xFF1A252F)],
-        ),
-      VisionWindowScene.garden => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF87CEEB), Color(0xFF98FB98), Color(0xFF3CB371)],
-        ),
-      VisionWindowScene.lake => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF89CFF0), Color(0xFF2E86C1), Color(0xFF1B4F72)],
-        ),
-      VisionWindowScene.sunrise => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFF8C42), Color(0xFFFFB347), Color(0xFFFFD699)],
-        ),
-      VisionWindowScene.sunset => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFF4500), Color(0xFFFF6B6B), Color(0xFF8B0000)],
-        ),
-      VisionWindowScene.nightSky => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF0F0F2E), Color(0xFF1A1A4E), Color(0xFF0B0B1A)],
-        ),
     };
   }
 }
 
-// ─── LAYER 4: WALL DECOR ───────────────────────────────────────────────────
-
-class _WallDecorLayer extends StatelessWidget {
-  final VisionCustomization customization;
-  const _WallDecorLayer({required this.customization});
+/// Realistic round candle in a small transparent glass jar with a dancing flickering flame and warm light aura
+class _RealisticCandle extends StatefulWidget {
+  const _RealisticCandle();
 
   @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: CustomPaint(
-        painter: _WallDecorPainter(
-          decorations: customization.decorations,
-          boardStyle: customization.boardStyle,
-        ),
-        size: Size.infinite,
-      ),
-    );
-  }
+  State<_RealisticCandle> createState() => _RealisticCandleState();
 }
 
-class _WallDecorPainter extends CustomPainter {
-  final List<BoardDecoration> decorations;
-  final VisionBoardStyle boardStyle;
-
-  _WallDecorPainter({required this.decorations, required this.boardStyle});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final decor in decorations) {
-      switch (decor) {
-        case BoardDecoration.stringLights:
-          _drawStringLights(canvas, size);
-        case BoardDecoration.miniPlants:
-          _drawMiniPlants(canvas, size);
-        case BoardDecoration.pushPins:
-          _drawPushPins(canvas, size);
-        case BoardDecoration.washiTape:
-          _drawWashiTape(canvas, size);
-        case BoardDecoration.ribbons:
-          _drawRibbons(canvas, size);
-        case BoardDecoration.pressedFlowers:
-          _drawPressedFlowers(canvas, size);
-        case BoardDecoration.bookmarks:
-          _drawBookmarks(canvas, size);
-        case BoardDecoration.minimalShelves:
-          _drawMinimalShelves(canvas, size);
-        default:
-          break;
-      }
-    }
-  }
-
-  void _drawStringLights(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..color = Colors.brown.withValues(alpha: 0.2);
-    // Only draw at the top portion of the wall
-    final wallHeight = size.height * 0.6;
-    final path = Path();
-    path.moveTo(50, wallHeight * 0.08);
-    for (double x = 50; x <= size.width - 50; x += 20) {
-      path.lineTo(x, wallHeight * 0.08 + sin(x * 0.02) * 6);
-    }
-    canvas.drawPath(path, paint);
-
-    final bulbPaint = Paint()..style = PaintingStyle.fill;
-    for (double x = 50; x <= size.width - 50; x += 50) {
-      final y = wallHeight * 0.08 + sin(x * 0.02) * 6;
-      bulbPaint.color = const Color(0xFFFFD700).withValues(alpha: 0.15);
-      canvas.drawCircle(Offset(x, y + 4), 3, bulbPaint);
-    }
-  }
-
-  void _drawMiniPlants(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final wallHeight = size.height * 0.6;
-    final positions = [
-      Offset(size.width * 0.06, wallHeight * 0.45),
-      Offset(size.width * 0.94, wallHeight * 0.40),
-    ];
-    for (final pos in positions) {
-      paint.color = const Color(0xFF2D6A4F).withValues(alpha: 0.12);
-      canvas.drawCircle(Offset(pos.dx, pos.dy), 6, paint);
-      paint.color = const Color(0xFF8B6914).withValues(alpha: 0.1);
-      final pot = Path()
-        ..moveTo(pos.dx - 5, pos.dy + 2)
-        ..lineTo(pos.dx - 3, pos.dy + 10)
-        ..lineTo(pos.dx + 3, pos.dy + 10)
-        ..lineTo(pos.dx + 5, pos.dy + 2)
-        ..close();
-      canvas.drawPath(pot, paint);
-    }
-  }
-
-  void _drawPushPins(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.red.withValues(alpha: 0.08)
-      ..style = PaintingStyle.fill;
-    final wallHeight = size.height * 0.6;
-    for (final pos in [
-      Offset(size.width * 0.12, wallHeight * 0.1),
-      Offset(size.width * 0.88, wallHeight * 0.08),
-    ]) {
-      canvas.drawCircle(pos, 3, paint);
-    }
-  }
-
-  void _drawWashiTape(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = Colors.pink.withValues(alpha: 0.06);
-    final wallHeight = size.height * 0.6;
-    for (final pos in [
-      Offset(size.width * 0.08, wallHeight * 0.06),
-      Offset(size.width * 0.85, wallHeight * 0.10),
-    ]) {
-      canvas.save();
-      canvas.translate(pos.dx, pos.dy);
-      canvas.rotate(-0.12);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset.zero, width: 40, height: 12),
-          const Radius.circular(1),
-        ),
-        paint,
-      );
-      canvas.restore();
-    }
-  }
-
-  void _drawRibbons(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = const Color(0xFFFF6B6B).withValues(alpha: 0.05);
-    final wallHeight = size.height * 0.6;
-    final path = Path()
-      ..moveTo(size.width - 15, 0)
-      ..lineTo(size.width, 0)
-      ..lineTo(size.width, 15)
-      ..close();
-    canvas.drawPath(path, paint);
-    paint.color = const Color(0xFF4DA3FF).withValues(alpha: 0.05);
-    final path2 = Path()
-      ..moveTo(0, wallHeight - 15)
-      ..lineTo(0, wallHeight)
-      ..lineTo(15, wallHeight)
-      ..close();
-    canvas.drawPath(path2, paint);
-  }
-
-  void _drawPressedFlowers(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final wallHeight = size.height * 0.6;
-    for (final pos in [
-      Offset(size.width * 0.2, wallHeight * 0.12),
-      Offset(size.width * 0.75, wallHeight * 0.15),
-    ]) {
-      paint.color = const Color(0xFFFFB7C5).withValues(alpha: 0.08);
-      for (int i = 0; i < 5; i++) {
-        canvas.drawCircle(
-          Offset(pos.dx + cos(i * 1.256) * 3, pos.dy + sin(i * 1.256) * 3),
-          2,
-          paint,
-        );
-      }
-      paint.color = const Color(0xFFFFD700).withValues(alpha: 0.06);
-      canvas.drawCircle(pos, 1.5, paint);
-    }
-  }
-
-  void _drawBookmarks(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final wallHeight = size.height * 0.6;
-    final data = [
-      (Offset(size.width * 0.9, wallHeight * 0.2), const Color(0xFFE74C3C)),
-      (Offset(size.width * 0.1, wallHeight * 0.7), const Color(0xFF3498DB)),
-    ];
-    for (final (pos, color) in data) {
-      paint.color = color.withValues(alpha: 0.08);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(center: pos, width: 6, height: 24),
-          const Radius.circular(2),
-        ),
-        paint,
-      );
-    }
-  }
-
-  void _drawMinimalShelves(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF8B7355).withValues(alpha: 0.08)
-      ..style = PaintingStyle.fill;
-    final wallHeight = size.height * 0.6;
-    canvas.drawRect(
-      Rect.fromLTWH(size.width * 0.04, wallHeight * 0.65, size.width * 0.25, 2.5),
-      paint,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(size.width * 0.71, wallHeight * 0.7, size.width * 0.25, 2.5),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_WallDecorPainter old) =>
-      old.decorations != decorations || old.boardStyle != boardStyle;
-}
-
-// ─── LAYER 5: SHELF ───────────────────────────────────────────────────────
-
-class _ShelfLayer extends StatelessWidget {
-  final VisionCustomization customization;
-  const _ShelfLayer({required this.customization});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      bottom: MediaQuery.of(context).size.height * 0.32,
-      left: 0,
-      right: 0,
-      height: 8,
-      child: Stack(
-        children: [
-          // Shelf front edge
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  const Color(0xFF8B7355).withValues(alpha: 0.2),
-                  const Color(0xFF5C4033).withValues(alpha: 0.3),
-                ],
-              ),
-            ),
-          ),
-          // Shelf shadow
-          Positioned(
-            bottom: -16,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 16,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.15),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── LAYER 6: FLOOR ────────────────────────────────────────────────────────
-
-class _FloorLayer extends StatelessWidget {
-  final VisionCustomization customization;
-  const _FloorLayer({required this.customization});
-
-  @override
-  Widget build(BuildContext context) {
-    final floorHeight = MediaQuery.of(context).size.height * 0.28;
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: floorHeight,
-      child: Stack(
-        children: [
-          // Floor surface with perspective
-          Transform(
-            transform: Matrix4.identity()
-              ..setEntry(3, 2, 0.0005)
-              ..rotateX(0.15),
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    const Color(0xFF5C4033).withValues(alpha: 0.3),
-                    const Color(0xFF3E1F0D).withValues(alpha: 0.5),
-                    const Color(0xFF2A1508).withValues(alpha: 0.6),
-                  ],
-                  stops: const [0.0, 0.5, 1.0],
-                ),
-              ),
-              child: CustomPaint(
-                painter: _FloorPlankPainter(),
-                size: Size.infinite,
-              ),
-            ),
-          ),
-          // Bottom vignette
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.4),
-                  ],
-                  stops: const [0.0, 0.7],
-                ),
-              ),
-            ),
-          ),
-          // Floor reflection (subtle shine)
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.04,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.white,
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.3],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FloorPlankPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..color = Colors.white.withValues(alpha: 0.04)
-      ..strokeWidth = 0.5;
-
-    final plankCount = 8;
-    final plankWidth = size.width / plankCount;
-
-    for (int i = 0; i < plankCount; i++) {
-      final x = i * plankWidth;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-      // Horizontal grain
-      for (double y = 0; y < size.height; y += 12) {
-        final grainX = x + 4 + sin(y * 0.1 + i) * (plankWidth * 0.3);
-        canvas.drawLine(
-          Offset(grainX, y),
-          Offset(grainX + 6 + sin(y * 0.15) * 4, y + 2),
-          paint,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
-}
-
-// ─── LAYER 6.5: ITEM FLOOR SHADOWS ─────────────────────────────────────────
-
-class _ItemShadowLayer extends StatelessWidget {
-  final List<VisionItem> items;
-
-  const _ItemShadowLayer({required this.items});
-
-  @override
-  Widget build(BuildContext context) {
-    final floorTop = MediaQuery.of(context).size.height * 0.72;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: CustomPaint(
-          painter: _ItemShadowPainter(
-            items: items,
-            floorTop: floorTop,
-            screenWidth: screenWidth,
-            screenHeight: screenHeight,
-          ),
-          size: Size.infinite,
-        ),
-      ),
-    );
-  }
-}
-
-class _ItemShadowPainter extends CustomPainter {
-  final List<VisionItem> items;
-  final double floorTop;
-  final double screenWidth;
-  final double screenHeight;
-
-  _ItemShadowPainter({
-    required this.items,
-    required this.floorTop,
-    required this.screenWidth,
-    required this.screenHeight,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill;
-
-    for (final item in items) {
-      final itemBottom = item.y + item.height;
-      final overlap = itemBottom - floorTop;
-      if (overlap <= 0) continue;
-
-      final shadowIntensity = (overlap / (screenHeight * 0.15)).clamp(0.1, 0.6);
-      final shadowHeight = item.height * 0.15 * shadowIntensity;
-      final shadowWidth = item.width * 0.9;
-
-      final cx = item.x + item.width / 2;
-      final shadowX = cx - shadowWidth / 2;
-      final shadowY = floorTop;
-
-      paint.color = Colors.black.withValues(alpha: 0.12 * shadowIntensity);
-      canvas.drawOval(
-        Rect.fromLTWH(shadowX, shadowY, shadowWidth, shadowHeight),
-        paint,
-      );
-
-      // Second softer shadow layer
-      paint.color = Colors.black.withValues(alpha: 0.06 * shadowIntensity);
-      canvas.drawOval(
-        Rect.fromLTWH(
-          shadowX - shadowWidth * 0.1,
-          shadowY - 2,
-          shadowWidth * 1.2,
-          shadowHeight * 1.3,
-        ),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_ItemShadowPainter old) => old.items != items;
-}
-
-// ─── LAYER 8: FOREGROUND ──────────────────────────────────────────────────
-
-class _ForegroundLayer extends StatelessWidget {
-  final VisionCustomization customization;
-  const _ForegroundLayer({required this.customization});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Positioned.fill(child: SizedBox());
-  }
-}
-
-// ─── LAYER 8.5: CEILING BULB (Premium Hanging Pendant Light) ──────────────────
-
-// ─── LAYER 8.5: CEILING BULB (Premium Hanging Pendant Light) ──────────────────
-
-class CeilingBulbLayer extends ConsumerWidget {
-  final VisionCustomization customization;
-  const CeilingBulbLayer({super.key, required this.customization});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final brightness = customization.ambientBrightness;
-    final isLightOn = ref.watch(lightOnProvider);
-
-    // Position: centered horizontally, ~12% down from top
-    final bulbTop = screenHeight * 0.12;
-    final bulbSize = screenWidth * 0.22; // ~22% of screen width
-
-    return Positioned(
-      top: 0, // Wire starts from the absolute top of the screen (ceiling)
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.topCenter,
-        children: [
-          // 1. Ceiling mount & wire (background non-interactive)
-          IgnorePointer(
-            child: Stack(
-              alignment: Alignment.topCenter,
-              children: [
-                // Ceiling mount (matte black cylinder)
-                Positioned(
-                  top: 0,
-                  width: bulbSize * 0.38,
-                  height: 14,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF111111),
-                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(6)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.5),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Thin black hanging wire extending from the top to the bulb position
-                Positioned(
-                  top: 14,
-                  width: 1.8,
-                  height: bulbTop - 14,
-                  child: Container(
-                    color: const Color(0xFF161616),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 2. Volumetric lighting and radial bloom (only shown if isLightOn is true)
-          if (isLightOn) ...[
-            // Volumetric light cone extending downward from the bulb base
-            Positioned(
-              top: bulbTop + bulbSize * 0.65, // Positioned strictly below the bulb neck
-              left: screenWidth / 2 - screenWidth * 0.48,
-              width: screenWidth * 0.96, // Expanded width for a wider light flare
-              height: screenHeight * 0.52,
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: _LightConePainter(brightness: brightness),
-                ),
-              ),
-            ),
-
-            // Soft radial glow bloom around the bulb (ambient warm glow)
-            Positioned(
-              top: bulbTop - bulbSize * 0.15,
-              left: screenWidth / 2 - bulbSize * 0.65,
-              width: bulbSize * 1.3,
-              height: bulbSize * 1.3,
-              child: IgnorePointer(
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFFFBBF24).withValues(alpha: 0.22 * brightness),
-                        const Color(0xFFF59E0B).withValues(alpha: 0.08 * brightness),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.45, 1.0],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-
-          // 3. Bulb image (Interactive!)
-          Positioned(
-            top: bulbTop - bulbSize * 0.1,
-            left: screenWidth / 2 - bulbSize / 2,
-            width: bulbSize,
-            height: bulbSize,
-            child: GestureDetector(
-              onTap: () {
-                HapticFeedback.mediumImpact();
-                ref.read(lightOnProvider.notifier).state = !ref.read(lightOnProvider);
-              },
-              behavior: HitTestBehavior.opaque,
-              child: Image.asset(
-                'assets/images/bulb.png',
-                width: bulbSize,
-                height: bulbSize,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.high,
-                color: isLightOn ? null : Colors.black.withValues(alpha: 0.55),
-                colorBlendMode: isLightOn ? null : BlendMode.srcATop,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LightConePainter extends CustomPainter {
-  final double brightness;
-  _LightConePainter({required this.brightness});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
-    final paint = Paint()
-      ..style = PaintingStyle.fill
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          const Color(0xFFFBBF24).withValues(alpha: 0.40 * brightness),
-          const Color(0xFFF59E0B).withValues(alpha: 0.20 * brightness),
-          const Color(0xFFD97706).withValues(alpha: 0.05 * brightness),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.28, 0.70, 1.0],
-      ).createShader(rect)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28); // Symmetrical feathered coning
-
-    final path = Path()
-      ..moveTo(size.width * 0.485, 0)
-      ..lineTo(size.width * 0.515, 0)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _LightConePainter oldDelegate) =>
-      oldDelegate.brightness != brightness;
-}
-
-// ─── LAYER 9: LIGHTING ────────────────────────────────────────────────────
-
-class LightingLayer extends ConsumerWidget {
-  final VisionCustomization customization;
-  const LightingLayer({super.key, required this.customization});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isLightOn = ref.watch(lightOnProvider);
-    if (!isLightOn) return const SizedBox.shrink();
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final bulbTop = screenHeight * 0.12;
-    final bulbSize = screenWidth * 0.22;
-
-    final lighting = customization.lighting;
-    final brightness = customization.ambientBrightness;
-
-    Color overlayColor;
-    double opacity;
-    switch (lighting) {
-      case VisionLighting.warm:
-        overlayColor = const Color(0xFFFBBF24); // Beautiful amber glow
-        opacity = 0.12;
-      case VisionLighting.neutral:
-        overlayColor = const Color(0xFFE8E0D0);
-        opacity = 0.05;
-      case VisionLighting.cool:
-        overlayColor = const Color(0xFF89CFF0);
-        opacity = 0.06;
-      case VisionLighting.morning:
-        overlayColor = const Color(0xFFFFC194);
-        opacity = 0.1;
-      case VisionLighting.goldenHour:
-        overlayColor = const Color(0xFFFF8C42);
-        opacity = 0.12;
-      case VisionLighting.sunset:
-        overlayColor = const Color(0xFFFF6B6B);
-        opacity = 0.1;
-      case VisionLighting.evening:
-        overlayColor = const Color(0xFF6C5B7B);
-        opacity = 0.1;
-      case VisionLighting.night:
-        overlayColor = const Color(0xFF1A1A40);
-        opacity = 0.2;
-    }
-    final adjustedOpacity = opacity * brightness;
-
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: Stack(
-          children: [
-            // Ambient room light (soft glow from ceiling)
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.topCenter,
-                    radius: 1.5,
-                    colors: [
-                      overlayColor.withValues(alpha: adjustedOpacity),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // Ceiling bulb primary light cone (main pendant illumination covering top to bottom)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment(0, -1.0 + (bulbTop + bulbSize * 0.55) / (screenHeight * 0.5)), // Centered at bulb
-                    radius: 1.35,
-                    colors: [
-                      const Color(0xFFFBBF24).withValues(alpha: 0.16 * brightness),
-                      const Color(0xFFF59E0B).withValues(alpha: 0.08 * brightness),
-                      const Color(0xFFD97706).withValues(alpha: 0.02 * brightness),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.40, 0.80, 1.0],
-                  ),
-                ),
-              ),
-            ),
-
-            // Floor pool of light (warm spot from ceiling bulb)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: MediaQuery.of(context).size.height * 0.35,
-              child: Center(
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.85,
-                  height: MediaQuery.of(context).size.height * 0.35,
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment.topCenter,
-                      radius: 0.9,
-                      colors: [
-                        const Color(0xFFFFD54F).withValues(alpha: 0.1 * brightness),
-                        const Color(0xFFFFB300).withValues(alpha: 0.06 * brightness),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.45, 1.0],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Wall wash - subtle vertical illumination on side walls
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFFFFE082).withValues(alpha: 0.03 * brightness),
-                      Colors.transparent,
-                      Colors.transparent,
-                      const Color(0xFFFFB300).withValues(alpha: 0.02 * brightness),
-                    ],
-                    stops: const [0.0, 0.3, 0.7, 1.0],
-                  ),
-                ),
-              ),
-            ),
-
-            // Warm floor light (soft glow from below - existing)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: MediaQuery.of(context).size.height * 0.3,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.bottomCenter,
-                    radius: 1.2,
-                    colors: [
-                      const Color(0xFFFF8C42).withValues(alpha: 0.06 * brightness),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Subtle shelf/wall object highlights from bulb
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(-0.3, -0.15),
-                    radius: 1.8,
-                    colors: [
-                      const Color(0xFFFFF8E1).withValues(alpha: 0.04 * brightness),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── LAYER 10: PARTICLES ──────────────────────────────────────────────────
-
-class _ParticleLayer extends StatefulWidget {
-  final VisionCustomization customization;
-  const _ParticleLayer({required this.customization});
-
-  @override
-  State<_ParticleLayer> createState() => _ParticleLayerState();
-}
-
-class _ParticleLayerState extends State<_ParticleLayer>
+class _RealisticCandleState extends State<_RealisticCandle>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late List<_DustParticle> _particles;
+  late AnimationController _flickerController;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _flickerController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 12),
-    )..repeat();
-    _particles = List.generate(15, (_) => _DustParticle(Random()));
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _flickerController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) {
-            return CustomPaint(
-              painter: _DustPainter(_particles, _controller.value),
-              size: Size.infinite,
-            );
-          },
-        ),
+    return AnimatedBuilder(
+      animation: _flickerController,
+      builder: (context, _) {
+        return CustomPaint(
+          size: const Size(44, 44),
+          painter: _CandlePainter(progress: _flickerController.value),
+        );
+      },
+    );
+  }
+}
+
+class _CandlePainter extends CustomPainter {
+  final double progress;
+
+  _CandlePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+    final bottomY = h - 1.0;
+
+    // Flicker calculations for natural flame dancing & soft lighting
+    final flickerSeed = math.sin(progress * math.pi * 4);
+    final flameScale = 0.85 + 0.15 * ((flickerSeed + 1) / 2);
+    final flameSway = math.cos(progress * math.pi * 3) * 0.6;
+    final auraAlpha = 0.12 + 0.05 * math.sin(progress * math.pi * 2);
+
+    // 1. Soft Warm Ambient Light Aura on Wall (subtle, localized light)
+    final auraRadius = 20.0 * flameScale;
+    final auraCenter = Offset(cx + flameSway, bottomY - 26);
+    final auraPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFFFFB74D).withValues(alpha: auraAlpha),
+          const Color(0xFFFF9800).withValues(alpha: auraAlpha * 0.3),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromCircle(center: auraCenter, radius: auraRadius));
+    canvas.drawCircle(auraCenter, auraRadius, auraPaint);
+
+    // 2. Compact 3D Glass Jar Base & Dimensions
+    final jarW = 18.0;
+    final jarH = 22.0;
+    final jarRect = Rect.fromLTWH(cx - jarW / 2, bottomY - jarH, jarW, jarH);
+
+    // 3. Thick Glass Base (solid 3D heavy glass bottom, clear & clean without black dots)
+    final baseH = 3.5;
+    final baseRect = Rect.fromLTWH(jarRect.left, jarRect.bottom - baseH, jarW, baseH);
+    final glassBasePaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          Colors.white.withValues(alpha: 0.35),
+          Colors.white.withValues(alpha: 0.15),
+          Colors.white.withValues(alpha: 0.25),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(baseRect);
+    canvas.drawRRect(
+      RRect.fromRectAndCorners(
+        baseRect,
+        bottomLeft: const Radius.circular(5),
+        bottomRight: const Radius.circular(5),
+      ),
+      glassBasePaint,
+    );
+
+    // 4. 3D Cylindrical Wax Column inside Jar
+    final waxH = (jarH - baseH) * 0.65;
+    final waxTopY = jarRect.bottom - baseH - waxH;
+    final waxRect = Rect.fromLTWH(jarRect.left + 1.5, waxTopY, jarW - 3, waxH);
+
+    // Cylindrical 3D Shading Gradient
+    final wax3DPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          const Color(0xFFFFFEE0),
+          const Color(0xFFFFFDD0),
+          const Color(0xFFE8D9B5),
+        ],
+        stops: const [0.0, 0.45, 1.0],
+      ).createShader(waxRect);
+
+    final waxPath = Path()
+      ..moveTo(waxRect.left, waxRect.top)
+      ..lineTo(waxRect.right, waxRect.top)
+      ..lineTo(waxRect.right, waxRect.bottom)
+      ..arcToPoint(
+        Offset(waxRect.left, waxRect.bottom),
+        radius: Radius.circular(waxRect.width / 2),
+        clockwise: false,
+      )
+      ..close();
+    canvas.drawPath(waxPath, wax3DPaint);
+
+    // 3D Elliptical Wax Top Surface Pool with molten glow
+    final waxTopRect = Rect.fromCenter(
+      center: Offset(cx, waxTopY),
+      width: waxRect.width,
+      height: 4.0,
+    );
+    canvas.drawOval(
+      waxTopRect,
+      Paint()..color = const Color(0xFFF7ECDA),
+    );
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(cx, waxTopY), width: 7, height: 2.2),
+      Paint()..color = const Color(0xFFFFD54F).withValues(alpha: 0.65),
+    );
+
+    // 5. Outer 3D Glass Jar Body & Cylindrical Highlights
+    final jarRRect = RRect.fromRectAndRadius(jarRect, const Radius.circular(5));
+    
+    final glassSheenPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          Colors.white.withValues(alpha: 0.35),
+          Colors.white.withValues(alpha: 0.05),
+          Colors.white.withValues(alpha: 0.20),
+        ],
+        stops: const [0.05, 0.5, 0.95],
+      ).createShader(jarRect);
+    canvas.drawRRect(jarRRect, glassSheenPaint);
+
+    // Glass Jar Rim / Top Lip Opening
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(cx, jarRect.top), width: jarW, height: 4),
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0,
+    );
+
+    // Specular Sheen Streak on left edge
+    final specularPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.4)
+      ..strokeWidth = 1.0;
+    canvas.drawLine(
+      Offset(jarRect.left + 2, jarRect.top + 2),
+      Offset(jarRect.left + 2, jarRect.bottom - 3),
+      specularPaint,
+    );
+
+    // 6. Candle Wick with ember glow
+    final wickTop = waxTopY - 4.0;
+    canvas.drawLine(
+      Offset(cx, waxTopY),
+      Offset(cx + flameSway * 0.3, wickTop),
+      Paint()
+        ..color = const Color(0xFF111111)
+        ..strokeWidth = 1.2
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawCircle(
+      Offset(cx + flameSway * 0.3, wickTop + 0.4),
+      0.6,
+      Paint()..color = const Color(0xFFFF5722),
+    );
+
+    // 7. Dynamic 3D Flickering Flame
+    canvas.save();
+    canvas.translate(cx + flameSway, wickTop - 0.5);
+    canvas.scale(flameScale);
+
+    final flamePath = Path()
+      ..moveTo(0, 0)
+      ..quadraticBezierTo(-3.5, -4.5, 0, -10)
+      ..quadraticBezierTo(3.5, -4.5, 0, 0);
+
+    canvas.drawPath(
+      flamePath,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [Color(0xFFFF5722), Color(0xFFFFB74D), Color(0xFFFFD54F)],
+        ).createShader(Rect.fromLTWH(-3.5, -10, 7, 10)),
+    );
+
+    final innerFlamePath = Path()
+      ..moveTo(0, -0.4)
+      ..quadraticBezierTo(-1.8, -3, 0, -6.5)
+      ..quadraticBezierTo(1.8, -3, 0, -0.4);
+
+    canvas.drawPath(
+      innerFlamePath,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [Color(0xFFFFF59D), Colors.white],
+        ).createShader(Rect.fromLTWH(-1.8, -6.5, 3.6, 6.5)),
+    );
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _CandlePainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+
+/// The exact living workspace fish tank with swimming Orange Goldfish and Blue Tetra
+class _WorkspaceFishTank extends StatefulWidget {
+  const _WorkspaceFishTank();
+
+  @override
+  State<_WorkspaceFishTank> createState() => _WorkspaceFishTankState();
+}
+
+class _WorkspaceFishTankState extends State<_WorkspaceFishTank>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _swayController;
+
+  @override
+  void initState() {
+    super.initState();
+    _swayController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 18),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _swayController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _swayController,
+      builder: (context, _) {
+        return CustomPaint(
+          size: const Size(78, 48),
+          painter: _WorkspaceFishTankPainter(progress: _swayController.value),
+        );
+      },
+    );
+  }
+}
+
+class _WorkspaceFishTankPainter extends CustomPainter {
+  final double progress;
+
+  _WorkspaceFishTankPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    final tankX = 0.0;
+    final tankY = 0.0;
+    final tankW = w;
+    final tankH = h;
+
+    // Tank glass body
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(tankX, tankY, tankW, tankH),
+        const Radius.circular(6),
+      ),
+      Paint()..color = Colors.white.withValues(alpha: 0.12),
+    );
+
+    // Tank border
+    final tankBorder = Paint()
+      ..color = Colors.cyan.withValues(alpha: 0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(tankX, tankY, tankW, tankH),
+        const Radius.circular(6),
+      ),
+      tankBorder,
+    );
+
+    // Water fill
+    final waterTop = tankY + tankH * 0.22;
+    canvas.drawRect(
+      Rect.fromLTWH(tankX, waterTop, tankW, tankH * 0.78),
+      Paint()..color = Colors.blue.withValues(alpha: 0.15),
+    );
+
+    // Water surface line
+    canvas.drawLine(
+      Offset(tankX + 2, waterTop),
+      Offset(tankX + tankW - 2, waterTop),
+      Paint()
+        ..color = Colors.cyan.withValues(alpha: 0.35)
+        ..strokeWidth = 0.8,
+    );
+
+    // Gravel at bottom
+    final gravelPaint = Paint()..color = const Color(0xFFD4A574);
+    final int gravelCount = (tankW / 4.8).floor();
+    for (int i = 0; i < gravelCount; i++) {
+      final gx = tankX + 3 + i * 4.8 + math.sin(i * 2.7) * 1.5;
+      final gy = tankY + tankH - 3 - (i % 3) * 2.5;
+      canvas.drawCircle(Offset(gx, gy), 1.4, gravelPaint);
+    }
+
+    // Bubbles
+    for (int i = 0; i < 5; i++) {
+      final bPhase = progress * 2 * math.pi + i * 1.8;
+      final by = tankY + tankH * 0.75 - (bPhase % (math.pi * 2)) / (math.pi * 2) * tankH * 0.65;
+      final bx = tankX + 6 + i * (tankW - 12) / 4 + math.sin(bPhase * 0.7) * 2;
+      final bSize = 0.7 + (i % 3) * 0.4;
+      canvas.drawCircle(
+        Offset(bx, by),
+        bSize,
+        Paint()..color = Colors.white.withValues(alpha: 0.35),
+      );
+    }
+
+    // ── Fish 1 (Orange Goldfish) ──
+    final f1Period = progress * 2 * math.pi;
+    final f1Cos = math.cos(f1Period);
+    final f1Sin = math.sin(f1Period);
+    final f1X = tankX + tankW / 2 + f1Sin * (tankW / 2 - 10);
+
+    final f1Side = f1Sin >= 0 ? -1.0 : 1.0;
+    final f1T = ((f1Cos + 1) / 2).clamp(0.0, 1.0);
+    final f1S = f1T * f1T * (3 - 2 * f1T);
+    final f1Heading = f1Side * math.pi * (1 - f1S);
+
+    final f1Lunge = f1Sin * f1Sin * (-1.5);
+    final f1Y = waterTop + tankH * 0.40 + math.sin(f1Period * 0.7) * 1.5 + f1Lunge;
+
+    canvas.save();
+    canvas.translate(f1X, f1Y);
+    canvas.rotate(f1Heading);
+    canvas.rotate(math.sin(f1Period * 3) * 0.08);
+
+    final tail1Path = Path()
+      ..moveTo(-4.5, 0)
+      ..lineTo(-8, -3.5 + math.sin(f1Period * 3) * 1.0)
+      ..lineTo(-8, 3.5 + math.cos(f1Period * 3) * 1.0)
+      ..close();
+    canvas.drawPath(tail1Path, Paint()..color = const Color(0xFFFF6B00));
+
+    final dorsal1Path = Path()
+      ..moveTo(-1.0, -2.0)
+      ..lineTo(0.8, -4.0)
+      ..lineTo(2.0, -2.0)
+      ..close();
+    canvas.drawPath(dorsal1Path, Paint()..color = const Color(0xFFFF8C00).withValues(alpha: 0.7));
+
+    canvas.drawOval(
+      Rect.fromCenter(center: const Offset(0, 0), width: 7.5, height: 3.5),
+      Paint()..color = const Color(0xFFFF8C00),
+    );
+
+    canvas.drawCircle(const Offset(2.8, -0.7), 0.9, Paint()..color = Colors.white);
+    canvas.drawCircle(const Offset(3.0, -0.7), 0.45, Paint()..color = Colors.black);
+    canvas.restore();
+
+    // ── Fish 2 (Blue Tetra) ──
+    final f2Period = progress * 2 * math.pi * 2 + 1.6;
+    final f2Cos = math.cos(f2Period);
+    final f2Sin = math.sin(f2Period);
+    final f2X = tankX + tankW / 2 + f2Sin * (tankW / 2 - 10);
+
+    final f2Side = f2Sin >= 0 ? -1.0 : 1.0;
+    final f2T = ((f2Cos + 1) / 2).clamp(0.0, 1.0);
+    final f2S = f2T * f2T * (3 - 2 * f2T);
+    final f2Heading = f2Side * math.pi * (1 - f2S);
+
+    final f2Lunge = f2Sin * f2Sin * (-1.0);
+    final f2Y = waterTop + tankH * 0.60 + math.cos(f2Period * 0.6) * 1.2 + f2Lunge;
+
+    canvas.save();
+    canvas.translate(f2X, f2Y);
+    canvas.rotate(f2Heading);
+    canvas.rotate(math.sin(f2Period * 3) * 0.06);
+
+    final tail2Path = Path()
+      ..moveTo(-3.5, 0)
+      ..lineTo(-6.5, -2.8 + math.cos(f2Period * 3) * 0.8)
+      ..lineTo(-6.5, 2.8 + math.sin(f2Period * 3) * 0.8)
+      ..close();
+    canvas.drawPath(tail2Path, Paint()..color = const Color(0xFF00BCD4));
+
+    final dorsal2Path = Path()
+      ..moveTo(-0.5, -1.5)
+      ..lineTo(0.5, -3.0)
+      ..lineTo(1.5, -1.5)
+      ..close();
+    canvas.drawPath(dorsal2Path, Paint()..color = const Color(0xFF26C6DA).withValues(alpha: 0.7));
+
+    canvas.drawOval(
+      Rect.fromCenter(center: const Offset(0, 0), width: 6.0, height: 2.8),
+      Paint()..color = const Color(0xFF00ACC1),
+    );
+
+    canvas.drawCircle(const Offset(2.2, -0.5), 0.7, Paint()..color = Colors.white);
+    canvas.drawCircle(const Offset(2.4, -0.5), 0.35, Paint()..color = Colors.black);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _WorkspaceFishTankPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+/// Full-width wooden shelf stretching across the wall above floorboards
+class _FullWidthFloatingShelf extends StatelessWidget {
+  const _FullWidthFloatingShelf();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 32,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // 1. Backing Drop Shadow on wall across full width
+          Positioned(
+            top: 10,
+            left: 0,
+            right: 0,
+            height: 20,
+            child: Container(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    blurRadius: 16,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // 2. Multiple Wall Brackets across the full width shelf
+          ...[0.18, 0.50, 0.82].map(
+            (factor) => Positioned(
+              left: MediaQuery.of(context).size.width * factor - 3.5,
+              top: 12,
+              child: Container(
+                width: 7,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B),
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(3),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.4),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Main Wooden Plank Body stretching full width
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 14,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFF6A4423),
+                    Color(0xFF4A2F18),
+                    Color(0xFF321F0F),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Stack(
+                children: [
+                  // Top bevel highlight streak across full width
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 1.5,
+                    child: Container(
+                      color: Colors.white.withValues(alpha: 0.22),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _DustParticle {
-  double x, y;
-  double speed;
-  double size;
-  double driftOffset;
-  double alpha;
+/// The exact room background painter used in the living room workspace:
+/// renders wall stucco/shadow texturing, skirting board, and wooden floorboards in perspective.
+class RoomBackgroundPainter extends CustomPainter {
+  final LinearGradient wallGradient;
+  final double floorHeight;
 
-  _DustParticle(Random rnd)
-      : x = rnd.nextDouble(),
-        y = rnd.nextDouble(),
-        speed = 0.005 + rnd.nextDouble() * 0.015,
-        size = 0.5 + rnd.nextDouble() * 1.5,
-        driftOffset = rnd.nextDouble() * 2 * pi,
-        alpha = 0.05 + rnd.nextDouble() * 0.15;
-}
-
-class _DustPainter extends CustomPainter {
-  final List<_DustParticle> particles;
-  final double progress;
-
-  _DustPainter(this.particles, this.progress);
+  RoomBackgroundPainter({
+    required this.wallGradient,
+    required this.floorHeight,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
+    final double w = size.width;
+    final double h = size.height;
+    final double wallH = h - floorHeight;
 
-    for (final p in particles) {
-      final y = (p.y - progress * p.speed) % 1.0;
-      final x = p.x + sin(progress * 2 * pi + p.driftOffset) * 0.015;
-      final alpha = p.alpha + sin(progress * 4 * pi + p.driftOffset) * 0.05;
+    final Rect wallRect = Rect.fromLTRB(0, 0, w, wallH);
+    final Rect floorRect = Rect.fromLTRB(0, wallH, w, h);
 
-      paint.color = Colors.white.withValues(alpha: alpha.clamp(0.0, 0.2));
-      canvas.drawCircle(
-        Offset(x * size.width, y * size.height),
-        p.size,
-        paint,
-      );
+    // 1. Wall Background Gradient
+    final Paint wallPaint = Paint()
+      ..shader = wallGradient.createShader(wallRect);
+    canvas.drawRect(wallRect, wallPaint);
+
+    // Soft wall shadow / ambient gradient in corners
+    final cornerShadow = RadialGradient(
+      colors: [Colors.black.withValues(alpha: 0.12), Colors.transparent],
+      radius: 1.3,
+    ).createShader(Rect.fromLTRB(-100, -100, w + 100, wallH + 100));
+    canvas.drawRect(
+      wallRect,
+      Paint()
+        ..shader = cornerShadow
+        ..blendMode = BlendMode.multiply,
+    );
+
+    // 2. Baseboard / Skirting Molding (floor depth)
+    final double baseboardH = 12.0;
+    final Rect baseboardRect = Rect.fromLTRB(0, wallH - baseboardH, w, wallH);
+    final baseboardPaint = Paint()
+      ..shader = const LinearGradient(
+        colors: [Color(0xFF8D6E63), Color(0xFF5D4037)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(baseboardRect);
+    canvas.drawRect(baseboardRect, baseboardPaint);
+    canvas.drawLine(
+      Offset(0, wallH - baseboardH),
+      Offset(w, wallH - baseboardH),
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.2)
+        ..strokeWidth = 0.8,
+    );
+    canvas.drawLine(
+      Offset(0, wallH),
+      Offset(w, wallH),
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.3)
+        ..strokeWidth = 1.2,
+    );
+
+    // 3. Wooden Floorboards in perspective
+    final floorGradient = const LinearGradient(
+      colors: [Color(0xFF5D4037), Color(0xFF3E2723)],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    );
+    canvas.drawRect(
+      floorRect,
+      Paint()..shader = floorGradient.createShader(floorRect),
+    );
+
+    // Horizontal floorboard spacing lines
+    final plankPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.5)
+      ..strokeWidth = 1.4;
+    final int plankCount = 6;
+    for (int j = 0; j <= plankCount; j++) {
+      final double t = j / plankCount;
+      final double y = wallH + floorHeight * math.pow(t, 1.38);
+      canvas.drawLine(Offset(0, y), Offset(w, y), plankPaint);
+      if (j > 0 && j < plankCount) {
+        canvas.drawLine(
+          Offset(0, y + 1),
+          Offset(w, y + 1),
+          Paint()
+            ..color = Colors.white.withValues(alpha: 0.03)
+            ..strokeWidth = 0.6,
+        );
+      }
+    }
+
+    // Converging vertical joint lines
+    final jointPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.4)
+      ..strokeWidth = 1.0;
+    final Offset vanishingPoint = Offset(w / 2, -h * 0.15);
+    for (int k = -3; k <= 7; k++) {
+      final double startX = (w / 4.5) * k;
+      final Offset startFloor = Offset(startX, wallH);
+      final double dirX = startFloor.dx - vanishingPoint.dx;
+      final double dirY = startFloor.dy - vanishingPoint.dy;
+      final double scale = (h - wallH) / dirY;
+      final Offset endFloor = Offset(startFloor.dx + dirX * scale, h);
+      canvas.drawLine(startFloor, endFloor, jointPaint);
     }
   }
 
   @override
-  bool shouldRepaint(_DustPainter old) => true;
+  bool shouldRepaint(covariant RoomBackgroundPainter oldDelegate) =>
+      oldDelegate.floorHeight != floorHeight ||
+      oldDelegate.wallGradient != wallGradient;
 }

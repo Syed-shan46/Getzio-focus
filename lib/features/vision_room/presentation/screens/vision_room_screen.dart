@@ -1,6 +1,12 @@
+import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../domain/models/vision_item.dart';
 import '../providers/vision_room_providers.dart';
 import '../providers/customization_provider.dart';
 import '../providers/canvas_providers.dart';
@@ -10,9 +16,17 @@ import '../walls/motivation_wall.dart';
 import '../walls/achievement_wall.dart';
 import '../walls/finance_wall.dart';
 import '../walls/timeline_wall.dart';
-import '../widgets/customization_sheet.dart';
+import '../widgets/hanging_pen.dart';
 import '../widgets/room_scene.dart';
-
+import '../widgets/vision_creation_sheet.dart';
+import '../widgets/quote_builder_modal.dart';
+import '../widgets/goal_builder_modal.dart';
+import '../widgets/task_builder_modal.dart';
+import '../widgets/plan_builder_modal.dart';
+import '../widgets/finance_builder_modal.dart';
+import '../widgets/countdown_builder_modal.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 
 class VisionRoomScreen extends ConsumerStatefulWidget {
   const VisionRoomScreen({super.key});
@@ -21,11 +35,14 @@ class VisionRoomScreen extends ConsumerStatefulWidget {
   ConsumerState<VisionRoomScreen> createState() => _VisionRoomScreenState();
 }
 
-class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with SingleTickerProviderStateMixin {
+class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
+    with SingleTickerProviderStateMixin {
   late PageController _pageController;
   late AnimationController _entryController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+
+  final ImagePicker _picker = ImagePicker();
 
   final List<String> _wallNames = [
     'Finance Wall',
@@ -33,24 +50,23 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
     'Habit Wall',
     'Vision Board',
     'Motivation Wall',
-    'Future Timeline'
+    'Future Timeline',
   ];
 
   @override
   void initState() {
     super.initState();
-    // Default to Vision Board (index 3)
     _pageController = PageController(initialPage: 3, viewportFraction: 1.0);
-    
-    // Cinematic Entry Animation
+
     _entryController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _entryController, curve: Curves.easeOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _entryController, curve: Curves.easeOut));
 
     _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
       CurvedAnimation(parent: _entryController, curve: Curves.easeOutCubic),
@@ -66,12 +82,642 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
     super.dispose();
   }
 
+  void _showPremiumAuthSheet(BuildContext context) {
+    PremiumAuthSheet.show(context);
+  }
+
+  // ─── ITEM CREATION METHODS ──────────────────────────────────────────────
+
+  Future<void> _pickImage() async {
+    final isGuest = ref.read(authProvider).value == null;
+    final items = ref.read(canvasStateProvider).items;
+    final count = items
+        .where((i) => i.type == VisionItemType.image.name)
+        .length;
+    if (isGuest && count >= 2) {
+      _showPremiumAuthSheet(context);
+      return;
+    }
+    final size = MediaQuery.of(context).size;
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      final random = Random();
+      final newItem = VisionItem(
+        id: const Uuid().v4(),
+        type: VisionItemType.image.name,
+        content: image.path,
+        x: (size.width / 2) - 125,
+        y: (size.height / 2) - 125,
+        width: 250,
+        height: 250,
+        rotation: (random.nextDouble() - 0.5) * 0.2,
+      );
+      ref.read(canvasStateProvider.notifier).addItem(newItem);
+    }
+  }
+
+  void _addStickyNote() {
+    _showStickyNoteDialog();
+  }
+
+  void _showStickyNoteDialog({VisionItem? existingItem}) {
+    if (existingItem == null) {
+      final isGuest = ref.read(authProvider).value == null;
+      final items = ref.read(canvasStateProvider).items;
+      final count = items
+          .where((i) => i.type == VisionItemType.stickyNote.name)
+          .length;
+      if (isGuest && count >= 3) {
+        _showPremiumAuthSheet(context);
+        return;
+      }
+    }
+
+    final textController = TextEditingController(
+      text: existingItem?.content ?? '',
+    );
+    int selectedColorValue = existingItem?.colorValue ?? 0xFFF59E0B;
+    double selectedFontSize =
+        (existingItem?.metadata?['fontSize'] as num?)?.toDouble() ?? 16.0;
+
+    final List<int> stickyColors = [
+      0xFFF59E0B,
+      0xFFEC4899,
+      0xFF3B82F6,
+      0xFFA855F7,
+      0xFF10B981,
+      0xFFF8FAFC,
+    ];
+
+    final Map<String, double> fontSizes = {
+      'Small': 12.0,
+      'Medium': 16.0,
+      'Large': 20.0,
+      'XL': 24.0,
+    };
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF0F172A),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                existingItem == null ? 'New Sticky Note' : 'Edit Sticky Note',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: textController,
+                      autofocus: true,
+                      maxLines: 3,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: selectedFontSize,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Type your note...',
+                        hintStyle: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: selectedFontSize,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.08),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Text Font Size',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: fontSizes.entries.map((entry) {
+                        final isSelected = selectedFontSize == entry.value;
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: GestureDetector(
+                              onTap: () =>
+                                  setState(() => selectedFontSize = entry.value),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 150),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.accentBlue
+                                      : Colors.white.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: isSelected
+                                      ? Border.all(color: Colors.white, width: 1.5)
+                                      : null,
+                                ),
+                                child: Text(
+                                  entry.key,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.white70,
+                                    fontSize: 11,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Color',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: stickyColors.map((colorValue) {
+                        final isSelected = selectedColorValue == colorValue;
+                        return GestureDetector(
+                          onTap: () =>
+                              setState(() => selectedColorValue = colorValue),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: Color(colorValue),
+                              shape: BoxShape.circle,
+                              border: isSelected
+                                  ? Border.all(color: Colors.white, width: 2.5)
+                                  : null,
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: Color(colorValue)
+                                            .withValues(alpha: 0.5),
+                                        blurRadius: 8,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accentBlue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () {
+                    final text = textController.text.trim();
+                    if (text.isNotEmpty) {
+                      Navigator.pop(dialogContext);
+                      if (existingItem != null) {
+                        ref
+                            .read(canvasStateProvider.notifier)
+                            .updateItemDetails(
+                              existingItem.id,
+                              content: text,
+                              colorValue: selectedColorValue,
+                              metadata: {'fontSize': selectedFontSize},
+                            );
+                      } else {
+                        final size = MediaQuery.of(context).size;
+                        final random = Random();
+                        ref.read(canvasStateProvider.notifier).addItem(
+                              VisionItem(
+                                id: const Uuid().v4(),
+                                type: VisionItemType.stickyNote.name,
+                                content: text,
+                                colorValue: selectedColorValue,
+                                x: (size.width / 2) - 90,
+                                y: (size.height / 2) - 90,
+                                width: 180,
+                                height: 180,
+                                rotation: (random.nextDouble() - 0.5) * 0.3,
+                                attachmentType: 'pin',
+                                attachmentStyle: 'redPin',
+                                metadata: {'fontSize': selectedFontSize},
+                              ),
+                            );
+                      }
+                    }
+                  },
+                  child: Text(existingItem == null ? 'Add' : 'Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _addQuote() {
+    final isGuest = ref.read(authProvider).value == null;
+    final items = ref.read(canvasStateProvider).items;
+    final count = items
+        .where((i) => i.type == VisionItemType.quote.name)
+        .length;
+    if (isGuest && count >= 2) {
+      _showPremiumAuthSheet(context);
+      return;
+    }
+    QuoteBuilderModal.show(
+      context,
+      onSubmit: (metadata) {
+        final size = MediaQuery.of(context).size;
+        final random = Random();
+        ref
+            .read(canvasStateProvider.notifier)
+            .addItem(
+              VisionItem(
+                id: const Uuid().v4(),
+                type: VisionItemType.quote.name,
+                content: metadata['quote'],
+                secondaryContent: metadata['author'],
+                metadata: metadata,
+                x: (size.width / 2) - 140,
+                y: (size.height / 2) - 80,
+                width: 280,
+                height: 160,
+                rotation: (random.nextDouble() - 0.5) * 0.15,
+                attachmentType: 'tape',
+                attachmentStyle: 'beige',
+              ),
+            );
+      },
+    );
+  }
+
+  void _addGoal() {
+    GoalBuilderModal.show(
+      context,
+      onSubmit: (metadata) {
+        final size = MediaQuery.of(context).size;
+        final random = Random();
+        ref
+            .read(canvasStateProvider.notifier)
+            .addItem(
+              VisionItem(
+                id: const Uuid().v4(),
+                type: VisionItemType.goal.name,
+                content: metadata['title'],
+                metadata: metadata,
+                x: (size.width / 2) - 150,
+                y: (size.height / 2) - 100,
+                width: 300,
+                height: 200,
+                rotation: (random.nextDouble() - 0.5) * 0.1,
+                attachmentType: 'pin',
+                attachmentStyle: 'bluePin',
+              ),
+            );
+      },
+    );
+  }
+
+  void _addPlan() {
+    PlanBuilderModal.show(
+      context,
+      onSubmit: (metadata) {
+        final size = MediaQuery.of(context).size;
+        ref
+            .read(canvasStateProvider.notifier)
+            .addItem(
+              VisionItem(
+                id: const Uuid().v4(),
+                type: VisionItemType.plan.name,
+                content: metadata['title'] ?? 'Plan',
+                metadata: metadata,
+                x: (size.width / 2) - 160,
+                y: (size.height / 2) - 120,
+                width: 320,
+                height: 240,
+                attachmentType: 'tape',
+                attachmentStyle: 'blackTape',
+              ),
+            );
+      },
+    );
+  }
+
+  void _addTask() {
+    TaskBuilderModal.show(
+      context,
+      onSubmit: (metadata) {
+        final size = MediaQuery.of(context).size;
+        ref
+            .read(canvasStateProvider.notifier)
+            .addItem(
+              VisionItem(
+                id: const Uuid().v4(),
+                type: VisionItemType.task.name,
+                content: metadata['title'] ?? 'Task',
+                metadata: metadata,
+                x: (size.width / 2) - 125,
+                y: (size.height / 2) - 60,
+                width: 250,
+                height: 120,
+              ),
+            );
+      },
+    );
+  }
+
+  void _addCountdown() {
+    CountdownBuilderModal.show(
+      context,
+      onSubmit: (metadata) {
+        final size = MediaQuery.of(context).size;
+        ref
+            .read(canvasStateProvider.notifier)
+            .addItem(
+              VisionItem(
+                id: const Uuid().v4(),
+                type: VisionItemType.countdown.name,
+                content: metadata['title'] ?? 'Countdown',
+                metadata: metadata,
+                x: (size.width / 2) - 110,
+                y: (size.height / 2) - 110,
+                width: 220,
+                height: 220,
+              ),
+            );
+      },
+    );
+  }
+
+  void _addFinance() {
+    FinanceBuilderModal.show(
+      context,
+      onSubmit: (metadata) {
+        final size = MediaQuery.of(context).size;
+        ref
+            .read(canvasStateProvider.notifier)
+            .addItem(
+              VisionItem(
+                id: const Uuid().v4(),
+                type: VisionItemType.financeGoal.name,
+                content: metadata['title'] ?? 'Finance',
+                metadata: metadata,
+                x: (size.width / 2) - 140,
+                y: (size.height / 2) - 80,
+                width: 280,
+                height: 160,
+              ),
+            );
+      },
+    );
+  }
+
+  void _addFrame() {
+    final frames = [
+      ('Modern', 0xFF3B82F6),
+      ('Warm', 0xFFF59E0B),
+      ('Rose', 0xFFEC4899),
+      ('Forest', 0xFF10B981),
+      ('Royal', 0xFF8B5CF6),
+      ('Slate', 0xFF64748B),
+    ];
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0F172A),
+        title: const Text(
+          'Add Frame',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        content: SizedBox(
+          width: 280,
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: frames.map((f) {
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  final size = MediaQuery.of(context).size;
+                  final random = Random();
+                  ref
+                      .read(canvasStateProvider.notifier)
+                      .addItem(
+                        VisionItem(
+                          id: const Uuid().v4(),
+                          type: VisionItemType.decoration.name,
+                          content: 'frame_${f.$1}',
+                          colorValue: f.$2,
+                          x: (size.width / 2) - 100,
+                          y: (size.height / 2) - 80,
+                          width: 200,
+                          height: 160,
+                          rotation: (random.nextDouble() - 0.5) * 0.08,
+                          attachmentType: 'none',
+                        ),
+                      );
+                },
+                child: Container(
+                  width: 76,
+                  height: 76,
+                  decoration: BoxDecoration(
+                    color: Color(f.$2).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Color(f.$2).withValues(alpha: 0.4),
+                      width: 2,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      f.$1,
+                      style: TextStyle(
+                        color: Color(f.$2),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _addText() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0F172A),
+        title: const Text(
+          'Add Text',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLines: 3,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+          decoration: InputDecoration(
+            hintText: 'Type your text...',
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.08),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white60),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentBlue,
+            ),
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isNotEmpty) {
+                Navigator.pop(ctx);
+                final size = MediaQuery.of(context).size;
+                final random = Random();
+                ref
+                    .read(canvasStateProvider.notifier)
+                    .addItem(
+                      VisionItem(
+                        id: const Uuid().v4(),
+                        type: VisionItemType.stickyNote.name,
+                        content: text,
+                        colorValue: 0xFF1E293B,
+                        x: (size.width / 2) - 100,
+                        y: (size.height / 2) - 60,
+                        width: 200,
+                        height: 120,
+                        rotation: (random.nextDouble() - 0.5) * 0.1,
+                        attachmentType: 'none',
+                      ),
+                    );
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openCreationSheet() {
+    void withEditMode(VoidCallback action) {
+      ref.read(editModeProvider.notifier).state = true;
+      action();
+    }
+
+    VisionCreationSheet.show(
+      context,
+      onAddImage: () => withEditMode(_pickImage),
+      onAddStickyNote: () => withEditMode(_addStickyNote),
+      onAddQuote: () => withEditMode(_addQuote),
+      onAddGoal: () => withEditMode(_addGoal),
+      onAddPlan: () => withEditMode(_addPlan),
+      onAddTask: () => withEditMode(_addTask),
+      onAddCountdown: () => withEditMode(_addCountdown),
+      onAddFinance: () => withEditMode(_addFinance),
+      onAddFrame: () => withEditMode(_addFrame),
+      onAddText: () => withEditMode(_addText),
+      onEnterEditMode: () {
+        ref.read(editModeProvider.notifier).state = true;
+      },
+    );
+  }
+
+  void _exitEditMode() {
+    ref.read(canvasStateProvider.notifier).clearSelection();
+    ref.read(editModeProvider.notifier).state = false;
+    HapticFeedback.mediumImpact();
+
+    // Show success snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: Colors.green, size: 20),
+            SizedBox(width: 8),
+            Text('✓ Vision Room Updated'),
+          ],
+        ),
+        backgroundColor: const Color(0xFF0F172A),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final focusMode = ref.watch(focusModeProvider);
     final customization = ref.watch(visionCustomizationProvider);
     final canvasState = ref.watch(canvasStateProvider);
-    
+    final isEditMode = ref.watch(editModeProvider);
+
+    ref.listen<String?>(premiumAuthTriggerProvider, (previous, next) {
+      if (next != null) {
+        _showPremiumAuthSheet(context);
+        ref.read(premiumAuthTriggerProvider.notifier).state = null;
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
@@ -84,63 +730,81 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
               scale: _scaleAnimation.value,
               child: Stack(
                 children: [
-                  // 1-10. Room Scene (walls, window, floor, lighting, particles)
+                  // 1-10. Room Scene
                   AnimatedBuilder(
                     animation: _pageController,
                     builder: (context, _) {
-                      final pageOffset = _pageController.hasClients && _pageController.position.haveDimensions
+                      final pageOffset =
+                          _pageController.hasClients &&
+                              _pageController.position.haveDimensions
                           ? _pageController.page! - 3
                           : 0.0;
                       return RoomScene(
                         customization: customization,
                         items: canvasState.items,
                         pageOffset: pageOffset,
-                      child: PageView.builder(
-                        controller: _pageController,
-                        physics: const NeverScrollableScrollPhysics(),
-                        onPageChanged: (index) {
-                          ref.read(currentWallIndexProvider.notifier).state = index;
-                        },
-                        itemCount: _wallNames.length,
-                        itemBuilder: (context, index) {
-                          return AnimatedBuilder(
-                            animation: _pageController,
-                            builder: (context, child) {
-                              double value = 1.0;
-                              if (_pageController.position.haveDimensions) {
-                                value = _pageController.page! - index;
-                                value = (1 - (value.abs() * 0.3)).clamp(0.0, 1.0);
-                              }
+                        child: PageView.builder(
+                          controller: _pageController,
+                          physics: const NeverScrollableScrollPhysics(),
+                          onPageChanged: (index) {
+                            ref.read(currentWallIndexProvider.notifier).state =
+                                index;
+                          },
+                          itemCount: _wallNames.length,
+                          itemBuilder: (context, index) {
+                            return AnimatedBuilder(
+                              animation: _pageController,
+                              builder: (context, child) {
+                                double value = 1.0;
+                                if (_pageController.hasClients &&
+                                    _pageController.position.haveDimensions) {
+                                  value = _pageController.page! - index;
+                                  value = (1 - (value.abs() * 0.3)).clamp(
+                                    0.0,
+                                    1.0,
+                                  );
+                                }
 
-                              final tilt = _pageController.position.haveDimensions 
-                                  ? (_pageController.page! - index) * 0.1 
-                                  : 0.0;
+                                final tilt =
+                                    (_pageController.hasClients &&
+                                        _pageController.position.haveDimensions)
+                                    ? (_pageController.page! - index) * 0.1
+                                    : 0.0;
 
-                              return Transform(
-                                transform: Matrix4.identity()
-                                  ..setEntry(3, 2, 0.001)
-                                  ..rotateY(-tilt),
-                                alignment: Alignment.center,
-                                child: Opacity(
-                                  opacity: value.clamp(0.5, 1.0),
-                                  child: _buildWallContent(index),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    );
-                  },
+                                return Transform(
+                                  transform: Matrix4.identity()
+                                    ..setEntry(3, 2, 0.001)
+                                    ..rotateY(-tilt),
+                                  alignment: Alignment.center,
+                                  child: Opacity(
+                                    opacity: value.clamp(0.5, 1.0),
+                                    child: _buildWallContent(index),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      );
+                    },
                   ),
+
+                  // 3. Hanging Pen (entry to creation sheet)
+                  Positioned.fill(child: HangingPen(onTap: _openCreationSheet)),
 
                   // 4. Focus Mode Overlay
                   if (focusMode)
-                    Container(
-                      color: Colors.black.withValues(alpha: 0.7),
+                    Container(color: Colors.black.withValues(alpha: 0.7)),
+
+                  // 5. Edit Mode dimming overlay (subtle)
+                  if (isEditMode)
+                    IgnorePointer(
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.15),
+                      ),
                     ),
 
-                  // 5. UI Overlay (Top Bar)
+                  // 6. UI Overlay (Top Bar)
                   SafeArea(
                     child: IgnorePointer(
                       ignoring: focusMode,
@@ -149,13 +813,20 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
                         opacity: focusMode ? 0.0 : 1.0,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _buildTopBar(),
-                          ],
+                          children: [_buildTopBar()],
                         ),
                       ),
                     ),
                   ),
+
+                  // 7. Edit Mode Floating Toolbar
+                  if (isEditMode)
+                    Positioned(
+                      bottom: 30,
+                      left: 0,
+                      right: 0,
+                      child: _buildEditToolbar(),
+                    ),
                 ],
               ),
             ),
@@ -167,27 +838,43 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
 
   Widget _buildWallContent(int index) {
     switch (index) {
-      case 0: return const FinanceWall();
-      case 1: return const AchievementWall();
-      case 2: return const HabitWall();
-      case 3: return const VisionWall();
-      case 4: return const MotivationWall();
-      case 5: return const TimelineWall();
-      default: return const SizedBox();
+      case 0:
+        return const FinanceWall();
+      case 1:
+        return const AchievementWall();
+      case 2:
+        return const HabitWall();
+      case 3:
+        return const VisionWall();
+      case 4:
+        return const MotivationWall();
+      case 5:
+        return const TimelineWall();
+      default:
+        return const SizedBox();
     }
   }
 
-
-
   Widget _buildTopBar() {
+    final isEditMode = ref.watch(editModeProvider);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Close button
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              if (isEditMode) {
+                _exitEditMode();
+              } else {
+                Navigator.pop(context);
+              }
+            },
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -195,41 +882,265 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen> with Single
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.glassBorder, width: 0.5),
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.white),
+              child: Icon(
+                isEditMode
+                    ? Icons.check_rounded
+                    : Icons.arrow_back_ios_new_rounded,
+                size: 18,
+                color: Colors.white,
+              ),
             ),
           ),
 
-          // Customize button
-          GestureDetector(
-            onTap: () => VisionCustomizationSheet.show(context),
-            child: Container(
+          // Edit Mode indicator
+          if (isEditMode)
+            Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.glass,
+                color: AppColors.accentBlue.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.glassBorder, width: 0.5),
+                border: Border.all(
+                  color: AppColors.accentBlue.withValues(alpha: 0.4),
+                ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.tune_rounded, size: 16, color: AppColors.accentBlue),
-                  const SizedBox(width: 6),
-                  const Text(
-                    'Customize',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+              child: const Text(
+                'Edit Mode',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
   }
+
+  // ─── EDIT MODE FLOATING TOOLBAR ─────────────────────────────────────────
+
+  Widget _buildEditToolbar() {
+    final selectedIds = ref.watch(canvasStateProvider).selectedIds;
+    final hasSelection = selectedIds.isNotEmpty;
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Done button
+                      _toolbarButton(
+                        icon: Icons.check_rounded,
+                        label: 'Done',
+                        color: const Color(0xFF10B981),
+                        onTap: _exitEditMode,
+                      ),
+                      _divider(),
+                      _toolbarButton(
+                        icon: Icons.undo_rounded,
+                        label: 'Undo',
+                        color: Colors.white70,
+                        onTap: () =>
+                            ref.read(canvasStateProvider.notifier).undo(),
+                      ),
+                      _toolbarButton(
+                        icon: Icons.redo_rounded,
+                        label: 'Redo',
+                        color: Colors.white70,
+                        onTap: () =>
+                            ref.read(canvasStateProvider.notifier).redo(),
+                      ),
+                      if (hasSelection) ...[
+                        _divider(),
+                        Builder(
+                          builder: (context) {
+                            final items = ref.read(canvasStateProvider).items;
+                            final selectedItem = items.firstWhere(
+                              (i) => i.id == selectedIds.first,
+                              orElse: () => items.first,
+                            );
+                            if (selectedItem.type == VisionItemType.stickyNote.name) {
+                              return _toolbarButton(
+                                icon: Icons.edit_note_rounded,
+                                label: 'Edit Note',
+                                color: AppColors.accentBlue,
+                                onTap: () {
+                                  _showStickyNoteDialog(existingItem: selectedItem);
+                                },
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                        _toolbarButton(
+                          icon: Icons.copy_rounded,
+                          label: 'Duplicate',
+                          color: Colors.white,
+                          onTap: () {
+                            final items = ref.read(canvasStateProvider).items;
+                            final item = items.firstWhere(
+                              (i) => i.id == selectedIds.first,
+                            );
+                            final newItem = item.copyWith(
+                              id: const Uuid().v4(),
+                              x: item.x + 40,
+                              y: item.y + 40,
+                              zIndex: item.zIndex + 1,
+                            );
+                            ref
+                                .read(canvasStateProvider.notifier)
+                                .addItem(newItem);
+                            ref
+                                .read(canvasStateProvider.notifier)
+                                .selectItem(newItem.id);
+                            HapticFeedback.lightImpact();
+                          },
+                        ),
+                        _toolbarButton(
+                          icon: Icons.delete_outline_rounded,
+                          label: 'Delete',
+                          color: Colors.redAccent,
+                          onTap: () {
+                            ref
+                                .read(canvasStateProvider.notifier)
+                                .removeItem(selectedIds.first);
+                            HapticFeedback.heavyImpact();
+                          },
+                        ),
+                        _toolbarButton(
+                          icon: Icons.lock_outline_rounded,
+                          label: 'Lock',
+                          color: Colors.white70,
+                          onTap: () {
+                            // Toggle pin
+                            final items = ref.read(canvasStateProvider).items;
+                            final item = items.firstWhere(
+                              (i) => i.id == selectedIds.first,
+                            );
+                            ref
+                                .read(canvasStateProvider.notifier)
+                                .updateAttachment(
+                                  item.id,
+                                  'pin',
+                                  item.attachmentStyle == 'redPin'
+                                      ? 'bluePin'
+                                      : 'redPin',
+                                );
+                          },
+                        ),
+                        _toolbarButton(
+                          icon: Icons.flip_to_front_rounded,
+                          label: 'Forward',
+                          color: Colors.white70,
+                          onTap: () => ref
+                              .read(canvasStateProvider.notifier)
+                              .bringToFront(selectedIds.first),
+                        ),
+                        _toolbarButton(
+                          icon: Icons.flip_to_back_rounded,
+                          label: 'Backward',
+                          color: Colors.white70,
+                          onTap: () => ref
+                              .read(canvasStateProvider.notifier)
+                              .sendToBack(selectedIds.first),
+                        ),
+                        _toolbarButton(
+                          icon: Icons.rotate_right_rounded,
+                          label: 'Rotate',
+                          color: Colors.white70,
+                          onTap: () {
+                            final items = ref.read(canvasStateProvider).items;
+                            final item = items.firstWhere(
+                              (i) => i.id == selectedIds.first,
+                            );
+                            ref
+                                .read(canvasStateProvider.notifier)
+                                .commitTransform(
+                                  item.id,
+                                  item.width,
+                                  item.height,
+                                  item.rotation + 0.15,
+                                );
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _toolbarButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 18, color: color),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _divider() {
+    return Container(
+      width: 1,
+      height: 32,
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      color: Colors.white.withValues(alpha: 0.1),
+    );
+  }
 }
-
-
