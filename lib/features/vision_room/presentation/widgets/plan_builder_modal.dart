@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import 'due_date_progress_selector.dart';
 
 class PlanBuilderModal extends StatefulWidget {
   final Function(Map<String, dynamic> metadata) onSubmit;
@@ -22,6 +23,8 @@ class PlanBuilderModal extends StatefulWidget {
 
 class _PlanBuilderModalState extends State<PlanBuilderModal> {
   final _titleController = TextEditingController();
+  double _progress = 0;
+  DateTime? _dueDate;
   final List<TextEditingController> _objectiveControllers = [
     TextEditingController(),
     TextEditingController(),
@@ -46,6 +49,8 @@ class _PlanBuilderModalState extends State<PlanBuilderModal> {
         
     widget.onSubmit({
       'title': _titleController.text.trim(),
+      'progress': _progress,
+      'dueDate': _dueDate?.toIso8601String(),
       'objectives': objectives.isEmpty ? ['Task 1', 'Task 2'] : objectives,
     });
     Navigator.pop(context);
@@ -101,6 +106,14 @@ class _PlanBuilderModalState extends State<PlanBuilderModal> {
                 );
               }),
               const SizedBox(height: 16),
+              DueDateAndProgressSelector(
+                selectedDate: _dueDate,
+                currentProgress: _progress,
+                accentColor: AppColors.accentEmerald,
+                onDateChanged: (d) => setState(() => _dueDate = d),
+                onProgressChanged: (p) => setState(() => _progress = p),
+              ),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _submit,
                 style: ElevatedButton.styleFrom(

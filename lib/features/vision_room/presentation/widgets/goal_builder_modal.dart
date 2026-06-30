@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import 'due_date_progress_selector.dart';
 
 class GoalBuilderModal extends StatefulWidget {
   final Function(Map<String, dynamic> metadata) onSubmit;
@@ -24,6 +25,7 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   double _progress = 0;
+  DateTime? _dueDate;
   String _priority = 'Medium';
   Color _selectedColor = Colors.blueAccent;
 
@@ -49,6 +51,7 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
       'title': _titleController.text.trim(),
       'description': _descriptionController.text.trim(),
       'progress': _progress,
+      'dueDate': _dueDate?.toIso8601String(),
       'priority': _priority,
       'color': _selectedColor.toARGB32(),
     });
@@ -109,18 +112,15 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
               ),
               const SizedBox(height: 24),
 
-              // Progress Slider
-              Text('Current Progress: ${_progress.toInt()}%', style: AppTypography.caption(color: Colors.white54)),
-              Slider(
-                value: _progress,
-                min: 0,
-                max: 100,
-                divisions: 20,
-                activeColor: _selectedColor,
-                inactiveColor: Colors.white.withValues(alpha: 0.1),
-                onChanged: (val) => setState(() => _progress = val),
+              // Due Date & Progress Selector
+              DueDateAndProgressSelector(
+                selectedDate: _dueDate,
+                currentProgress: _progress,
+                accentColor: _selectedColor,
+                onDateChanged: (d) => setState(() => _dueDate = d),
+                onProgressChanged: (p) => setState(() => _progress = p),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
               // Priority
               Text('Priority', style: AppTypography.caption(color: Colors.white54)),

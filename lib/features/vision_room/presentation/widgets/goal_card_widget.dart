@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../domain/models/smart_object_models.dart';
 import '../../domain/models/vision_item.dart';
 
 class GoalCardWidget extends StatelessWidget {
@@ -10,9 +11,10 @@ class GoalCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metadata = item.metadata ?? {};
-    final title = metadata['title'] as String? ?? 'My Goal';
+    final title = item.content.isNotEmpty ? item.content : (metadata['title'] as String? ?? 'My Goal');
     final description = metadata['description'] as String? ?? '';
-    final progress = (metadata['progress'] as num?)?.toDouble() ?? 0.0;
+    final progressRatio = item.smartProgress;
+    final progressPercent = item.smartProgressPercent;
     final priority = metadata['priority'] as String? ?? 'Medium';
     final colorValue = metadata['color'] as int? ?? Colors.blueAccent.toARGB32();
     final themeColor = Color(colorValue);
@@ -26,7 +28,7 @@ class GoalCardWidget extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: const Color(0xFF1E293B), // Dark slate
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: themeColor.withValues(alpha: 0.3), width: 1.5),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 20, offset: const Offset(0, 10))
@@ -89,14 +91,14 @@ class GoalCardWidget extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     CircularProgressIndicator(
-                      value: progress / 100,
+                      value: progressRatio,
                       strokeWidth: 6,
                       backgroundColor: themeColor.withValues(alpha: 0.2),
                       valueColor: AlwaysStoppedAnimation<Color>(themeColor),
                     ),
                     Center(
                       child: Text(
-                        '${progress.toInt()}%',
+                        '$progressPercent%',
                         style: AppTypography.caption(color: Colors.white).copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -109,7 +111,7 @@ class GoalCardWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      progress == 100 ? 'Completed!' : 'In Progress',
+                      progressPercent == 100 ? 'Completed!' : 'In Progress',
                       style: AppTypography.bodyMedium(color: Colors.white),
                     ),
                     Text(

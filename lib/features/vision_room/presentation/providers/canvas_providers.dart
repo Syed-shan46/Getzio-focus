@@ -267,7 +267,10 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     if (hasToken) {
       try {
         final dio = _ref.read(dioClientProvider);
-        dio.post('/focus/vision-room/item', data: _mapItemToDbKeys(newItem)).then((_) {
+        final payload = _mapItemToDbKeys(newItem);
+        payload['countdownDate'] = newItem.countdownDate?.toIso8601String();
+        payload['metadata'] = newItem.metadata;
+        dio.post('/focus/vision-room/item', data: payload).then((_) {
           debugPrint('[CanvasSync] Created item ${newItem.id} on backend');
         }).catchError((e) {
           debugPrint('[CanvasSync] Failed to create item ${newItem.id}: $e');
@@ -382,12 +385,26 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
         _debouncePatchItem(id, {
           if (content != null) (updated.type == 'image' ? 'imageUrl' : 'text'): content,
           if (colorValue != null) 'color': colorValue.toRadixString(16),
+          'metadata': newMetadata,
         });
         return updated;
       }
       return item;
     }).toList();
     commitState(state.copyWith(items: updatedItems));
+  }
+
+  void duplicateItem(String id) {
+    final itemIndex = state.items.indexWhere((i) => i.id == id);
+    if (itemIndex == -1) return;
+    final original = state.items[itemIndex];
+    final newItem = original.copyWith(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      x: original.x + 30,
+      y: original.y + 30,
+      zIndex: original.zIndex + 1,
+    );
+    addItem(newItem);
   }
 
   void updateAttachment(String id, String type, String style) {

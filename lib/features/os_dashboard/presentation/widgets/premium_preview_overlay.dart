@@ -619,45 +619,22 @@ class PremiumPreviewOverlay extends ConsumerWidget {
               const SizedBox(height: 20),
 
               if (featureId == 'vision_room') ...[
-                ElevatedButton.icon(
+                ElevatedButton(
                   onPressed: () {
                     HapticFeedback.mediumImpact();
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
-                    );
+                    onContinue();
                   },
-                  icon: const Icon(Icons.phone_android_rounded, color: Colors.black, size: 20),
-                  label: const Text(
-                    'Continue with Phone Number',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
+                    backgroundColor: AppColors.accentBlue,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    onContinue();
-                  },
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                  ),
-                  child: Text(
-                    'Stored on the device locally',
-                    style: GoogleFonts.outfit(
-                      color: Colors.white60,
-                      fontSize: 14,
-                      decoration: TextDecoration.underline,
-                    ),
+                  child: const Text(
+                    'Continue',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                   ),
                 ),
               ] else ...[

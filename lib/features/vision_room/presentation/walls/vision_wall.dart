@@ -10,12 +10,16 @@ import '../../domain/models/vision_customization.dart';
 import '../providers/canvas_providers.dart';
 import '../providers/customization_provider.dart';
 import '../providers/vision_room_providers.dart';
+import '../providers/sticky_note_provider.dart';
 import '../widgets/attachment_widgets.dart';
+import '../widgets/sticky_note_widget.dart';
 import '../widgets/quote_card_widget.dart';
 import '../widgets/goal_card_widget.dart';
 import '../widgets/premium_cards.dart'
     show PlanCardWidget, TaskCardWidget, FinanceCardWidget, CountdownCardWidget;
-import '../widgets/roadmap_bottom_sheet.dart';
+import '../widgets/universal_smart_object_sheet.dart';
+import '../widgets/premium_goal_overview_sheet.dart';
+import '../widgets/smart_object_sheets.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class VisionWall extends ConsumerStatefulWidget {
@@ -161,26 +165,37 @@ class _VisionWallState extends ConsumerState<VisionWall>
                   }
                 : null,
             child: Stack(
-              children: items.map((item) {
-                final isSelected = selectedIds.contains(item.id);
-                final isInteracting = _interactingItemId == item.id;
-                final springValue = _springItemId == item.id
-                    ? _springAnimation.value
-                    : 0.0;
+              children: [
+                ...items.map((item) {
+                  final isSelected = selectedIds.contains(item.id);
+                  final isInteracting = _interactingItemId == item.id;
+                  final springValue = _springItemId == item.id
+                      ? _springAnimation.value
+                      : 0.0;
 
-                return Positioned(
-                  left: item.x,
-                  top: item.y,
-                  child: _VisionItemWidget(
-                    item: item,
-                    isSelected: isSelected,
-                    isInteracting: isInteracting,
-                    isEditMode: isEditMode,
-                    boardStyle: cust.boardStyle,
-                    springValue: springValue,
-                  ),
-                );
-              }).toList(),
+                  return Positioned(
+                    left: item.x,
+                    top: item.y,
+                    child: _VisionItemWidget(
+                      item: item,
+                      isSelected: isSelected,
+                      isInteracting: isInteracting,
+                      isEditMode: isEditMode,
+                      boardStyle: cust.boardStyle,
+                      springValue: springValue,
+                    ),
+                  );
+                }),
+                
+                // Add Premium Sticky Notes from Hive/API
+                ...ref.watch(stickyNotesProvider).map((note) {
+                  return Positioned(
+                    left: note.x,
+                    top: note.y,
+                    child: StickyNoteWidget(note: note),
+                  );
+                }),
+              ],
             ),
           ),
         ),
@@ -282,14 +297,12 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
         opacity: cardCfg.opacity,
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(
-              cardCfg.glassMode ? cr : cr.clamp(4, 20),
-            ),
+            borderRadius: BorderRadius.zero,
             border:
                 selectionBorder ??
                 Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: bt,
+                  color: Colors.white.withValues(alpha: 0.8),
+                  width: 4.0,
                 ),
             boxShadow: [
               BoxShadow(
@@ -302,25 +315,40 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(
-              cardCfg.roundedMode ? cr : cr.clamp(4, 20),
-            ),
-            child: Image.file(
-              File(item.content),
-              width: item.width,
-              height: item.height,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: Colors.grey[800],
-                child: const Center(
-                  child: Icon(
-                    Icons.broken_image_rounded,
-                    color: Colors.white54,
-                    size: 40,
+            borderRadius: BorderRadius.zero,
+            child: item.content.startsWith('http')
+                ? Image.network(
+                    item.content,
+                    width: item.width,
+                    height: item.height,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[800],
+                      child: const Center(
+                        child: Icon(
+                          Icons.broken_image_rounded,
+                          color: Colors.white54,
+                          size: 40,
+                        ),
+                      ),
+                    ),
+                  )
+                : Image.file(
+                    File(item.content),
+                    width: item.width,
+                    height: item.height,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[800],
+                      child: const Center(
+                        child: Icon(
+                          Icons.broken_image_rounded,
+                          color: Colors.white54,
+                          size: 40,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
           ),
         ),
       );
@@ -334,14 +362,7 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: noteColor,
-          borderRadius: cardCfg.squareMode
-              ? BorderRadius.zero
-              : BorderRadius.only(
-                  topLeft: Radius.circular(cardCfg.roundedMode ? cr : 2),
-                  topRight: Radius.circular(cardCfg.roundedMode ? cr : 2),
-                  bottomLeft: Radius.circular(cardCfg.roundedMode ? cr : 2),
-                  bottomRight: Radius.circular(cardCfg.roundedMode ? 24 : cr),
-                ),
+          borderRadius: BorderRadius.zero,
           border:
               selectionBorder ??
               (bt > 0
@@ -433,7 +454,7 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Color(item.colorValue).withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(cr),
+          borderRadius: BorderRadius.zero,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.2),
@@ -469,7 +490,7 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
     final boardAdjustedWidget =
         widget.boardStyle == VisionBoardStyle.floatingGallery
         ? ClipRRect(
-            borderRadius: BorderRadius.circular(cr),
+            borderRadius: BorderRadius.zero,
             child: ImageFiltered(
               imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
               child: contentWidget,
@@ -515,12 +536,7 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
             ref.read(canvasStateProvider.notifier).selectItem(item.id);
             HapticFeedback.selectionClick();
           } else {
-            // Viewing mode: tap goals/plans/tasks to open roadmap
-            if (item.type == VisionItemType.goal.name ||
-                item.type == VisionItemType.plan.name ||
-                item.type == VisionItemType.task.name) {
-              RoadmapBottomSheet.show(context, item: item);
-            }
+            SmartObjectSheetRouter.open(context, item);
           }
         },
         onDoubleTap: () {

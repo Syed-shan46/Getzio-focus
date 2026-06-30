@@ -15,6 +15,8 @@ import '../widgets/floor_plant.dart';
 import '../widgets/celebration_banner.dart';
 import '../widgets/premium_shelf_section.dart';
 import '../../../vision_room/presentation/screens/vision_room_screen.dart';
+import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
+import '../../../affirmations/presentation/widgets/guest_affirmations_view.dart';
 import '../../../todo/presentation/widgets/left_floating_shelf.dart';
 import '../../../todo/presentation/widgets/floor_glass_panel.dart';
 import 'daily_motivation_screen.dart';
@@ -364,28 +366,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
   void _handleDoorTap(bool isUnlocked) {
     HapticFeedback.mediumImpact();
     if (isUnlocked) {
-      final authState = ref.read(authProvider);
-      final isLoggedIn = authState.hasValue && authState.value != null;
-      final hiveDb = ref.read(hiveDatabaseProvider);
-
-      if (!isLoggedIn) {
-        PremiumPreviewOverlay.show(
-          context: context,
-          featureId: 'vision_room',
-          onContinue: () {
-            _doorOpenController.forward().then((_) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const VisionRoomScreen()),
-              ).then((_) {
-                _doorOpenController.reverse();
-              });
-            });
-          },
-        );
-        return;
-      }
-
+      // Guest or Authenticated users enter directly
       _doorOpenController.forward().then((_) {
         Navigator.push(
           context,
@@ -688,7 +669,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                           label: 'Ferrari 488 GTB',
                           wallColor: state.wallColor,
                           child: const MiniatureCarWidget(
-                            carType: 'ferrari',
+                            carType: 'lamborghini',
                             carColor: Color(0xFFE11D48),
                             label: 'Ferrari 488 GTB',
                             width: 76,
@@ -765,7 +746,6 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                         bottom: 178,
                         child: const ThreeDCustomizeSwitch(),
                       ),
-
                     ],
                   ),
                 ),
@@ -2046,6 +2026,16 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
 
   // 8. AFFIRMATIONS EDIT SHEETS (Picture Frame click)
   Widget _buildAffirmationsSheetContent() {
+    final authState = ref.watch(authProvider);
+    final isGuest = authState.value == null;
+
+    if (isGuest) {
+      return const ClipRRect(
+        borderRadius: BorderRadius.all(Radius.circular(28)),
+        child: GuestAffirmationsView(),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -5859,20 +5849,30 @@ class GlassDisplayCase extends StatelessWidget {
     // Tint glass container borders to reflect the dashboard theme highlights
     switch (wallColor) {
       case 'Classic Navy':
-        glassBorderColor = const Color(0xFF38BDF8).withOpacity(0.18); // Blue tint
+        glassBorderColor = const Color(
+          0xFF38BDF8,
+        ).withOpacity(0.18); // Blue tint
         break;
       case 'Emerald':
-        glassBorderColor = const Color(0xFF34D399).withOpacity(0.18); // Emerald tint
+        glassBorderColor = const Color(
+          0xFF34D399,
+        ).withOpacity(0.18); // Emerald tint
         break;
       case 'Warm Terracotta':
-        glassBorderColor = const Color(0xFFF87171).withOpacity(0.18); // Terracotta tint
+        glassBorderColor = const Color(
+          0xFFF87171,
+        ).withOpacity(0.18); // Terracotta tint
         break;
       case 'Charcoal':
-        glassBorderColor = const Color(0xFF94A3B8).withOpacity(0.18); // Slate grey tint
+        glassBorderColor = const Color(
+          0xFF94A3B8,
+        ).withOpacity(0.18); // Slate grey tint
         break;
       case 'Deep Indigo':
       default:
-        glassBorderColor = const Color(0xFF818CF8).withOpacity(0.18); // Indigo tint
+        glassBorderColor = const Color(
+          0xFF818CF8,
+        ).withOpacity(0.18); // Indigo tint
         break;
     }
 
@@ -5883,10 +5883,7 @@ class GlassDisplayCase extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.025),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: glassBorderColor,
-          width: 0.8,
-        ),
+        border: Border.all(color: glassBorderColor, width: 0.8),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.42),
@@ -5934,10 +5931,7 @@ class GlassDisplayCase extends StatelessWidget {
               ),
             ),
             // 2. The car itself
-            Positioned(
-              bottom: 8,
-              child: child,
-            ),
+            Positioned(bottom: 8, child: child),
             // 3. Diagonal glass reflection highlights
             Positioned.fill(
               child: IgnorePointer(
@@ -6120,8 +6114,10 @@ class _MiniatureCarWidgetState extends State<MiniatureCarWidget>
       case 'volkswagen':
         return 'assets/images/cars/file_00000000aaec7209aafb236e4993c4f0.png';
       case 'vintage':
+      case 'lamborghini':
+        return 'assets/images/cars/file_00000000ca747209973ee5c2e8b1a9cb.png';
       default:
-        return 'assets/images/cars/file_00000000de647206ba0f05f8c90980a2.png';
+        return 'assets/images/cars/file_00000000aaec7209aafb236e4993c4f0.png';
     }
   }
 
@@ -6138,9 +6134,9 @@ class _MiniatureCarWidgetState extends State<MiniatureCarWidget>
           return Transform(
             transform: Matrix4.identity()
               ..setEntry(3, 2, 0.002) // perspective depth
-              ..rotateX(0.06)          // tilt forward to see the hood/roof
-              ..rotateY(-0.12)         // rotate slightly in Y to see 3D side profile
-              ..rotateZ(-0.06)         // tilt front side down, back side up!
+              ..rotateX(0.06) // tilt forward to see the hood/roof
+              ..rotateY(-0.12) // rotate slightly in Y to see 3D side profile
+              ..rotateZ(-0.06) // tilt front side down, back side up!
               ..translate(0.0, translateY, 0.0), // add bounce translation
             alignment: Alignment.bottomCenter, // anchor to base stand
             child: SizedBox(
@@ -6182,4 +6178,3 @@ class _MiniatureCarWidgetState extends State<MiniatureCarWidget>
     );
   }
 }
-

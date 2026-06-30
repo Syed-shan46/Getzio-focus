@@ -5,12 +5,15 @@ import 'package:google_fonts/google_fonts.dart';
 import '../screens/phone_login_screen.dart';
 
 class PremiumAuthSheet extends StatefulWidget {
-  const PremiumAuthSheet({super.key});
+  final String? customTitle;
+  final String? customDescription;
+
+  const PremiumAuthSheet({super.key, this.customTitle, this.customDescription});
 
   static bool _isShowing = false;
 
   /// Display the Premium Auth modal sheet with haptic feedback and safety guards.
-  static void show(BuildContext context) {
+  static void show(BuildContext context, {String? customTitle, String? customDescription}) {
     if (_isShowing) return;
     _isShowing = true;
     HapticFeedback.vibrate();
@@ -21,7 +24,10 @@ class PremiumAuthSheet extends StatefulWidget {
       backgroundColor: Colors.transparent,
       enableDrag: true,
       isDismissible: true,
-      builder: (context) => const PremiumAuthSheet(),
+      builder: (context) => PremiumAuthSheet(
+        customTitle: customTitle,
+        customDescription: customDescription,
+      ),
     ).whenComplete(() {
       _isShowing = false;
     });
@@ -139,7 +145,7 @@ class _PremiumAuthSheetState extends State<PremiumAuthSheet> {
 
                       // Title
                       Text(
-                        '✨ Unlock Your Personal Workspace',
+                        widget.customTitle ?? '✨ Unlock Your Personal Workspace',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.outfit(
                           color: Colors.white,
@@ -152,11 +158,11 @@ class _PremiumAuthSheetState extends State<PremiumAuthSheet> {
 
                       // Subtitle
                       Text(
-                        "You've reached the free guest limit.\nCreate a free account to unlock unlimited Vision Boards, Daily Affirmations and secure cloud backup across all your devices.",
+                        widget.customDescription ?? 'You\'re currently exploring Getzio Focus in Guest Mode. Create a free account to unlock unlimited Vision Room items, cloud backup and cross-device sync.',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.outfit(
-                          color: Colors.white.withOpacity(0.65),
-                          fontSize: 14,
+                          color: Colors.white70,
+                          fontSize: 14.5,
                           height: 1.45,
                         ),
                       ),

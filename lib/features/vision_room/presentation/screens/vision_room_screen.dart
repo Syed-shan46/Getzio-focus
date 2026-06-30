@@ -3,11 +3,15 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/models/vision_item.dart';
 import '../providers/vision_room_providers.dart';
+import '../providers/sticky_note_provider.dart';
+import '../widgets/sticky_note_bottom_sheet.dart';
+import '../providers/canvas_providers.dart';
 import '../providers/customization_provider.dart';
 import '../providers/canvas_providers.dart';
 import '../walls/vision_wall.dart';
@@ -19,14 +23,19 @@ import '../walls/timeline_wall.dart';
 import '../widgets/hanging_pen.dart';
 import '../widgets/room_scene.dart';
 import '../widgets/vision_creation_sheet.dart';
+import '../../../../shared/providers/app_providers.dart';
+import '../../data/services/vision_upload_service.dart';
 import '../widgets/quote_builder_modal.dart';
 import '../widgets/goal_builder_modal.dart';
 import '../widgets/task_builder_modal.dart';
 import '../widgets/plan_builder_modal.dart';
 import '../widgets/finance_builder_modal.dart';
 import '../widgets/countdown_builder_modal.dart';
+import '../widgets/due_date_progress_selector.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
+import '../../../auth/presentation/providers/preview_mode_provider.dart';
+import '../../../auth/presentation/widgets/start_workspace_sheet.dart';
 
 class VisionRoomScreen extends ConsumerStatefulWidget {
   const VisionRoomScreen({super.key});
@@ -88,31 +97,103 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
 
   // ─── ITEM CREATION METHODS ──────────────────────────────────────────────
 
-  Future<void> _pickImage() async {
-    final isGuest = ref.read(authProvider).value == null;
-    final items = ref.read(canvasStateProvider).items;
-    final count = items
-        .where((i) => i.type == VisionItemType.image.name)
-        .length;
-    if (isGuest && count >= 2) {
-      _showPremiumAuthSheet(context);
-      return;
+  bool _canCreateItem(String itemType) {
+    final isPreviewMode = ref.read(previewModeProvider);
+    if (isPreviewMode) {
+      StartWorkspaceSheet.show(context);
+      return false;
     }
+
+    final isGuest = ref.read(authProvider).value == null;
+    if (!isGuest) return true;
+
+    if (itemType == 'sticky_note') {
+      _showPremiumAuthSheet(context);
+      return false;
+    }
+
+    _showPremiumAuthSheet(context);
+    return false;
+  }
+
+  Future<void> _pickImage() async {
+    if (!_canCreateItem(VisionItemType.image.name)) return;
     final size = MediaQuery.of(context).size;
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
+    if (image != null && mounted) {
+      DateTime? selectedDueDate;
+      double selectedProgress = 0;
+      await showDialog(
+        context: context,
+        builder: (ctx) => StatefulBuilder(
+          builder: (context, setDlgState) => AlertDialog(
+            backgroundColor: const Color(0xFF0F172A),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text('Image Vision Goal Details', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+            content: SizedBox(
+              width: 300,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DueDateAndProgressSelector(
+                    selectedDate: selectedDueDate,
+                    currentProgress: selectedProgress,
+                    accentColor: const Color(0xFF10B981),
+                    onDateChanged: (d) => setDlgState(() => selectedDueDate = d),
+                    onProgressChanged: (p) => setDlgState(() => selectedProgress = p),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Skip', style: TextStyle(color: Colors.white60)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Save Details'),
+              ),
+            ],
+          ),
+        ),
+      );
+
       final random = Random();
       final newItem = VisionItem(
         id: const Uuid().v4(),
         type: VisionItemType.image.name,
-        content: image.path,
+        content: image.path, // Temporary local cache path
+        countdownDate: selectedDueDate,
         x: (size.width / 2) - 125,
         y: (size.height / 2) - 125,
         width: 250,
         height: 250,
         rotation: (random.nextDouble() - 0.5) * 0.2,
+        metadata: {'progress': selectedProgress},
       );
+      
+      // Optimistically add the item to the canvas using local cache
       ref.read(canvasStateProvider.notifier).addItem(newItem);
+
+      // Upload in the background
+      final dio = ref.read(dioClientProvider).dio;
+      final uploadService = VisionUploadService(dio: dio);
+      
+      uploadService.uploadImage(image.path).then((uploadedUrl) {
+        if (uploadedUrl != null && mounted) {
+          // Replace the local path with the actual Cloudinary URL
+          ref.read(canvasStateProvider.notifier).updateItemDetails(
+            newItem.id,
+            content: uploadedUrl,
+          );
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to upload image to Cloudinary. Please try again later.')),
+          );
+        }
+      });
     }
   }
 
@@ -122,249 +203,15 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
 
   void _showStickyNoteDialog({VisionItem? existingItem}) {
     if (existingItem == null) {
-      final isGuest = ref.read(authProvider).value == null;
-      final items = ref.read(canvasStateProvider).items;
-      final count = items
-          .where((i) => i.type == VisionItemType.stickyNote.name)
-          .length;
-      if (isGuest && count >= 3) {
-        _showPremiumAuthSheet(context);
-        return;
-      }
+      if (!_canCreateItem('sticky_note')) return;
     }
 
-    final textController = TextEditingController(
-      text: existingItem?.content ?? '',
-    );
-    int selectedColorValue = existingItem?.colorValue ?? 0xFFF59E0B;
-    double selectedFontSize =
-        (existingItem?.metadata?['fontSize'] as num?)?.toDouble() ?? 16.0;
-
-    final List<int> stickyColors = [
-      0xFFF59E0B,
-      0xFFEC4899,
-      0xFF3B82F6,
-      0xFFA855F7,
-      0xFF10B981,
-      0xFFF8FAFC,
-    ];
-
-    final Map<String, double> fontSizes = {
-      'Small': 12.0,
-      'Medium': 16.0,
-      'Large': 20.0,
-      'XL': 24.0,
-    };
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF0F172A),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: Text(
-                existingItem == null ? 'New Sticky Note' : 'Edit Sticky Note',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      controller: textController,
-                      autofocus: true,
-                      maxLines: 3,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: selectedFontSize,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Type your note...',
-                        hintStyle: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
-                          fontSize: selectedFontSize,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.08),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Text Font Size',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: fontSizes.entries.map((entry) {
-                        final isSelected = selectedFontSize == entry.value;
-                        return Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 2),
-                            child: GestureDetector(
-                              onTap: () =>
-                                  setState(() => selectedFontSize = entry.value),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppColors.accentBlue
-                                      : Colors.white.withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: isSelected
-                                      ? Border.all(color: Colors.white, width: 1.5)
-                                      : null,
-                                ),
-                                child: Text(
-                                  entry.key,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Colors.white70,
-                                    fontSize: 11,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Color',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: stickyColors.map((colorValue) {
-                        final isSelected = selectedColorValue == colorValue;
-                        return GestureDetector(
-                          onTap: () =>
-                              setState(() => selectedColorValue = colorValue),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            width: 34,
-                            height: 34,
-                            decoration: BoxDecoration(
-                              color: Color(colorValue),
-                              shape: BoxShape.circle,
-                              border: isSelected
-                                  ? Border.all(color: Colors.white, width: 2.5)
-                                  : null,
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: Color(colorValue)
-                                            .withValues(alpha: 0.5),
-                                        blurRadius: 8,
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accentBlue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () {
-                    final text = textController.text.trim();
-                    if (text.isNotEmpty) {
-                      Navigator.pop(dialogContext);
-                      if (existingItem != null) {
-                        ref
-                            .read(canvasStateProvider.notifier)
-                            .updateItemDetails(
-                              existingItem.id,
-                              content: text,
-                              colorValue: selectedColorValue,
-                              metadata: {'fontSize': selectedFontSize},
-                            );
-                      } else {
-                        final size = MediaQuery.of(context).size;
-                        final random = Random();
-                        ref.read(canvasStateProvider.notifier).addItem(
-                              VisionItem(
-                                id: const Uuid().v4(),
-                                type: VisionItemType.stickyNote.name,
-                                content: text,
-                                colorValue: selectedColorValue,
-                                x: (size.width / 2) - 90,
-                                y: (size.height / 2) - 90,
-                                width: 180,
-                                height: 180,
-                                rotation: (random.nextDouble() - 0.5) * 0.3,
-                                attachmentType: 'pin',
-                                attachmentStyle: 'redPin',
-                                metadata: {'fontSize': selectedFontSize},
-                              ),
-                            );
-                      }
-                    }
-                  },
-                  child: Text(existingItem == null ? 'Add' : 'Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
+    // Replace old generic dialog with the new premium sheet
+    StickyNoteBottomSheet.show(context);
   }
 
   void _addQuote() {
-    final isGuest = ref.read(authProvider).value == null;
-    final items = ref.read(canvasStateProvider).items;
-    final count = items
-        .where((i) => i.type == VisionItemType.quote.name)
-        .length;
-    if (isGuest && count >= 2) {
-      _showPremiumAuthSheet(context);
-      return;
-    }
+    if (!_canCreateItem(VisionItemType.quote.name)) return;
     QuoteBuilderModal.show(
       context,
       onSubmit: (metadata) {
@@ -393,6 +240,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
   }
 
   void _addGoal() {
+    if (!_canCreateItem(VisionItemType.goal.name)) return;
     GoalBuilderModal.show(
       context,
       onSubmit: (metadata) {
@@ -420,6 +268,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
   }
 
   void _addPlan() {
+    if (!_canCreateItem(VisionItemType.plan.name)) return;
     PlanBuilderModal.show(
       context,
       onSubmit: (metadata) {
@@ -445,6 +294,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
   }
 
   void _addTask() {
+    if (!_canCreateItem(VisionItemType.task.name)) return;
     TaskBuilderModal.show(
       context,
       onSubmit: (metadata) {
@@ -468,6 +318,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
   }
 
   void _addCountdown() {
+    if (!_canCreateItem(VisionItemType.countdown.name)) return;
     CountdownBuilderModal.show(
       context,
       onSubmit: (metadata) {
@@ -489,6 +340,10 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
       },
     );
   }
+
+
+
+
 
   void _addFinance() {
     FinanceBuilderModal.show(
@@ -857,63 +712,91 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
 
   Widget _buildTopBar() {
     final isEditMode = ref.watch(editModeProvider);
+    final isPreviewMode = ref.watch(previewModeProvider);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Close button
+    return Column(
+      children: [
+        if (isPreviewMode)
           GestureDetector(
-            onTap: () {
-              if (isEditMode) {
-                _exitEditMode();
-              } else {
-                Navigator.pop(context);
-              }
-            },
+            onTap: () => StartWorkspaceSheet.show(context),
             child: Container(
-              padding: const EdgeInsets.all(10),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.glass,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.glassBorder, width: 0.5),
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                border: const Border(bottom: BorderSide(color: Color(0xFFF59E0B), width: 1)),
               ),
-              child: Icon(
-                isEditMode
-                    ? Icons.check_rounded
-                    : Icons.arrow_back_ios_new_rounded,
-                size: 18,
-                color: Colors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.info_outline, color: Color(0xFFF59E0B), size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Preview Mode. Start your permanent workspace to begin saving.',
+                    style: GoogleFonts.outfit(color: const Color(0xFFFCD34D), fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                ],
               ),
             ),
           ),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Close button
+              GestureDetector(
+                onTap: () {
+                  if (isEditMode) {
+                    _exitEditMode();
+                  } else {
+                    Navigator.pop(context);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.glass,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.glassBorder, width: 0.5),
+                  ),
+                  child: Icon(
+                    isEditMode
+                        ? Icons.check_rounded
+                        : Icons.arrow_back_ios_new_rounded,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
 
-          // Edit Mode indicator
-          if (isEditMode)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.accentBlue.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: AppColors.accentBlue.withValues(alpha: 0.4),
+              // Edit Mode indicator
+              if (isEditMode)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentBlue.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.accentBlue.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: const Text(
+                    'Edit Mode',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Edit Mode',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-        ],
-      ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

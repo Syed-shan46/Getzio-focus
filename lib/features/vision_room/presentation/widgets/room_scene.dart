@@ -55,10 +55,7 @@ class RoomScene extends StatelessWidget {
           right: 0,
           bottom: 105,
           child: RepaintBoundary(
-            child: parallaxLayer(
-              const _FullWidthFloatingShelf(),
-              0.05,
-            ),
+            child: parallaxLayer(const _FullWidthFloatingShelf(), 0.05),
           ),
         ),
 
@@ -67,10 +64,7 @@ class RoomScene extends StatelessWidget {
           left: 44,
           bottom: 136,
           child: RepaintBoundary(
-            child: parallaxLayer(
-              const _RealisticCandle(),
-              0.05,
-            ),
+            child: parallaxLayer(const _RealisticCandle(), 0.05),
           ),
         ),
 
@@ -79,14 +73,27 @@ class RoomScene extends StatelessWidget {
           right: 36,
           bottom: 136,
           child: RepaintBoundary(
-            child: parallaxLayer(
-              const _WorkspaceFishTank(),
-              0.05,
+            child: parallaxLayer(const _WorkspaceFishTank(), 0.05),
+          ),
+        ),
+
+        // 5. Border lighting — soft warm glow on left & right walls only
+        Positioned(
+          top: 0,
+          bottom: 105,
+          left: 0,
+          right: 0,
+          child: IgnorePointer(
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: _BorderLightPainter(),
+                size: Size.infinite,
+              ),
             ),
           ),
         ),
 
-        // 5. The actual wall content (VisionBoard, items, etc.)
+        // 6. The actual wall content (VisionBoard, items, etc.)
         Positioned.fill(child: child),
       ],
     );
@@ -97,7 +104,7 @@ class RoomScene extends StatelessWidget {
       VisionBackground.scandinavianWall => const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFFFAF9F6), Color(0xFFF1EFEA), Color(0xFFE7E4DF)],
+        colors: [Color(0xFFFBE8CE), Color(0xFFF5DEC0), Color(0xFFEDD4B2)],
       ),
       VisionBackground.oceanView => const LinearGradient(
         begin: Alignment.topCenter,
@@ -127,12 +134,12 @@ class RoomScene extends StatelessWidget {
       VisionBackground.matteBlack => const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFFFAF9F6), Color(0xFFF1EFEA), Color(0xFFE7E4DF)],
+        colors: [Color(0xFFFBE8CE), Color(0xFFF5DEC0), Color(0xFFEDD4B2)],
       ),
       _ => const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFFFAF9F6), Color(0xFFF1EFEA), Color(0xFFE7E4DF)],
+        colors: [Color(0xFFFBE8CE), Color(0xFFF5DEC0), Color(0xFFEDD4B2)],
       ),
     };
   }
@@ -218,7 +225,12 @@ class _CandlePainter extends CustomPainter {
 
     // 3. Thick Glass Base (solid 3D heavy glass bottom, clear & clean without black dots)
     final baseH = 3.5;
-    final baseRect = Rect.fromLTWH(jarRect.left, jarRect.bottom - baseH, jarW, baseH);
+    final baseRect = Rect.fromLTWH(
+      jarRect.left,
+      jarRect.bottom - baseH,
+      jarW,
+      baseH,
+    );
     final glassBasePaint = Paint()
       ..shader = LinearGradient(
         colors: [
@@ -273,10 +285,7 @@ class _CandlePainter extends CustomPainter {
       width: waxRect.width,
       height: 4.0,
     );
-    canvas.drawOval(
-      waxTopRect,
-      Paint()..color = const Color(0xFFF7ECDA),
-    );
+    canvas.drawOval(waxTopRect, Paint()..color = const Color(0xFFF7ECDA));
     canvas.drawOval(
       Rect.fromCenter(center: Offset(cx, waxTopY), width: 7, height: 2.2),
       Paint()..color = const Color(0xFFFFD54F).withValues(alpha: 0.65),
@@ -284,7 +293,7 @@ class _CandlePainter extends CustomPainter {
 
     // 5. Outer 3D Glass Jar Body & Cylindrical Highlights
     final jarRRect = RRect.fromRectAndRadius(jarRect, const Radius.circular(5));
-    
+
     final glassSheenPaint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.centerLeft,
@@ -375,7 +384,6 @@ class _CandlePainter extends CustomPainter {
   bool shouldRepaint(covariant _CandlePainter oldDelegate) =>
       oldDelegate.progress != progress;
 }
-
 
 /// The exact living workspace fish tank with swimming Orange Goldfish and Blue Tetra
 class _WorkspaceFishTank extends StatefulWidget {
@@ -483,7 +491,10 @@ class _WorkspaceFishTankPainter extends CustomPainter {
     // Bubbles
     for (int i = 0; i < 5; i++) {
       final bPhase = progress * 2 * math.pi + i * 1.8;
-      final by = tankY + tankH * 0.75 - (bPhase % (math.pi * 2)) / (math.pi * 2) * tankH * 0.65;
+      final by =
+          tankY +
+          tankH * 0.75 -
+          (bPhase % (math.pi * 2)) / (math.pi * 2) * tankH * 0.65;
       final bx = tankX + 6 + i * (tankW - 12) / 4 + math.sin(bPhase * 0.7) * 2;
       final bSize = 0.7 + (i % 3) * 0.4;
       canvas.drawCircle(
@@ -505,7 +516,8 @@ class _WorkspaceFishTankPainter extends CustomPainter {
     final f1Heading = f1Side * math.pi * (1 - f1S);
 
     final f1Lunge = f1Sin * f1Sin * (-1.5);
-    final f1Y = waterTop + tankH * 0.40 + math.sin(f1Period * 0.7) * 1.5 + f1Lunge;
+    final f1Y =
+        waterTop + tankH * 0.40 + math.sin(f1Period * 0.7) * 1.5 + f1Lunge;
 
     canvas.save();
     canvas.translate(f1X, f1Y);
@@ -524,15 +536,26 @@ class _WorkspaceFishTankPainter extends CustomPainter {
       ..lineTo(0.8, -4.0)
       ..lineTo(2.0, -2.0)
       ..close();
-    canvas.drawPath(dorsal1Path, Paint()..color = const Color(0xFFFF8C00).withValues(alpha: 0.7));
+    canvas.drawPath(
+      dorsal1Path,
+      Paint()..color = const Color(0xFFFF8C00).withValues(alpha: 0.7),
+    );
 
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(0, 0), width: 7.5, height: 3.5),
       Paint()..color = const Color(0xFFFF8C00),
     );
 
-    canvas.drawCircle(const Offset(2.8, -0.7), 0.9, Paint()..color = Colors.white);
-    canvas.drawCircle(const Offset(3.0, -0.7), 0.45, Paint()..color = Colors.black);
+    canvas.drawCircle(
+      const Offset(2.8, -0.7),
+      0.9,
+      Paint()..color = Colors.white,
+    );
+    canvas.drawCircle(
+      const Offset(3.0, -0.7),
+      0.45,
+      Paint()..color = Colors.black,
+    );
     canvas.restore();
 
     // ── Fish 2 (Blue Tetra) ──
@@ -547,7 +570,8 @@ class _WorkspaceFishTankPainter extends CustomPainter {
     final f2Heading = f2Side * math.pi * (1 - f2S);
 
     final f2Lunge = f2Sin * f2Sin * (-1.0);
-    final f2Y = waterTop + tankH * 0.60 + math.cos(f2Period * 0.6) * 1.2 + f2Lunge;
+    final f2Y =
+        waterTop + tankH * 0.60 + math.cos(f2Period * 0.6) * 1.2 + f2Lunge;
 
     canvas.save();
     canvas.translate(f2X, f2Y);
@@ -566,15 +590,26 @@ class _WorkspaceFishTankPainter extends CustomPainter {
       ..lineTo(0.5, -3.0)
       ..lineTo(1.5, -1.5)
       ..close();
-    canvas.drawPath(dorsal2Path, Paint()..color = const Color(0xFF26C6DA).withValues(alpha: 0.7));
+    canvas.drawPath(
+      dorsal2Path,
+      Paint()..color = const Color(0xFF26C6DA).withValues(alpha: 0.7),
+    );
 
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(0, 0), width: 6.0, height: 2.8),
       Paint()..color = const Color(0xFF00ACC1),
     );
 
-    canvas.drawCircle(const Offset(2.2, -0.5), 0.7, Paint()..color = Colors.white);
-    canvas.drawCircle(const Offset(2.4, -0.5), 0.35, Paint()..color = Colors.black);
+    canvas.drawCircle(
+      const Offset(2.2, -0.5),
+      0.7,
+      Paint()..color = Colors.white,
+    );
+    canvas.drawCircle(
+      const Offset(2.4, -0.5),
+      0.35,
+      Paint()..color = Colors.black,
+    );
     canvas.restore();
   }
 
@@ -798,4 +833,62 @@ class RoomBackgroundPainter extends CustomPainter {
   bool shouldRepaint(covariant RoomBackgroundPainter oldDelegate) =>
       oldDelegate.floorHeight != floorHeight ||
       oldDelegate.wallGradient != wallGradient;
+}
+
+/// Paints a soft warm light glow along the left and right wall edges only.
+/// Does not affect the floor or shelf area.
+class _BorderLightPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final edgeWidth = w * 0.12;
+
+    // Left edge warm light glow
+    final leftPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          const Color(0xFFFFD54F).withValues(alpha: 0.08),
+          const Color(0xFFFFB74D).withValues(alpha: 0.04),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromLTWH(0, 0, edgeWidth, h));
+    canvas.drawRect(Rect.fromLTWH(0, 0, edgeWidth, h), leftPaint);
+
+    // Right edge warm light glow
+    final rightPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.centerRight,
+        end: Alignment.centerLeft,
+        colors: [
+          const Color(0xFFFFD54F).withValues(alpha: 0.08),
+          const Color(0xFFFFB74D).withValues(alpha: 0.04),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromLTWH(w - edgeWidth, 0, edgeWidth, h));
+    canvas.drawRect(Rect.fromLTWH(w - edgeWidth, 0, edgeWidth, h), rightPaint);
+
+    // Subtle vertical light streaks
+    final streakPaint = Paint()
+      ..color = const Color(0xFFFFF8E1).withValues(alpha: 0.03)
+      ..strokeWidth = 1.0;
+
+    canvas.drawLine(
+      Offset(edgeWidth * 0.3, 0),
+      Offset(edgeWidth * 0.3, h),
+      streakPaint,
+    );
+    canvas.drawLine(
+      Offset(w - edgeWidth * 0.3, 0),
+      Offset(w - edgeWidth * 0.3, h),
+      streakPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

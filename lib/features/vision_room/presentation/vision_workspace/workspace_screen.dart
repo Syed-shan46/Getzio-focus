@@ -23,6 +23,8 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 import 'widgets/canvas_item_widget.dart';
 import 'painters/paper_texture_painter.dart';
+import '../../data/services/vision_upload_service.dart';
+import '../../../../shared/providers/app_providers.dart';
 
 enum _AutoSaveStatus { saving, saved, offline, syncing }
 
@@ -150,15 +152,35 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
       final newItem = VisionItem(
         id: const Uuid().v4(),
         type: VisionItemType.image.name,
-        content: image.path,
+        content: image.path, // Temporary local cache path
         x: canvasCenter.dx - 125,
         y: canvasCenter.dy - 125,
         width: 250,
         height: 250,
         rotation: (random.nextDouble() - 0.5) * 0.2,
       );
+      
+      // Optimistically add the item to the canvas using local cache
       ref.read(canvasStateProvider.notifier).addItem(newItem);
       _setSaving();
+
+      // Upload in the background
+      final dio = ref.read(dioClientProvider).dio;
+      final uploadService = VisionUploadService(dio: dio);
+      
+      uploadService.uploadImage(image.path).then((uploadedUrl) {
+        if (uploadedUrl != null && mounted) {
+          // Replace the local path with the actual Cloudinary URL
+          ref.read(canvasStateProvider.notifier).updateItemDetails(
+            newItem.id,
+            content: uploadedUrl,
+          );
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to upload image. Please try again.')),
+          );
+        }
+      });
     }
   }
 

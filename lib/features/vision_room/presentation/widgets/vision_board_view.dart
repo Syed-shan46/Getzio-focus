@@ -11,6 +11,9 @@ import 'quote_card_widget.dart';
 import 'goal_card_widget.dart';
 import 'premium_cards.dart'
     show PlanCardWidget, TaskCardWidget, FinanceCardWidget, CountdownCardWidget;
+import 'universal_smart_object_sheet.dart';
+import 'premium_goal_overview_sheet.dart';
+import 'smart_object_sheets.dart';
 
 class VisionBoardView extends ConsumerWidget {
   const VisionBoardView({super.key});
@@ -155,37 +158,40 @@ class _ViewItemWidget extends StatelessWidget {
           )
         : contentWidget;
 
-    return Transform.rotate(
-      angle: item.rotation,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          SizedBox(
-            width: item.width,
-            height: item.height,
-            child: boardAdjusted,
-          ),
-          if (item.attachmentType == 'pin')
-            Positioned(
-              top: (20 * (item.width / 200.0)) - 36,
-              left: item.width / 2 - 12,
-              child: Transform.scale(
-                scale: item.width / 200.0,
-                alignment: Alignment.bottomCenter,
-                child: PushPinWidget(style: item.attachmentStyle),
-              ),
-            )
-          else if (item.attachmentType == 'tape')
-            Positioned(
-              top: -12,
-              left: item.width / 2 - 40,
-              child: Transform.scale(
-                scale: item.width / 200.0,
-                alignment: Alignment.center,
-                child: TapeWidget(style: item.attachmentStyle),
-              ),
+    return GestureDetector(
+      onTap: () => SmartObjectSheetRouter.open(context, item),
+      child: Transform.rotate(
+        angle: item.rotation,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            SizedBox(
+              width: item.width,
+              height: item.height,
+              child: boardAdjusted,
             ),
-        ],
+            if (item.attachmentType == 'pin')
+              Positioned(
+                top: (20 * (item.width / 200.0)) - 36,
+                left: item.width / 2 - 12,
+                child: Transform.scale(
+                  scale: item.width / 200.0,
+                  alignment: Alignment.bottomCenter,
+                  child: PushPinWidget(style: item.attachmentStyle),
+                ),
+              )
+            else if (item.attachmentType == 'tape')
+              Positioned(
+                top: -12,
+                left: item.width / 2 - 40,
+                child: Transform.scale(
+                  scale: item.width / 200.0,
+                  alignment: Alignment.center,
+                  child: TapeWidget(style: item.attachmentStyle),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -209,16 +215,27 @@ class _ViewItemWidget extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(cardCfg.roundedMode ? cr : cr.clamp(4, 20)),
-            child: Image.file(
-              File(item.content),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: Colors.grey[800],
-                child: const Center(
-                  child: Icon(Icons.broken_image_rounded, color: Colors.white54, size: 40),
-                ),
-              ),
-            ),
+            child: item.content.startsWith('http')
+                ? Image.network(
+                    item.content,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[800],
+                      child: const Center(
+                        child: Icon(Icons.broken_image_rounded, color: Colors.white54, size: 40),
+                      ),
+                    ),
+                  )
+                : Image.file(
+                    File(item.content),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[800],
+                      child: const Center(
+                        child: Icon(Icons.broken_image_rounded, color: Colors.white54, size: 40),
+                      ),
+                    ),
+                  ),
           ),
         ),
       );

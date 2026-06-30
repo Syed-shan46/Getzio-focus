@@ -210,17 +210,29 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(
                 cardCfg.roundedMode ? cr : cr.clamp(4, 20)),
-            child: Image.file(
-              File(item.content),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: Colors.grey[800],
-                child: const Center(
-                  child: Icon(Icons.broken_image_rounded,
-                      color: Colors.white54, size: 40),
-                ),
-              ),
-            ),
+            child: item.content.startsWith('http')
+                ? Image.network(
+                    item.content,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[800],
+                      child: const Center(
+                        child: Icon(Icons.broken_image_rounded,
+                            color: Colors.white54, size: 40),
+                      ),
+                    ),
+                  )
+                : Image.file(
+                    File(item.content),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[800],
+                      child: const Center(
+                        child: Icon(Icons.broken_image_rounded,
+                            color: Colors.white54, size: 40),
+                      ),
+                    ),
+                  ),
           ),
         ),
       );

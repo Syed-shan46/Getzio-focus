@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../todo/presentation/widgets/wallpaper_background.dart';
 import '../providers/auth_providers.dart';
+import '../../../vision_room/presentation/providers/sticky_note_provider.dart';
+import '../providers/preview_mode_provider.dart';
 
 class OtpVerificationScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
@@ -56,10 +58,22 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
             otp,
           );
       
-      if (mounted) {
-        // Pop back to root so main.dart renders HomeScreen
-        Navigator.of(context).popUntil((route) => route.isFirst);
+      if (!mounted) return;
+      
+      // Unlock full workspace automatically after successful login
+      await ref.read(previewModeProvider.notifier).setPreviewMode(false);
+      
+      final authState = ref.read(authProvider);
+      final newUserId = authState.value?.id;
+      
+      // Auto-migrate any local guest data directly without asking
+      if (newUserId != null) {
+        await ref.read(stickyNotesProvider.notifier).handleLoginContinueAndSave(newUserId);
       }
+
+      if (!mounted) return;
+      // Pop back to root so main.dart renders HomeScreen
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       if (mounted) {
         setState(() => _error = e.toString().replaceFirst('Exception: ', ''));

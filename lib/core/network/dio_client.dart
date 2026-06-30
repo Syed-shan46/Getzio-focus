@@ -8,6 +8,8 @@ class DioClient {
   late final Dio _dio;
   final HiveDatabase _hiveDb;
 
+  Dio get dio => _dio;
+
   DioClient(this._hiveDb) {
     final baseUrl = EnvConfig.baseUrl.endsWith('/')
         ? EnvConfig.baseUrl

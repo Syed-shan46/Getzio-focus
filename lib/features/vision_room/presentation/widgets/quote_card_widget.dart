@@ -50,7 +50,7 @@ class QuoteCardWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.zero,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -150,10 +150,10 @@ class QuoteCardWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.black87,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: Colors.pinkAccent.withValues(alpha: 0.5), width: 1.5),
         boxShadow: const [
-          BoxShadow(color: Colors.pinkAccent, blurRadius: 20, spreadRadius: -10),
+          BoxShadow(color: Colors.pinkAccent, blurRadius: 15, spreadRadius: 2),
         ],
       ),
       child: Column(
@@ -239,14 +239,14 @@ class QuoteCardWidget extends StatelessWidget {
 
   Widget _buildGlassCard(String quote, String author) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.zero,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
           ),
           child: Column(

@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../features/vision_room/domain/models/sticky_note.dart';
 
 class HiveDatabase {
   static const String _todosBoxName = 'todo_personal_todos';
@@ -14,6 +15,12 @@ class HiveDatabase {
   Future<void> init() async {
     final dir = await getApplicationDocumentsDirectory();
     await Hive.initFlutter(dir.path);
+
+    if (!Hive.isAdapterRegistered(21)) {
+      Hive.registerAdapter(StickyNoteAdapter());
+    }
+
+    await Hive.openBox<StickyNote>('guest_sticky_notes');
 
     _todosBox = await Hive.openBox(_todosBoxName);
     _syncBox = await Hive.openBox(_syncBoxName);
@@ -186,6 +193,23 @@ class HiveDatabase {
     await _settingsBox.clear();
   }
 
+  Future<void> clearAllGuestData() async {
+    // Wait, the guest data is in _todosBox and _syncBox? Actually, guest data is just data without an auth_token.
+    // So clearing the boxes except for auth info would be best. 
+    // Wait, GuestDataMigrationService.clearGuestData() is a better place for this.
+    // Let's implement it here for simplicity.
+    final token = _settingsBox.get('auth_token');
+    final userData = _settingsBox.get('user_data');
+    
+    await _todosBox.clear();
+    await _syncBox.clear();
+    await _settingsBox.clear();
+    
+    // Restore auth info
+    if (token != null) await _settingsBox.put('auth_token', token);
+    if (userData != null) await _settingsBox.put('user_data', userData);
+  }
+
   // ─── Getzio Focus Onboarding & Dashboard ──────────────────────────────
 
   Future<void> saveSelectedIdentity(String identity) async {
@@ -194,6 +218,14 @@ class HiveDatabase {
 
   String? getSelectedIdentity() {
     return _settingsBox.get('focus_selected_identity') as String?;
+  }
+
+  Future<void> saveIsPreviewMode(bool isPreview) async {
+    await _settingsBox.put('is_preview_mode', isPreview);
+  }
+
+  bool? getIsPreviewMode() {
+    return _settingsBox.get('is_preview_mode') as bool?;
   }
 
   Future<void> saveSelectedGoal(String goal) async {

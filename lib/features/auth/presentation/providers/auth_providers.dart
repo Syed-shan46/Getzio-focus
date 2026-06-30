@@ -5,6 +5,8 @@ import '../../../../shared/providers/app_providers.dart';
 import '../../../../core/storage/hive_database.dart';
 import '../../../../core/services/firebase_service.dart';
 import '../../../todo/presentation/providers/todo_providers.dart';
+import '../screens/otp_verification_screen.dart';
+import 'preview_mode_provider.dart';
 import '../../../affirmations/presentation/providers/affirmations_provider.dart';
 import '../../../vision_room/presentation/providers/canvas_providers.dart';
 import '../../../os_dashboard/presentation/providers/os_providers.dart';
@@ -428,6 +430,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
       _ref.invalidate(canvasStateProvider);
       _ref.invalidate(affirmationsProvider);
       _ref.invalidate(osStateProvider);
+      _ref.invalidate(previewModeProvider);
       _ref.invalidate(dailyMotivationProvider);
       
       state = const AsyncValue.data(null);
