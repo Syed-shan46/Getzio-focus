@@ -296,7 +296,7 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
     } else if (item.type == VisionItemType.quote.name) {
       contentWidget = QuoteCardWidget(item: item);
     } else if (item.type == VisionItemType.goal.name) {
-      contentWidget = const SizedBox.shrink();
+      contentWidget = GoalCardWidget(item: item);
     } else if (item.type == VisionItemType.plan.name) {
       contentWidget = PlanCardWidget(item: item);
     } else if (item.type == VisionItemType.task.name) {
