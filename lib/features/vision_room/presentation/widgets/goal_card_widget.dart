@@ -33,186 +33,193 @@ class GoalCardWidget extends StatelessWidget {
         ? '${dueDate.day}/${dueDate.month}/${dueDate.year}'
         : 'No limit';
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withValues(alpha: 0.92), // Premium matte background
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: themeColor.withValues(alpha: 0.35),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: themeColor.withValues(alpha: 0.12),
-            blurRadius: 24,
-            spreadRadius: -4,
+    return FittedBox(
+      fit: BoxFit.fill,
+      child: SizedBox(
+        width: 320,
+        height: 240,
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.92), // Premium matte background
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: themeColor.withValues(alpha: 0.35),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: themeColor.withValues(alpha: 0.12),
+                blurRadius: 24,
+                spreadRadius: -4,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Row 1: Category Badge & Priority
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: themeColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: themeColor.withValues(alpha: 0.3), width: 0.8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.category_rounded, color: themeColor, size: 10),
-                    const SizedBox(width: 4),
-                    Text(
-                      category.toUpperCase(),
+              // Row 1: Category Badge & Priority
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: themeColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: themeColor.withValues(alpha: 0.3), width: 0.8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.category_rounded, color: themeColor, size: 10),
+                        const SizedBox(width: 4),
+                        Text(
+                          category.toUpperCase(),
+                          style: GoogleFonts.outfit(
+                            color: themeColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 9,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _getPriorityColor(priority).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _getPriorityColor(priority).withValues(alpha: 0.4),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Text(
+                      priority.toUpperCase(),
                       style: GoogleFonts.outfit(
-                        color: themeColor,
-                        fontWeight: FontWeight.bold,
+                        color: _getPriorityColor(priority),
+                        fontWeight: FontWeight.w700,
                         fontSize: 9,
                         letterSpacing: 0.5,
                       ),
                     ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+    
+              // Row 2: Title & Target Date
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        height: 1.25,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (description.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white60,
+                          fontSize: 12,
+                          height: 1.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _getPriorityColor(priority).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: _getPriorityColor(priority).withValues(alpha: 0.4),
-                    width: 0.8,
-                  ),
-                ),
-                child: Text(
-                  priority.toUpperCase(),
-                  style: GoogleFonts.outfit(
-                    color: _getPriorityColor(priority),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 9,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Row 2: Title & Target Date
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    height: 1.25,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (description.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: GoogleFonts.outfit(
-                      color: Colors.white60,
-                      fontSize: 12,
-                      height: 1.2,
+    
+              // Row 3: Stats (Tasks & Milestones counts)
+              Row(
+                children: [
+                  if (milestones.isNotEmpty) ...[
+                    Icon(Icons.flag_rounded, color: themeColor.withValues(alpha: 0.7), size: 12),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$completedMilestones/${milestones.length} Steps',
+                      style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    const SizedBox(width: 12),
+                  ],
+                  if (checklist.isNotEmpty) ...[
+                    Icon(Icons.assignment_turned_in_rounded, color: themeColor.withValues(alpha: 0.7), size: 12),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$completedTasks/${checklist.length} Tasks',
+                      style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  const Spacer(),
+                  const Icon(Icons.calendar_month_rounded, color: Colors.white38, size: 12),
+                  const SizedBox(width: 4),
+                  Text(
+                    dueDateStr,
+                    style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w500),
                   ),
                 ],
-              ],
-            ),
-          ),
-
-          // Row 3: Stats (Tasks & Milestones counts)
-          Row(
-            children: [
-              if (milestones.isNotEmpty) ...[
-                Icon(Icons.flag_rounded, color: themeColor.withValues(alpha: 0.7), size: 12),
-                const SizedBox(width: 4),
-                Text(
-                  '$completedMilestones/${milestones.length} Steps',
-                  style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(width: 12),
-              ],
-              if (checklist.isNotEmpty) ...[
-                Icon(Icons.assignment_turned_in_rounded, color: themeColor.withValues(alpha: 0.7), size: 12),
-                const SizedBox(width: 4),
-                Text(
-                  '$completedTasks/${checklist.length} Tasks',
-                  style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(width: 12),
-              ],
-              const Spacer(),
-              const Icon(Icons.calendar_month_rounded, color: Colors.white38, size: 12),
-              const SizedBox(width: 4),
-              Text(
-                dueDateStr,
-                style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w500),
               ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // Row 4: Text Labels for Progress
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                progressRatio >= 1.0 ? 'Goal Conquered 🏆' : 'Journey Progress',
-                style: GoogleFonts.outfit(
-                  color: progressRatio >= 1.0 ? const Color(0xFFFFD54F) : Colors.white70,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+              const SizedBox(height: 14),
+    
+              // Row 4: Text Labels for Progress
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    progressRatio >= 1.0 ? 'Goal Conquered 🏆' : 'Journey Progress',
+                    style: GoogleFonts.outfit(
+                      color: progressRatio >= 1.0 ? const Color(0xFFFFD54F) : Colors.white70,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Text(
+                    '$progressPercent%',
+                    style: GoogleFonts.outfit(
+                      color: themeColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                '$progressPercent%',
-                style: GoogleFonts.outfit(
-                  color: themeColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+              const SizedBox(height: 8),
+    
+              // Row 5: Realistic Road Progress via Custom Paint
+              SizedBox(
+                height: 38,
+                child: CustomPaint(
+                  painter: RealisticRoadProgressPainter(
+                    progress: progressRatio.clamp(0.0, 1.0),
+                    themeColor: themeColor,
+                    milestones: milestones,
+                  ),
+                  child: const SizedBox.expand(),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-
-          // Row 5: Realistic Road Progress via Custom Paint
-          SizedBox(
-            height: 38,
-            child: CustomPaint(
-              painter: RealisticRoadProgressPainter(
-                progress: progressRatio.clamp(0.0, 1.0),
-                themeColor: themeColor,
-                milestones: milestones,
-              ),
-              child: const SizedBox.expand(),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
