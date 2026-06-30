@@ -76,9 +76,10 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
 
   Future<void> _loadData() async {
     final local = _repo.getLocalAffirmations();
+    final isGuest = _ref.read(authProvider).valueOrNull == null;
 
-    // If empty, initialize default cards
-    if (local.isEmpty) {
+    // If empty and user is a guest, initialize default cards
+    if (local.isEmpty && isGuest) {
       final defaults = [
         DailyAffirmation(
           id: 'def_1',

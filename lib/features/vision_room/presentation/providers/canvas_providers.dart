@@ -66,7 +66,21 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
               }).toList();
               
               items.sort((a, b) => a.zIndex.compareTo(b.zIndex));
-              state = CanvasState(items: items);
+              
+              final remoteViewport = data['viewport'] as List?;
+              List<double>? parsedViewport;
+              
+              if (remoteViewport != null) {
+                parsedViewport = remoteViewport.map((e) => (e as num).toDouble()).toList();
+                _hiveDb.saveVisionViewport(parsedViewport);
+              } else {
+                parsedViewport = _hiveDb.getVisionViewport();
+              }
+              
+              state = CanvasState(
+                items: items,
+                viewportTransform: parsedViewport != null ? Matrix4.fromList(parsedViewport) : null,
+              );
               
               final serialized = items.map((i) => i.toJson()).toList();
               _hiveDb.saveVisionItems(serialized);
@@ -135,7 +149,11 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
       final serialized = items.map((i) => i.toJson()).toList();
       _hiveDb.saveVisionItems(serialized);
     }
-    state = CanvasState(items: items);
+    final cachedViewport = _hiveDb.getVisionViewport();
+    state = CanvasState(
+      items: items,
+      viewportTransform: cachedViewport != null ? Matrix4.fromList(cachedViewport) : null,
+    );
   }
 
   bool get canUndo => _undoStack.isNotEmpty;
@@ -144,6 +162,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   void _saveState() {
     final serializedItems = state.items.map((i) => i.toJson()).toList();
     _hiveDb.saveVisionItems(serializedItems);
+    _hiveDb.saveVisionViewport(state.viewportTransform.storage.toList());
   }
 
   Future<void> saveRoomToServer() async {
@@ -157,6 +176,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
         '/focus/vision-room',
         data: {
           'items': serializedItems,
+          'viewport': state.viewportTransform.storage.toList(),
         },
       );
       debugPrint('[CanvasSync] Saved entire room to server successfully');

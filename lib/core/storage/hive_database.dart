@@ -378,6 +378,15 @@ class HiveDatabase {
     return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
   }
 
+  Future<void> saveVisionViewport(List<double> matrix) async {
+    await _settingsBox.put('focus_vision_viewport', matrix);
+  }
+
+  List<double>? getVisionViewport() {
+    final list = _settingsBox.get('focus_vision_viewport') as List?;
+    return list?.cast<double>();
+  }
+
   // ─── Vision Customization ──────────────────────────────────────────────
 
   Future<void> saveVisionCustomization(Map<String, dynamic> customization) async {

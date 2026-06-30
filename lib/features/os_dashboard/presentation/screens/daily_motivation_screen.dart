@@ -260,7 +260,14 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
             child: FloatingActionButton.extended(
               heroTag: 'create_aff_fab',
               backgroundColor: const Color(0xFF6366F1),
-              onPressed: () => AffirmationBottomSheet.show(context),
+              onPressed: () {
+                final isGuest = ref.read(authProvider).valueOrNull == null;
+                if (isGuest) {
+                  PremiumAuthSheet.show(context);
+                } else {
+                  AffirmationBottomSheet.show(context);
+                }
+              },
               icon: const Icon(
                 Icons.spa_rounded,
                 color: Colors.white,
