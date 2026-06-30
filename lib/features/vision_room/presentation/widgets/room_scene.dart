@@ -59,23 +59,8 @@ class RoomScene extends StatelessWidget {
           ),
         ),
 
-        // 3. Realistic Cozy Candle sitting on the left side of the bottom shelf
-        Positioned(
-          left: 44,
-          bottom: 136,
-          child: RepaintBoundary(
-            child: parallaxLayer(const _RealisticCandle(), 0.05),
-          ),
-        ),
 
-        // 4. Living Workspace Fish Tank sitting cleanly on the right side of the bottom shelf
-        Positioned(
-          right: 36,
-          bottom: 136,
-          child: RepaintBoundary(
-            child: parallaxLayer(const _WorkspaceFishTank(), 0.05),
-          ),
-        ),
+
 
         // 5. Border lighting — soft warm glow on left & right walls only
         Positioned(

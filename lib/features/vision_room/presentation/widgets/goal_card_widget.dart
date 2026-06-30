@@ -81,47 +81,101 @@ class GoalCardWidget extends StatelessWidget {
           
           const Spacer(),
 
-          // Footer: Progress Ring and Percentage
+          // Footer: Beautiful Road Progress
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(
-                width: 48,
-                height: 48,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CircularProgressIndicator(
-                      value: progressRatio,
-                      strokeWidth: 6,
-                      backgroundColor: themeColor.withValues(alpha: 0.2),
-                      valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                    ),
-                    Center(
-                      child: Text(
-                        '$progressPercent%',
-                        style: AppTypography.caption(color: Colors.white).copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
+              Text(
+                progressPercent == 100 ? 'Goal Reached!' : 'Journey in Progress',
+                style: AppTypography.bodyMedium(color: Colors.white).copyWith(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      progressPercent == 100 ? 'Completed!' : 'In Progress',
-                      style: AppTypography.bodyMedium(color: Colors.white),
-                    ),
-                    Text(
-                      'Keep pushing forward',
-                      style: AppTypography.caption(color: Colors.white54),
-                    ),
-                  ],
-                ),
+              Text(
+                '$progressPercent%',
+                style: AppTypography.caption(color: themeColor).copyWith(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final double width = constraints.maxWidth;
+              const double roadHeight = 16.0;
+              return Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.centerLeft,
+                children: [
+                  // Road Background
+                  Container(
+                    width: width,
+                    height: roadHeight,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF334155),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white12, width: 1),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black26, blurRadius: 4)
+                      ],
+                    ),
+                  ),
+                  // Dashed Center Line
+                  Positioned.fill(
+                    child: Row(
+                      children: List.generate(
+                        20,
+                        (index) => Expanded(
+                          child: Container(
+                            height: 2,
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            color: index % 2 == 0 ? Colors.white24 : Colors.transparent,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Filled Progress (Road traveled)
+                  Container(
+                    width: width * progressRatio,
+                    height: roadHeight,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [themeColor.withValues(alpha: 0.3), themeColor.withValues(alpha: 0.8)],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  // Flag at the end
+                  Positioned(
+                    right: -4,
+                    top: -24,
+                    child: const Icon(
+                      Icons.flag_rounded,
+                      color: Colors.orangeAccent,
+                      size: 28,
+                    ),
+                  ),
+                  // Progress Marker (Person/Car)
+                  Positioned(
+                    left: (width * progressRatio).clamp(0.0, width - 24.0),
+                    top: -12,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(color: themeColor.withValues(alpha: 0.6), blurRadius: 8, spreadRadius: 2)
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.directions_run_rounded,
+                        color: themeColor,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),

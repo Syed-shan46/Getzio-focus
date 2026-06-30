@@ -104,14 +104,47 @@ class _TaskBuilderModalState extends State<TaskBuilderModal> {
                 onProgressChanged: (p) => setState(() => _progress = p),
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accentBlue,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: Text('Add Task', style: AppTypography.titleMedium(color: Colors.white)),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        if (_titleController.text.trim().isEmpty) return;
+                        widget.onSubmit({
+                          'title': _titleController.text.trim(),
+                          'priority': _priority,
+                          'progress': _progress,
+                          'dueDate': _dueDate?.toIso8601String(),
+                        });
+                        // Reset form for next task
+                        setState(() {
+                          _titleController.clear();
+                          _priority = 'High';
+                          _progress = 0;
+                          _dueDate = null;
+                        });
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.accentBlue, width: 1.5),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Text('Add More', style: AppTypography.titleMedium(color: AppColors.accentBlue)),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accentBlue,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Text('Done', style: AppTypography.titleMedium(color: Colors.white)),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

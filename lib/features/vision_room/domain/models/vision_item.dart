@@ -78,8 +78,8 @@ class VisionItem extends HiveObject {
     this.countdownDate,
     this.secondaryContent,
     this.zIndex = 0,
-    this.attachmentType = 'pin',
-    this.attachmentStyle = 'redPin',
+    this.attachmentType = 'tape',
+    this.attachmentStyle = 'beige',
     this.materialStyle = 'default',
     this.metadata,
   });

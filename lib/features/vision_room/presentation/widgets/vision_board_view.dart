@@ -286,7 +286,7 @@ class _ViewItemWidget extends StatelessWidget {
       return _wrapCard(QuoteCardWidget(item: item));
     }
     if (item.type == VisionItemType.goal.name) {
-      return _wrapCard(GoalCardWidget(item: item));
+      return const SizedBox.shrink(); // Rendered in PremiumGoalShelf instead
     }
     if (item.type == VisionItemType.plan.name) {
       return _wrapCard(PlanCardWidget(item: item));
