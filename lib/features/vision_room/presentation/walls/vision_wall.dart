@@ -418,7 +418,11 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
         child: QuoteCardWidget(item: item),
       );
     } else if (item.type == VisionItemType.goal.name) {
-      contentWidget = const SizedBox.shrink();
+      contentWidget = SizedBox(
+        width: item.width,
+        height: item.height,
+        child: GoalCardWidget(item: item),
+      );
     } else if (item.type == VisionItemType.plan.name) {
       contentWidget = SizedBox(
         width: item.width,
