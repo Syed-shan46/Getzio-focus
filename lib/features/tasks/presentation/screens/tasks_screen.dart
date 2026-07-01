@@ -388,28 +388,38 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     );
   }
 
-  Widget _buildFilterChips() {
+  Widget _buildFilterChips(WidgetRef ref) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          _buildChip('Today', 8, Icons.wb_sunny_rounded),
-          _buildChip('Upcoming', 5, Icons.calendar_month_rounded),
-          _buildChip('Completed', 23, Icons.check_circle_outline),
-          _buildChip('Overdue', 2, Icons.access_time_rounded),
+          _buildChip('Today', 8, Icons.wb_sunny_rounded, ref),
+          _buildChip('Upcoming', 5, Icons.calendar_month_rounded, ref),
+          _buildChip('Completed', 23, Icons.check_circle_outline, ref),
+          _buildChip('Overdue', 2, Icons.access_time_rounded, ref),
         ],
       ),
     );
   }
 
-  Widget _buildChip(String label, int count, IconData icon) {
+  Widget _buildChip(String label, int count, IconData icon, WidgetRef ref) {
     final isSelected = _activeFilter == label;
     return GestureDetector(
       onTap: () {
         setState(() {
           _activeFilter = label;
         });
+        
+        TaskFilter filter;
+        switch (label) {
+          case 'Today': filter = TaskFilter.today; break;
+          case 'Upcoming': filter = TaskFilter.upcoming; break;
+          case 'Completed': filter = TaskFilter.completed; break;
+          case 'Overdue': filter = TaskFilter.overdue; break;
+          default: filter = TaskFilter.all; break;
+        }
+        ref.read(tasksProvider.notifier).setFilter(filter);
       },
       child: Container(
         margin: const EdgeInsets.only(right: 12),
@@ -570,7 +580,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 24),
-                  child: _buildFilterChips(),
+                  child: _buildFilterChips(ref),
                 ),
               ),
               

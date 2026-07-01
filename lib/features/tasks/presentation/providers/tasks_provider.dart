@@ -20,7 +20,7 @@ class TasksState {
   TasksState({
     this.allTasks = const [],
     this.isLoading = false,
-    this.activeFilter = TaskFilter.all,
+    this.activeFilter = TaskFilter.today,
   });
 
   TasksState copyWith({
