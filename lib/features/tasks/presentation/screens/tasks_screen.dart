@@ -17,245 +17,217 @@ class TasksScreen extends ConsumerStatefulWidget {
 class _TasksScreenState extends ConsumerState<TasksScreen> {
   String _activeFilter = 'Today';
 
-  Widget _buildTopAppBar() {
+  Widget _buildGreeting() {
     return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.only(top: 24, bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildIconButton(Icons.notes_rounded),
           Row(
             children: [
-              _buildIconButton(Icons.search_rounded),
-              const SizedBox(width: 12),
-              _buildIconButton(Icons.calendar_today_rounded),
-              const SizedBox(width: 12),
-              _buildIconButton(Icons.more_horiz_rounded),
+              Text(
+                'Good Morning, ',
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                'Syed ',
+                style: GoogleFonts.outfit(
+                  color: const Color(0xFFFBBF24), // Gold/Amber
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Text('👋', style: TextStyle(fontSize: 24)),
             ],
           ),
+          const SizedBox(height: 6),
+          Text(
+            "Let's make today amazing.",
+            style: GoogleFonts.outfit(
+              color: Colors.white54,
+              fontSize: 14,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildIconButton(IconData icon) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Icon(icon, color: Colors.white70, size: 20),
-    );
-  }
+  Widget _buildDashboard(WidgetRef ref) {
+    final state = ref.watch(tasksProvider);
+    final allTodayTasks = state.allTasks.where((t) {
+      if (t.dueDate == null) return true;
+      final d = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+      final today = DateTime.now();
+      return d == DateTime(today.year, today.month, today.day);
+    }).toList();
+    final completedTasks = allTodayTasks.where((t) => t.status == TaskStatus.completed || t.completed).length;
+    final totalTasks = allTodayTasks.length;
+    final progress = totalTasks > 0 ? completedTasks / totalTasks : 0.0;
+    final progressPercent = (progress * 100).toInt();
 
-  Widget _buildGreeting() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              'Good Morning, ',
-              style: GoogleFonts.outfit(
-                color: Colors.white,
-                fontSize: 26,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Text(
-              'Syed ',
-              style: GoogleFonts.outfit(
-                color: const Color(0xFFFBBF24), // Gold/Amber
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Text('👋', style: TextStyle(fontSize: 24)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          "Let's make today amazing.",
-          style: GoogleFonts.outfit(
-            color: Colors.white54,
-            fontSize: 14,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsRow() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Row(
-        children: [
-          // Streak
-          Expanded(
-            flex: 2,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-              ),
-              child: Row(
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Streak & XP small containers
+            Expanded(
+              flex: 2,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.orangeAccent.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '12',
-                        style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        'Day Streak',
-                        style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11),
-                      ),
-                    ],
-                  ),
+                  _buildSmallStatContainer('12', 'Day Streak', Icons.local_fire_department_rounded, Colors.orangeAccent),
+                  const SizedBox(height: 12),
+                  _buildSmallStatContainer('1,250', 'XP Today', Icons.star_rounded, Colors.amber),
                 ],
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          // XP
-          Expanded(
-            flex: 2,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                    ),
-                    child: const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '1,250',
-                        style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        'XP Today',
-                        style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            const SizedBox(width: 12),
+            // Dynamic Progress Card
+            Expanded(
+              flex: 3,
+              child: _buildDynamicProgressCard(completedTasks, totalTasks, progressPercent),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildProgressCard() {
+  Widget _buildSmallStatContainer(String value, String label, IconData icon, Color color) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
-          // Circular Progress
-          SizedBox(
-            width: 70,
-            height: 70,
-            child: Stack(
-              children: [
-                ShaderMask(
-                  shaderCallback: (rect) {
-                    return const SweepGradient(
-                      startAngle: 0.0,
-                      endAngle: 3.14 * 2,
-                      stops: [0.0, 0.5, 1.0],
-                      colors: [Color(0xFF8B5CF6), Color(0xFFF97316), Color(0xFF8B5CF6)],
-                    ).createShader(rect);
-                  },
-                  child: Container(
-                    width: 70,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 4),
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Text(
-                    '72%',
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
+            child: Icon(icon, color: color, size: 16),
           ),
-          const SizedBox(width: 20),
-          // Text & Bar
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  "Today's Progress",
-                  style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13),
+                  value,
+                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 4),
                 Text(
-                  '8 / 11 Tasks',
-                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  height: 6,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(3),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF8B5CF6), Color(0xFFF97316)],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Keep going! You're doing great.",
+                  label,
                   style: GoogleFonts.outfit(color: Colors.white54, fontSize: 10),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDynamicProgressCard(int completed, int total, int percent) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 50,
+                height: 50,
+                child: Stack(
+                  children: [
+                    ShaderMask(
+                      shaderCallback: (rect) {
+                        return const SweepGradient(
+                          startAngle: 0.0,
+                          endAngle: 3.14 * 2,
+                          stops: [0.0, 0.5, 1.0],
+                          colors: [Color(0xFF8B5CF6), Color(0xFFF97316), Color(0xFF8B5CF6)],
+                        ).createShader(rect);
+                      },
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: Text(
+                        '$percent%',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Today's Progress",
+                      style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$completed / ${total == 0 ? 1 : total}',
+                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            height: 6,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(3),
+              color: Colors.white.withValues(alpha: 0.05),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: percent / 100,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(3),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF8B5CF6), Color(0xFFF97316)],
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -422,39 +394,39 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         ref.read(tasksProvider.notifier).setFilter(filter);
       },
       child: Container(
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? Colors.amber.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? Colors.amber : Colors.white.withValues(alpha: 0.05),
           ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: isSelected ? Colors.amber : Colors.white54, size: 16),
-            const SizedBox(width: 8),
+            Icon(icon, color: isSelected ? Colors.amber : Colors.white54, size: 14),
+            const SizedBox(width: 6),
             Text(
               label,
               style: GoogleFonts.outfit(
                 color: isSelected ? Colors.amber : Colors.white70,
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               decoration: BoxDecoration(
                 color: isSelected ? Colors.amber.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 count.toString(),
                 style: GoogleFonts.outfit(
                   color: isSelected ? Colors.amber : Colors.white70,
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -550,10 +522,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildTopAppBar(),
                           _buildGreeting(),
-                          _buildStatsRow(),
-                          _buildProgressCard(),
+                          _buildDashboard(ref),
                           _buildTodaysFocusCard(),
                           
                           Row(

@@ -43,7 +43,7 @@ class TaskCard extends StatelessWidget {
         onTap();
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16, left: 20, right: 20),
+        margin: const EdgeInsets.only(bottom: 12, left: 16, right: 16),
         decoration: BoxDecoration(
           color: const Color(0xFF131722),
           borderRadius: BorderRadius.circular(16),
@@ -67,7 +67,7 @@ class TaskCard extends StatelessWidget {
               // Main Content
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -78,9 +78,9 @@ class TaskCard extends StatelessWidget {
                           onToggleComplete(!isCompleted);
                         },
                         child: Container(
-                          margin: const EdgeInsets.only(top: 2, right: 16),
-                          width: 28,
-                          height: 28,
+                          margin: const EdgeInsets.only(top: 2, right: 12),
+                          width: 22,
+                          height: 22,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
@@ -89,7 +89,7 @@ class TaskCard extends StatelessWidget {
                             ),
                           ),
                           child: isCompleted
-                              ? const Icon(Icons.check, size: 18, color: Colors.amber)
+                              ? const Icon(Icons.check, size: 14, color: Colors.amber)
                               : null,
                         ),
                       ),
@@ -103,12 +103,12 @@ class TaskCard extends StatelessWidget {
                               task.title,
                               style: GoogleFonts.outfit(
                                 color: Colors.white,
-                                fontSize: 16,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w500,
                                 decoration: isCompleted ? TextDecoration.lineThrough : null,
                               ),
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 8),
                             
                             // Badges & Time Row
                             Row(

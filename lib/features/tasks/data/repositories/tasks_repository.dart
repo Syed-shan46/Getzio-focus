@@ -14,7 +14,7 @@ class TasksRepository {
 
   List<TaskModel> getLocalTasks() {
     final maps = _hiveDb.getTasks();
-    return maps.map((m) => TaskModel.fromMap(m)).toList();
+    return maps.map((m) => TaskModel.fromMap(Map<String, dynamic>.from(m as Map))).toList();
   }
 
   Future<void> saveLocalTasks(List<TaskModel> tasks) async {
