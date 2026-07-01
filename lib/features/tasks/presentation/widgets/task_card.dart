@@ -20,8 +20,8 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCompleted = task.status == TaskStatus.completed || task.completed;
-    final isOverdue = task.status == TaskStatus.overdue;
+    final isCompleted = task.effectiveCompleted;
+    final isOverdue = task.status == TaskStatus.overdue && !isCompleted;
 
     Color priorityColor;
     switch (task.priority) {
@@ -35,6 +35,8 @@ class TaskCard extends StatelessWidget {
         priorityColor = Colors.greenAccent;
         break;
     }
+
+    final double progressPercent = task.effectiveProgress / 100.0;
 
     return GestureDetector(
       onTap: () {
@@ -139,10 +141,39 @@ class TaskCard extends StatelessWidget {
                             ),
                           ),
                         ],
+
+                        // Progress Bar Section
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: progressPercent,
+                                  backgroundColor: Colors.white.withValues(alpha: 0.1),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    isCompleted ? Colors.greenAccent : const Color(0xFF3B82F6),
+                                  ),
+                                  minHeight: 6,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              '${task.effectiveProgress.toInt()}%',
+                              style: GoogleFonts.outfit(
+                                color: isCompleted ? Colors.greenAccent : Colors.white70,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                         
                         const SizedBox(height: 12),
                         
-                        // Bottom row: Due Date, Checklist, Duration
+                        // Bottom row: Due Date, Subtasks, Duration
                         Row(
                           children: [
                             if (task.dueDate != null) ...[
@@ -162,11 +193,11 @@ class TaskCard extends StatelessWidget {
                               const SizedBox(width: 12),
                             ],
                             
-                            if (task.checklist.isNotEmpty) ...[
-                              const Icon(Icons.checklist_rounded, size: 14, color: Colors.white54),
+                            if (task.subtasks.isNotEmpty) ...[
+                              const Icon(Icons.account_tree_rounded, size: 14, color: Colors.white54),
                               const SizedBox(width: 4),
                               Text(
-                                '${task.checklist.where((c) => c.completed).length}/${task.checklist.length}',
+                                '${task.subtasks.where((c) => c.completed).length} / ${task.subtasks.length} Completed',
                                 style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11),
                               ),
                               const SizedBox(width: 12),
