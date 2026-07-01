@@ -42,7 +42,7 @@ class TasksState {
     switch (activeFilter) {
       case TaskFilter.today:
         return allTasks.where((t) {
-          if (t.dueDate == null) return false;
+          if (t.dueDate == null) return t.status != TaskStatus.completed;
           final d = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
           return d == today && t.status != TaskStatus.completed;
         }).toList();

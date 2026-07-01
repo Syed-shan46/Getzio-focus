@@ -44,7 +44,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> with SingleTi
     _descController = TextEditingController(text: task?.description ?? '');
     _category = task?.category ?? 'Personal';
     _priority = task?.priority ?? TaskPriority.medium;
-    _dueDate = task?.dueDate;
+    _dueDate = task?.dueDate ?? DateTime.now();
     _pinned = task?.pinned ?? false;
     _manualProgress = task?.manualProgress ?? 0;
     _subtasks = task?.subtasks.toList() ?? [];
