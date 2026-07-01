@@ -18,25 +18,24 @@ class TaskCard extends StatelessWidget {
     required this.onToggleComplete,
   });
 
+  Color _getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'work':
+        return const Color(0xFF8B5CF6); // Purple
+      case 'personal':
+        return const Color(0xFF10B981); // Green
+      case 'learning':
+      case 'study':
+        return const Color(0xFF3B82F6); // Blue
+      default:
+        return const Color(0xFFF97316); // Orange
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isCompleted = task.effectiveCompleted;
-    final isOverdue = task.status == TaskStatus.overdue && !isCompleted;
-
-    Color priorityColor;
-    switch (task.priority) {
-      case TaskPriority.high:
-        priorityColor = Colors.redAccent;
-        break;
-      case TaskPriority.medium:
-        priorityColor = Colors.orangeAccent;
-        break;
-      case TaskPriority.low:
-        priorityColor = Colors.greenAccent;
-        break;
-    }
-
-    final double progressPercent = task.effectiveProgress / 100.0;
+    final categoryColor = _getCategoryColor(task.category);
 
     return GestureDetector(
       onTap: () {
@@ -44,181 +43,185 @@ class TaskCard extends StatelessWidget {
         onTap();
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12, left: 20, right: 20),
+        margin: const EdgeInsets.only(bottom: 16, left: 20, right: 20),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
+          color: const Color(0xFF131722),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isCompleted
-                ? Colors.green.withValues(alpha: 0.3)
-                : isOverdue
-                    ? Colors.red.withValues(alpha: 0.3)
-                    : Colors.white.withValues(alpha: 0.08),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Checkbox
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.mediumImpact();
-                      onToggleComplete(!isCompleted);
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 2, right: 12),
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isCompleted ? Colors.greenAccent : Colors.white54,
-                          width: 1.5,
-                        ),
-                        color: isCompleted ? Colors.greenAccent.withValues(alpha: 0.2) : Colors.transparent,
-                      ),
-                      child: isCompleted
-                          ? const Icon(Icons.check, size: 16, color: Colors.greenAccent)
-                          : null,
-                    ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Left Colored Strip
+              Container(
+                width: 4,
+                decoration: BoxDecoration(
+                  color: categoryColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    bottomLeft: Radius.circular(16),
                   ),
-                  
-                  // Content
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            if (task.pinned) ...[
-                              const Icon(Icons.push_pin_rounded, size: 14, color: Colors.amber),
-                              const SizedBox(width: 6),
-                            ],
-                            Expanded(
-                              child: Text(
-                                task.title,
-                                style: GoogleFonts.outfit(
-                                  color: isCompleted ? Colors.white54 : Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  decoration: isCompleted ? TextDecoration.lineThrough : null,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: priorityColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                        
-                        if (task.category.isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            task.category,
-                            style: GoogleFonts.outfit(
-                              color: Colors.white38,
-                              fontSize: 12,
+                ),
+              ),
+              
+              // Main Content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Checkbox
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          onToggleComplete(!isCompleted);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(top: 2, right: 16),
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isCompleted ? Colors.amber : Colors.white24,
+                              width: 1.5,
                             ),
                           ),
-                        ],
-
-                        // Progress Bar Section
-                        const SizedBox(height: 12),
-                        Row(
+                          child: isCompleted
+                              ? const Icon(Icons.check, size: 18, color: Colors.amber)
+                              : null,
+                        ),
+                      ),
+                      
+                      // Text Info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: progressPercent,
-                                  backgroundColor: Colors.white.withValues(alpha: 0.1),
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    isCompleted ? Colors.greenAccent : const Color(0xFF3B82F6),
-                                  ),
-                                  minHeight: 6,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
                             Text(
-                              '${task.effectiveProgress.toInt()}%',
+                              task.title,
                               style: GoogleFonts.outfit(
-                                color: isCompleted ? Colors.greenAccent : Colors.white70,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                decoration: isCompleted ? TextDecoration.lineThrough : null,
                               ),
+                            ),
+                            const SizedBox(height: 10),
+                            
+                            // Badges & Time Row
+                            Row(
+                              children: [
+                                // Category Badge
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: categoryColor.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    task.category,
+                                    style: GoogleFonts.outfit(
+                                      color: categoryColor,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                
+                                // Due Date
+                                if (task.dueDate != null) ...[
+                                  const Icon(Icons.calendar_today_rounded, size: 12, color: Colors.white54),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${DateFormat('MMM d').format(task.dueDate!)}${task.dueTime != null ? ', ${task.dueTime}' : ''}',
+                                    style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+                                  ),
+                                  const SizedBox(width: 12),
+                                ],
+                                
+                                // Estimated Duration
+                                if (task.estimatedMinutes != null) ...[
+                                  const Icon(Icons.access_time_rounded, size: 12, color: Colors.white54),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${task.estimatedMinutes}m',
+                                    style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            
+                            const SizedBox(height: 10),
+                            
+                            // Bottom Row (Checklist & Priority)
+                            Row(
+                              children: [
+                                if (task.subtasks.isNotEmpty) ...[
+                                  const Icon(Icons.check_box_outlined, size: 14, color: Colors.white54),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${task.subtasks.where((c) => c.completed).length}/${task.subtasks.length}',
+                                    style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8),
+                                    child: Text('•', style: TextStyle(color: Colors.white24)),
+                                  ),
+                                ],
+                                
+                                if (task.priority == TaskPriority.high) ...[
+                                  Container(
+                                    width: 4,
+                                    height: 4,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.redAccent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'High Priority',
+                                    style: GoogleFonts.outfit(color: Colors.redAccent, fontSize: 12),
+                                  ),
+                                ],
+                              ],
                             ),
                           ],
                         ),
-                        
-                        const SizedBox(height: 12),
-                        
-                        // Bottom row: Due Date, Subtasks, Duration
-                        Row(
-                          children: [
-                            if (task.dueDate != null) ...[
+                      ),
+                      
+                      // Right Icons Column
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Row(
+                            children: [
                               Icon(
-                                Icons.calendar_today_rounded,
-                                size: 12,
-                                color: isOverdue ? Colors.redAccent : Colors.white54,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${DateFormat('MMM d').format(task.dueDate!)}${task.dueTime != null ? ', ${task.dueTime}' : ''}',
-                                style: GoogleFonts.outfit(
-                                  color: isOverdue ? Colors.redAccent : Colors.white54,
-                                  fontSize: 11,
-                                ),
+                                task.pinned ? Icons.star_rounded : Icons.star_border_rounded,
+                                color: task.pinned ? Colors.amber : Colors.white54,
+                                size: 20,
                               ),
                               const SizedBox(width: 12),
+                              const Icon(Icons.more_horiz_rounded, color: Colors.white54, size: 20),
                             ],
-                            
-                            if (task.subtasks.isNotEmpty) ...[
-                              const Icon(Icons.account_tree_rounded, size: 14, color: Colors.white54),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${task.subtasks.where((c) => c.completed).length} / ${task.subtasks.length} Completed',
-                                style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11),
-                              ),
-                              const SizedBox(width: 12),
-                            ],
-                            
-                            if (task.estimatedMinutes != null) ...[
-                              const Icon(Icons.timer_outlined, size: 14, color: Colors.white54),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${task.estimatedMinutes}m',
-                                style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                          const SizedBox(height: 16),
+                          Icon(
+                            Icons.alarm,
+                            color: categoryColor.withValues(alpha: 0.8),
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
