@@ -533,59 +533,67 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       backgroundColor: const Color(0xFF070A13),
       body: Stack(
         children: [
-          CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildTopAppBar(),
-                        _buildGreeting(),
-                        _buildStatsRow(),
-                        _buildProgressCard(),
-                        _buildTodaysFocusCard(),
-                        
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'My Tasks',
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+          RefreshIndicator(
+            color: const Color(0xFF8B5CF6),
+            backgroundColor: const Color(0xFF1E1E2A),
+            onRefresh: () async {
+              await ref.read(tasksProvider.notifier).refresh();
+            },
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildTopAppBar(),
+                          _buildGreeting(),
+                          _buildStatsRow(),
+                          _buildProgressCard(),
+                          _buildTodaysFocusCard(),
+                          
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'My Tasks',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            Text(
-                              'View All >',
-                              style: GoogleFonts.outfit(
-                                color: Colors.amber,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
+                              Text(
+                                'View All >',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.amber,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  child: _buildFilterChips(ref),
+                
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: _buildFilterChips(ref),
+                  ),
                 ),
-              ),
-              
-              _buildTasksList(ref),
-            ],
+                
+                _buildTasksList(ref),
+              ],
+            ),
           ),
           
           // Floating Action Buttons

@@ -83,13 +83,22 @@ class TasksNotifier extends StateNotifier<TasksState> {
 
     try {
       // 1. Load instantly from cache
-      final localTasks = _repository.getLocalTasks();
-      if (localTasks.isNotEmpty) {
-        state = state.copyWith(allTasks: localTasks, isLoading: false);
+      try {
+        final localTasks = _repository.getLocalTasks();
+        if (localTasks.isNotEmpty) {
+          state = state.copyWith(allTasks: localTasks, isLoading: false);
+        }
+      } catch (e) {
+        print('Error loading local tasks: $e');
       }
 
       // 2. Background sync offline changes
-      await _repository.syncOfflineTasks(localTasks);
+      try {
+        final localTasks = _repository.getLocalTasks(); // Reload safely
+        await _repository.syncOfflineTasks(localTasks);
+      } catch (e) {
+        print('Error syncing offline tasks: $e');
+      }
 
       // 3. Background fetch fresh data from server
       final serverTasks = await _repository.fetchTasksFromServer();
@@ -100,12 +109,16 @@ class TasksNotifier extends StateNotifier<TasksState> {
         await _repository.saveLocalTasks(serverTasks);
       }
     } catch (e) {
-      print('Error loading tasks: $e');
+      print('Error fetching tasks from server: $e');
     } finally {
       if (mounted) {
         state = state.copyWith(isLoading: false);
       }
     }
+  }
+
+  Future<void> refresh() async {
+    await _loadData();
   }
 
   void setFilter(TaskFilter filter) {

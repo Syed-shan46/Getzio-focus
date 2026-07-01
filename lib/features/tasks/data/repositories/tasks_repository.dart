@@ -24,10 +24,12 @@ class TasksRepository {
 
   Future<List<TaskModel>?> fetchTasksFromServer() async {
     final hasToken = _hiveDb.getAuthToken() != null;
+    dev.log('fetchTasksFromServer - hasToken: $hasToken');
     if (!hasToken) return null;
 
     try {
       final dio = _ref.read(dioClientProvider);
+      dev.log('fetchTasksFromServer - making GET request');
       final response = await dio.get('/tasks');
       if (response.statusCode == 200 && response.data != null && response.data['status'] == 'success') {
         final data = response.data['data']['tasks'] as List;
