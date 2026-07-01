@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -465,7 +464,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       );
     }
 
-    if (state.tasks.isEmpty) {
+    if (state.filteredTasks.isEmpty) {
       return SliverFillRemaining(
         child: Center(
           child: Column(
@@ -491,7 +490,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
-            final task = state.tasks[index];
+            final task = state.filteredTasks[index];
             return TaskCard(
               task: task,
               onTap: () {
@@ -512,7 +511,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               },
             );
           },
-          childCount: state.tasks.length,
+          childCount: state.filteredTasks.length,
         ),
       ),
     );
