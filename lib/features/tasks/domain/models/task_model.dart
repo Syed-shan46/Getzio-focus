@@ -213,7 +213,7 @@ class TaskModel {
       'title': title,
       'description': description,
       'category': category,
-      'priority': priority.name.toUpperCase(),
+      'priority': '${priority.name[0].toUpperCase()}${priority.name.substring(1)}',
       'status': status == TaskStatus.inProgress ? 'in_progress' : status.name,
       'progress': effectiveProgress,
       'manualProgress': manualProgress,
