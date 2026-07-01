@@ -81,24 +81,30 @@ class TasksNotifier extends StateNotifier<TasksState> {
   Future<void> _loadData() async {
     state = state.copyWith(isLoading: true);
 
-    // 1. Load instantly from cache
-    final localTasks = _repository.getLocalTasks();
-    if (localTasks.isNotEmpty) {
-      state = state.copyWith(allTasks: localTasks, isLoading: false);
-    }
+    try {
+      // 1. Load instantly from cache
+      final localTasks = _repository.getLocalTasks();
+      if (localTasks.isNotEmpty) {
+        state = state.copyWith(allTasks: localTasks, isLoading: false);
+      }
 
-    // 2. Background sync offline changes
-    await _repository.syncOfflineTasks(localTasks);
+      // 2. Background sync offline changes
+      await _repository.syncOfflineTasks(localTasks);
 
-    // 3. Background fetch fresh data from server
-    final serverTasks = await _repository.fetchTasksFromServer();
-    if (serverTasks != null) {
-      // Refresh state
-      state = state.copyWith(allTasks: serverTasks, isLoading: false);
-      // Update cache
-      await _repository.saveLocalTasks(serverTasks);
-    } else {
-      state = state.copyWith(isLoading: false);
+      // 3. Background fetch fresh data from server
+      final serverTasks = await _repository.fetchTasksFromServer();
+      if (serverTasks != null) {
+        // Refresh state
+        state = state.copyWith(allTasks: serverTasks, isLoading: false);
+        // Update cache
+        await _repository.saveLocalTasks(serverTasks);
+      }
+    } catch (e) {
+      print('Error loading tasks: $e');
+    } finally {
+      if (mounted) {
+        state = state.copyWith(isLoading: false);
+      }
     }
   }
 
