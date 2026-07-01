@@ -17,6 +17,8 @@ import '../widgets/plan_builder_modal.dart';
 import '../widgets/finance_builder_modal.dart';
 import '../widgets/countdown_builder_modal.dart';
 import '../widgets/customization_sheet.dart';
+import '../widgets/smart_object_sheets.dart';
+import '../widgets/sticky_note_bottom_sheet.dart';
 import '../widgets/roadmap_bottom_sheet.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -1375,6 +1377,12 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  _selectionAction(Icons.edit_note_rounded, 'Edit Details', () {
+                    final items = ref.read(canvasStateProvider).items;
+                    final item = items.firstWhere((i) => i.id == itemId);
+                    SmartObjectSheetRouter.open(context, item);
+                    HapticFeedback.lightImpact();
+                  }),
                   _selectionAction(Icons.copy_rounded, 'Duplicate', () {
                     final items = ref.read(canvasStateProvider).items;
                     final item = items.firstWhere((i) => i.id == itemId);

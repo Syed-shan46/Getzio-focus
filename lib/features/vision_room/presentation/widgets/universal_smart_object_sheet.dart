@@ -296,6 +296,50 @@ class _UniversalSmartObjectSheetState
           ),
           const SizedBox(height: 20),
 
+          // Show Progress Toggle
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.pie_chart_rounded, color: AppColors.accentBlue, size: 16),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Show Progress on Card',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 24,
+                  child: Transform.scale(
+                    scale: 0.7,
+                    child: Switch(
+                      value: meta['showProgress'] as bool? ?? false,
+                      activeTrackColor: AppColors.accentBlue,
+                      onChanged: (val) {
+                        _saveItemDetails(extraMeta: {'showProgress': val});
+                        HapticFeedback.lightImpact();
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
           // Object-Specific Quick Editors
           if (item.type == VisionItemType.financeGoal.name) ...[
             _buildSectionLabel('Finance Goal Amounts'),

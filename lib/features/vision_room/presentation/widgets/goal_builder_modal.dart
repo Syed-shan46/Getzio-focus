@@ -44,6 +44,8 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
     super.dispose();
   }
 
+  bool _addToShelf = false;
+
   void _submit() {
     if (_titleController.text.trim().isEmpty) return;
 
@@ -54,6 +56,7 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
       'dueDate': _dueDate?.toIso8601String(),
       'priority': _priority,
       'color': _selectedColor.toARGB32(),
+      'isOnShelf': _addToShelf,
     });
     Navigator.pop(context);
   }
@@ -165,6 +168,29 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
                     ),
                   );
                 }).toList(),
+              ),
+              const SizedBox(height: 32),
+
+              // Add to Shelf Option
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Add to Wooden Shelf',
+                        style: AppTypography.titleMedium(color: Colors.white70).copyWith(fontSize: 15),
+                      ),
+                    ],
+                  ),
+                  Switch(
+                    value: _addToShelf,
+                    activeColor: _selectedColor,
+                    onChanged: (val) => setState(() => _addToShelf = val),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
 

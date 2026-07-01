@@ -131,9 +131,6 @@ class MotivationNotifier extends StateNotifier<MotivationState> {
           text: 'Challenges are opportunities to grow and expand my capabilities.',
           category: 'Mindset',
           colorTheme: 'Emerald Green',
-          backgroundStyle: 'Warm Wood',
-          fontStyle: 'Serif',
-          schedule: ['Morning'],
         ),
         DailyAffirmation(
           id: 'aff_2',
@@ -141,9 +138,6 @@ class MotivationNotifier extends StateNotifier<MotivationState> {
           text: 'I choose consistency over temporary motivation. I finish what I start.',
           category: 'Discipline',
           colorTheme: 'Minimal Black',
-          backgroundStyle: 'Minimal Black',
-          fontStyle: 'Sans-Serif',
-          schedule: ['Morning', 'Afternoon'],
         ),
         DailyAffirmation(
           id: 'aff_3',
@@ -151,9 +145,6 @@ class MotivationNotifier extends StateNotifier<MotivationState> {
           text: 'I create value daily, and my work builds long-term security.',
           category: 'Finance',
           colorTheme: 'Luxury Gold',
-          backgroundStyle: 'Luxury Gold',
-          fontStyle: 'Serif',
-          schedule: ['Morning', 'Evening'],
         ),
       ];
       _saveAffirmationsToHive(affirmationsList);
@@ -290,19 +281,6 @@ class MotivationNotifier extends StateNotifier<MotivationState> {
       author: original.author,
       category: original.category,
       colorTheme: original.colorTheme,
-      fontStyle: original.fontStyle,
-      backgroundStyle: original.backgroundStyle,
-      schedule: List<String>.from(original.schedule),
-      woodFinish: original.woodFinish,
-      frameStyle: original.frameStyle,
-      frameColor: original.frameColor,
-      glassReflection: original.glassReflection,
-      fontWeight: original.fontWeight,
-      quoteAlignment: original.quoteAlignment,
-      quoteSize: original.quoteSize,
-      accentColor: original.accentColor,
-      bgBlur: original.bgBlur,
-      borderDecoration: original.borderDecoration,
     );
     final list = [...state.affirmations, duplicate];
     state = state.copyWith(affirmations: list);

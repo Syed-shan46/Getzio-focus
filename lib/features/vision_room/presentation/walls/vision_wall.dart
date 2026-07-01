@@ -77,7 +77,9 @@ class _VisionWallState extends ConsumerState<VisionWall>
   @override
   Widget build(BuildContext context) {
     final canvasState = ref.watch(canvasStateProvider);
-    final items = canvasState.items;
+    final items = canvasState.items
+        .where((item) => item.metadata?['isOnShelf'] != true)
+        .toList();
     final cust = ref.watch(visionCustomizationProvider);
     final isEditMode = ref.watch(editModeProvider);
     final selectedIds = canvasState.selectedIds;
@@ -188,7 +190,9 @@ class _VisionWallState extends ConsumerState<VisionWall>
                 }),
                 
                 // Add Premium Sticky Notes from Hive/API
-                ...ref.watch(stickyNotesProvider).map((note) {
+                ...ref.watch(stickyNotesProvider)
+                    .where((note) => !note.category.contains('#shelf'))
+                    .map((note) {
                   return Positioned(
                     left: note.x,
                     top: note.y,

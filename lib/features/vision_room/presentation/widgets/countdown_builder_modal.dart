@@ -30,6 +30,8 @@ class _CountdownBuilderModalState extends State<CountdownBuilderModal> {
     super.dispose();
   }
 
+  bool _addToShelf = false;
+
   void _submit() {
     if (_titleController.text.trim().isEmpty) return;
     
@@ -43,6 +45,7 @@ class _CountdownBuilderModalState extends State<CountdownBuilderModal> {
       'title': _titleController.text.trim(),
       'days': days,
       'targetDate': _selectedDate?.toIso8601String(),
+      'isOnShelf': _addToShelf,
     });
     Navigator.pop(context);
   }
@@ -109,6 +112,29 @@ class _CountdownBuilderModalState extends State<CountdownBuilderModal> {
                     ],
                   ),
                 ),
+              ),
+              const SizedBox(height: 24),
+
+              // Add to Shelf Option
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Add to Wooden Shelf',
+                        style: AppTypography.titleMedium(color: Colors.white70).copyWith(fontSize: 15),
+                      ),
+                    ],
+                  ),
+                  Switch(
+                    value: _addToShelf,
+                    activeColor: Colors.pinkAccent,
+                    onChanged: (val) => setState(() => _addToShelf = val),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
               ElevatedButton(

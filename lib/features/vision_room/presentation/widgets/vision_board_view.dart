@@ -21,7 +21,9 @@ class VisionBoardView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final canvasState = ref.watch(canvasStateProvider);
-    final items = canvasState.items;
+    final items = canvasState.items
+        .where((item) => item.metadata?['isOnShelf'] != true)
+        .toList();
     final cust = ref.watch(visionCustomizationProvider);
     final cardCfg = cust.cardCustomization;
 

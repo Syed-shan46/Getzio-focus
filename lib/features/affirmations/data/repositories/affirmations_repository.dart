@@ -98,31 +98,20 @@ class AffirmationsRepository {
       final payload = {
         'affirmations': list
             .map(
-              (a) => {
-                'id': a.id,
-                'localId': a.id,
-                'title': a.title,
-                'text': a.text,
-                'author': a.author ?? 'Anonymous',
-                'category': a.category,
-                'emoji': a.emoji ?? '',
-                'icon': a.icon ?? '✨',
-                'isFavorite': a.isFavorite,
-                'isPinned': a.isPinned,
-                'backgroundStyle': a.backgroundStyle,
-                'colorTheme': a.colorTheme,
-                'fontStyle': a.fontStyle,
-                'woodFinish': a.woodFinish,
-                'frameStyle': a.frameStyle,
-                'frameColor': a.frameColor,
-                'glassReflection': a.glassReflection,
-                'fontWeight': a.fontWeight,
-                'quoteAlignment': a.quoteAlignment,
-                'quoteSize': a.quoteSize,
-                'accentColor': a.accentColor,
-                'bgBlur': a.bgBlur,
-                'borderDecoration': a.borderDecoration,
-                'createdAt': a.createdAt?.toIso8601String(),
+              (a) {
+                return {
+                  'id': a.id,
+                  'localId': a.id,
+                  'title': a.title,
+                  'text': a.text,
+                  'author': a.author ?? 'Anonymous',
+                  'category': a.category,
+                  'emoji': a.emoji ?? '',
+                  'isFavorite': a.isFavorite,
+                  'isPinned': a.isPinned,
+                  'colorTheme': a.colorTheme,
+                  'createdAt': a.createdAt?.toIso8601String(),
+                };
               },
             )
             .toList(),

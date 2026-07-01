@@ -123,6 +123,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
     if (image != null && mounted) {
       DateTime? selectedDueDate;
       double selectedProgress = 0;
+      bool addToShelf = false;
       await showDialog(
         context: context,
         builder: (ctx) => StatefulBuilder(
@@ -141,6 +142,27 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                     accentColor: const Color(0xFF10B981),
                     onDateChanged: (d) => setDlgState(() => selectedDueDate = d),
                     onProgressChanged: (p) => setDlgState(() => selectedProgress = p),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Add to Wooden Shelf',
+                            style: TextStyle(color: Colors.white70, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                      Switch(
+                        value: addToShelf,
+                        activeColor: const Color(0xFF10B981),
+                        onChanged: (val) => setDlgState(() => addToShelf = val),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -171,7 +193,10 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
         width: 250,
         height: 250,
         rotation: (random.nextDouble() - 0.5) * 0.2,
-        metadata: {'progress': selectedProgress},
+        metadata: {
+          'progress': selectedProgress,
+          'isOnShelf': addToShelf,
+        },
       );
       
       // Optimistically add the item to the canvas using local cache
@@ -445,69 +470,102 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
 
   void _addText() {
     final controller = TextEditingController();
+    bool addToShelf = false;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0F172A),
-        title: const Text(
-          'Add Text',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          backgroundColor: const Color(0xFF0F172A),
+          title: const Text(
+            'Add Text',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
+          content: SizedBox(
+            width: 280,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  maxLines: 3,
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: 'Type your text...',
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.08),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Add to Wooden Shelf',
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                    Switch(
+                      value: addToShelf,
+                      activeColor: AppColors.accentBlue,
+                      onChanged: (val) => setDlgState(() => addToShelf = val),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white60),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accentBlue,
+              ),
+              onPressed: () {
+                final text = controller.text.trim();
+                if (text.isNotEmpty) {
+                  Navigator.pop(ctx);
+                  final size = MediaQuery.of(context).size;
+                  final random = Random();
+                  ref
+                      .read(canvasStateProvider.notifier)
+                      .addItem(
+                        VisionItem(
+                          id: const Uuid().v4(),
+                          type: VisionItemType.stickyNote.name,
+                          content: text,
+                          colorValue: 0xFF1E293B,
+                          x: (size.width / 2) - 100,
+                          y: (size.height / 2) - 60,
+                          width: 200,
+                          height: 120,
+                          rotation: (random.nextDouble() - 0.5) * 0.1,
+                          attachmentType: 'none',
+                          metadata: {'isOnShelf': addToShelf},
+                        ),
+                      );
+                }
+              },
+              child: const Text('Add'),
+            ),
+          ],
         ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLines: 3,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
-          decoration: InputDecoration(
-            hintText: 'Type your text...',
-            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.08),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.white60),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accentBlue,
-            ),
-            onPressed: () {
-              final text = controller.text.trim();
-              if (text.isNotEmpty) {
-                Navigator.pop(ctx);
-                final size = MediaQuery.of(context).size;
-                final random = Random();
-                ref
-                    .read(canvasStateProvider.notifier)
-                    .addItem(
-                      VisionItem(
-                        id: const Uuid().v4(),
-                        type: VisionItemType.stickyNote.name,
-                        content: text,
-                        colorValue: 0xFF1E293B,
-                        x: (size.width / 2) - 100,
-                        y: (size.height / 2) - 60,
-                        width: 200,
-                        height: 120,
-                        rotation: (random.nextDouble() - 0.5) * 0.1,
-                        attachmentType: 'none',
-                      ),
-                    );
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
       ),
     );
   }
@@ -539,6 +597,9 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
   void _exitEditMode() {
     ref.read(canvasStateProvider.notifier).clearSelection();
     ref.read(editModeProvider.notifier).state = false;
+    ref.read(canvasStateProvider.notifier).saveRoomToServer().catchError((e) {
+      debugPrint('[CanvasSync] Error auto-saving on exit edit mode: $e');
+    });
     HapticFeedback.mediumImpact();
 
     // Show success snackbar

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/storage/hive_database.dart';
@@ -14,6 +15,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   final List<CanvasState> _undoStack = [];
   final List<CanvasState> _redoStack = [];
   final Map<String, Timer> _itemDebouncers = {};
+  Timer? _viewportDebouncer;
 
   CanvasHistoryNotifier(this._hiveDb, this._ref) : super(CanvasState(items: [])) {
     _loadInitialItems();
@@ -35,32 +37,60 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
         dio.get('/focus/vision-room').then((response) {
           if (response.data != null && response.data['success'] == true) {
             final data = response.data['data'];
+            debugPrint('[CanvasSync] GET focus/vision-room response data: $data');
             final itemsList = data['items'] as List?;
             if (itemsList != null) {
               final items = itemsList.map((itemJson) {
+                Map<String, dynamic> parsedMeta = {};
+                final fontStr = itemJson['font'] as String?;
+                if (fontStr != null && fontStr.trim().startsWith('{') && fontStr.trim().endsWith('}')) {
+                  try {
+                    parsedMeta = Map<String, dynamic>.from(jsonDecode(fontStr));
+                  } catch (_) {}
+                }
+
+                final scaleVal = (itemJson['scale'] as num?)?.toDouble() ?? parsedMeta['scale'] ?? 1.0;
+                final opacityVal = (itemJson['opacity'] as num?)?.toDouble() ?? parsedMeta['opacity'] ?? 1.0;
+
+                final rawId = itemJson['itemId'] ?? itemJson['id'] ?? '';
+                final rawType = itemJson['type'] ?? '';
+                final rawContent = itemJson['type'] == 'image'
+                    ? (itemJson['imageUrl'] ?? itemJson['content'] ?? '')
+                    : (itemJson['text'] ?? itemJson['content'] ?? '');
+                final rawX = (itemJson['xPosition'] as num?)?.toDouble() ?? (itemJson['x'] as num?)?.toDouble() ?? 0.0;
+                final rawY = (itemJson['yPosition'] as num?)?.toDouble() ?? (itemJson['y'] as num?)?.toDouble() ?? 0.0;
+                final rawWidth = (itemJson['width'] as num?)?.toDouble() ?? (itemJson['w'] as num?)?.toDouble() ?? 180.0;
+                final rawHeight = (itemJson['height'] as num?)?.toDouble() ?? (itemJson['h'] as num?)?.toDouble() ?? 120.0;
+                final rawRotation = (itemJson['rotation'] as num?)?.toDouble() ?? (itemJson['r'] as num?)?.toDouble() ?? 0.0;
+
+                final rawColorVal = itemJson['color'] != null && itemJson['color'].toString().isNotEmpty
+                    ? (int.tryParse(itemJson['color'], radix: 16) ?? (itemJson['colorValue'] as int?) ?? 0xFF1E1B4B)
+                    : ((itemJson['colorValue'] as int?) ?? 0xFF1E1B4B);
+
+                final rawIsPinned = itemJson['locked'] ?? itemJson['isPinned'] ?? false;
+
                 return VisionItem(
-                  id: itemJson['itemId'] ?? '',
-                  type: itemJson['type'] ?? '',
-                  content: itemJson['type'] == 'image' ? (itemJson['imageUrl'] ?? '') : (itemJson['text'] ?? ''),
-                  x: (itemJson['xPosition'] as num?)?.toDouble() ?? 0.0,
-                  y: (itemJson['yPosition'] as num?)?.toDouble() ?? 0.0,
-                  width: (itemJson['width'] as num?)?.toDouble() ?? 180.0,
-                  height: (itemJson['height'] as num?)?.toDouble() ?? 120.0,
-                  rotation: (itemJson['rotation'] as num?)?.toDouble() ?? 0.0,
-                  colorValue: itemJson['color'] != null && itemJson['color'].toString().isNotEmpty
-                      ? int.tryParse(itemJson['color'], radix: 16) ?? 0xFF1E1B4B
-                      : 0xFF1E1B4B,
-                  isPinned: itemJson['locked'] ?? false,
+                  id: rawId,
+                  type: rawType,
+                  content: rawContent,
+                  x: rawX,
+                  y: rawY,
+                  width: rawWidth,
+                  height: rawHeight,
+                  rotation: rawRotation,
+                  colorValue: rawColorVal,
+                  isPinned: rawIsPinned,
                   zIndex: (itemJson['zIndex'] as num?)?.toInt() ?? 0,
                   attachmentType: 'tape',
                   attachmentStyle: 'beige',
                   materialStyle: 'default',
                   countdownDate: itemJson['countdownDate'] != null ? DateTime.parse(itemJson['countdownDate']) : null,
                   metadata: {
-                    ...((itemJson['metadata'] as Map<String, dynamic>?) ?? {}),
-                    'scale': (itemJson['scale'] as num?)?.toDouble() ?? 1.0,
-                    'opacity': (itemJson['opacity'] as num?)?.toDouble() ?? 1.0,
-                    'font': itemJson['font'] ?? '',
+                    ...parsedMeta,
+                    'scale': scaleVal,
+                    'opacity': opacityVal,
+                    'font': fontStr ?? '',
+                    'isOnShelf': parsedMeta['isOnShelf'] == true || itemJson['isOnShelf'] == true || itemJson['isShelfItem'] == true,
                   }
                 );
               }).toList();
@@ -171,7 +201,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
 
     try {
       final dio = _ref.read(dioClientProvider);
-      final serializedItems = state.items.map((i) => i.toJson()).toList();
+      final serializedItems = state.items.map((i) => _mapItemToDbKeys(i)).toList();
       await dio.post(
         '/focus/vision-room',
         data: {
@@ -187,13 +217,20 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   }
 
   Map<String, dynamic> _mapItemToDbKeys(VisionItem item) {
+    final metaMap = {
+      'isOnShelf': item.metadata?['isOnShelf'] == true,
+      'createdAt': item.metadata?['createdAt'] ?? DateTime.now().toIso8601String(),
+      'scale': item.metadata?['scale'] ?? 1.0,
+      'opacity': item.metadata?['opacity'] ?? 1.0,
+      ...?item.metadata,
+    };
     return {
       'itemId': item.id,
       'type': item.type,
       'imageUrl': item.type == 'image' ? item.content : '',
       'text': item.type != 'image' ? item.content : '',
       'color': item.colorValue.toRadixString(16),
-      'font': item.metadata?['font'] ?? '',
+      'font': jsonEncode(metaMap),
       'xPosition': item.x,
       'yPosition': item.y,
       'width': item.width,
@@ -203,16 +240,26 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
       'zIndex': item.zIndex,
       'opacity': item.metadata?['opacity'] ?? 1.0,
       'locked': item.isPinned,
+      'countdownDate': item.countdownDate?.toIso8601String(),
+      'isOnShelf': item.metadata?['isOnShelf'] == true,
+      'isShelfItem': item.metadata?['isOnShelf'] == true,
+      // Persist full metadata including isOnShelf so the shelf state
+      // survives logout/login and multi-session reloads from the backend.
+      'metadata': metaMap,
     };
   }
 
-  void _debouncePatchItem(String id, Map<String, dynamic> data) {
+  void _debouncePatchItem(String id) {
     final hasToken = _hiveDb.getAuthToken() != null;
     if (!hasToken) return;
 
     _itemDebouncers[id]?.cancel();
     _itemDebouncers[id] = Timer(const Duration(milliseconds: 350), () {
       try {
+        final itemIndex = state.items.indexWhere((i) => i.id == id);
+        if (itemIndex == -1) return;
+        final item = state.items[itemIndex];
+        final data = _mapItemToDbKeys(item);
         final dio = _ref.read(dioClientProvider);
         dio.patch('/focus/vision-room/item/$id', data: data).then((_) {
           debugPrint('[CanvasSync] Patched item $id successfully');
@@ -290,8 +337,13 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
       try {
         final dio = _ref.read(dioClientProvider);
         final payload = _mapItemToDbKeys(newItem);
+        // Stamp creation timestamp into metadata for ordering shelf items later
+        final createdAt = DateTime.now().toIso8601String();
+        payload['metadata'] = {
+          ...?(newItem.metadata),
+          'createdAt': createdAt,
+        };
         payload['countdownDate'] = newItem.countdownDate?.toIso8601String();
-        payload['metadata'] = newItem.metadata;
         dio.post('/focus/vision-room/item', data: payload).then((_) {
           debugPrint('[CanvasSync] Created item ${newItem.id} on backend');
         }).catchError((e) {
@@ -312,7 +364,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     final newItems = state.items.map((item) {
       if (item.id == id) {
         final updated = item.copyWith(zIndex: maxZ + 1);
-        _debouncePatchItem(id, {'zIndex': updated.zIndex});
+        _debouncePatchItem(id);
         return updated;
       }
       return item;
@@ -331,7 +383,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     final newItems = state.items.map((item) {
       if (item.id == id) {
         final updated = item.copyWith(zIndex: minZ - 1);
-        _debouncePatchItem(id, {'zIndex': updated.zIndex});
+        _debouncePatchItem(id);
         return updated;
       }
       return item;
@@ -345,10 +397,6 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     final updatedItems = state.items.map((item) {
       if (item.id == id) {
         final updated = item.copyWith(x: item.x + dx, y: item.y + dy);
-        _debouncePatchItem(id, {
-          'xPosition': updated.x,
-          'yPosition': updated.y
-        });
         return updated;
       }
       return item;
@@ -365,12 +413,6 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
           x: item.x + (dx ?? 0),
           y: item.y + (dy ?? 0),
         );
-        _debouncePatchItem(id, {
-          'xPosition': updated.x,
-          'yPosition': updated.y,
-          'width': updated.width,
-          'height': updated.height
-        });
         return updated;
       }
       return item;
@@ -382,10 +424,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     final updatedItems = state.items.map((item) {
       if (item.id == id) {
         final updated = item.copyWith(content: newContent);
-        final patchData = updated.type == 'image' 
-            ? {'imageUrl': newContent} 
-            : {'text': newContent};
-        _debouncePatchItem(id, patchData);
+        _debouncePatchItem(id);
         return updated;
       }
       return item;
@@ -404,11 +443,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
           colorValue: colorValue ?? item.colorValue,
           metadata: newMetadata,
         );
-        _debouncePatchItem(id, {
-          if (content != null) (updated.type == 'image' ? 'imageUrl' : 'text'): content,
-          if (colorValue != null) 'color': colorValue.toRadixString(16),
-          'metadata': newMetadata,
-        });
+        _debouncePatchItem(id);
         return updated;
       }
       return item;
@@ -433,10 +468,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     final updatedItems = state.items.map((item) {
       if (item.id == id) {
         final updated = item.copyWith(attachmentType: type, attachmentStyle: style);
-        _debouncePatchItem(id, {
-          'attachmentType': type,
-          'attachmentStyle': style
-        });
+        _debouncePatchItem(id);
         return updated;
       }
       return item;
@@ -444,7 +476,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     commitState(state.copyWith(items: updatedItems));
   }
 
-  void commitTransform(String id, double newWidth, double newHeight, double newRotation) {
+  void commitTransform(String id, double newWidth, double newHeight, double newRotation, {bool isFinal = false}) {
     final newItems = state.items.map((item) {
       if (item.id == id) {
         final updated = item.copyWith(
@@ -452,11 +484,9 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
           height: newHeight.clamp(50.0, 2000.0),
           rotation: newRotation,
         );
-        _debouncePatchItem(id, {
-          'width': updated.width,
-          'height': updated.height,
-          'rotation': updated.rotation
-        });
+        if (isFinal) {
+          _debouncePatchItem(id);
+        }
         return updated;
       }
       return item;
@@ -489,7 +519,30 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   }
 
   void commitViewport() {
+    // Save viewport locally via Hive immediately
     commitState(state);
+
+    // Debounce-sync the viewport to the backend so it survives logout/login.
+    // After a pan/zoom gesture ends, we wait 800ms then push the full room state.
+    final hasToken = _hiveDb.getAuthToken() != null;
+    if (!hasToken) return;
+    _viewportDebouncer?.cancel();
+    _viewportDebouncer = Timer(const Duration(milliseconds: 800), () {
+      try {
+        final dio = _ref.read(dioClientProvider);
+        dio.patch('/focus/vision-room/viewport', data: {
+          'viewport': state.viewportTransform.storage.toList(),
+        }).then((_) {
+          debugPrint('[CanvasSync] Viewport synced to backend');
+        }).catchError((e) {
+          // Fallback: try full room save if viewport-only endpoint not available
+          debugPrint('[CanvasSync] Viewport patch failed ($e), falling back to full save');
+          saveRoomToServer().catchError((_) {});
+        });
+      } catch (e) {
+        debugPrint('[CanvasSync] Exception syncing viewport: $e');
+      }
+    });
   }
 
   void selectItem(String id) {
@@ -505,6 +558,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     for (var debouncer in _itemDebouncers.values) {
       debouncer.cancel();
     }
+    _viewportDebouncer?.cancel();
     super.dispose();
   }
 }

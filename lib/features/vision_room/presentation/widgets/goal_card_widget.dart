@@ -91,25 +91,56 @@ class GoalCardWidget extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: _getPriorityColor(priority).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: _getPriorityColor(priority).withValues(alpha: 0.4),
-                        width: 0.8,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (metadata['showProgress'] == true) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: themeColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: themeColor.withValues(alpha: 0.5), width: 0.8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.trending_up_rounded, color: themeColor, size: 9),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$progressPercent%',
+                                style: GoogleFonts.outfit(
+                                  color: themeColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 9,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _getPriorityColor(priority).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _getPriorityColor(priority).withValues(alpha: 0.4),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          priority.toUpperCase(),
+                          style: GoogleFonts.outfit(
+                            color: _getPriorityColor(priority),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 9,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      priority.toUpperCase(),
-                      style: GoogleFonts.outfit(
-                        color: _getPriorityColor(priority),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 9,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
+                    ],
                   ),
                 ],
               ),

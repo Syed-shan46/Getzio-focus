@@ -10,12 +10,144 @@ import '../../../../shared/providers/app_providers.dart';
 import '../providers/os_providers.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/widgets/save_workspace_sheet.dart';
+import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 import '../../../vision_room/presentation/screens/vision_room_screen.dart';
+import '../../../affirmations/presentation/providers/affirmations_provider.dart';
+import '../../../affirmations/presentation/widgets/affirmation_bottom_sheet.dart';
+import '../../../affirmations/presentation/screens/reader_view_screen.dart';
 import 'workspace_customization.dart';
+import '../../../tasks/presentation/screens/tasks_screen.dart';
 
-class ClassicDashboardWidget extends ConsumerWidget {
+class ClassicDashboardWidget extends ConsumerStatefulWidget {
   const ClassicDashboardWidget({super.key});
 
+  @override
+  ConsumerState<ClassicDashboardWidget> createState() =>
+      _ClassicDashboardWidgetState();
+}
+
+class _ClassicDashboardWidgetState
+    extends ConsumerState<ClassicDashboardWidget> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF070A13),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          const VisionRoomScreen(), // Room
+          _GoalsTab(),              // Goals (Placeholder)
+          const TasksScreen(),      // Tasks
+          _AffirmationsTab(),       // Affirmations
+          _ProfileTab(),            // Profile
+        ],
+      ),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0C1020),
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withValues(alpha: 0.06),
+            width: 0.5,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(0, Icons.door_sliding_rounded, 'Room'),
+                  _buildNavItem(1, Icons.flag_rounded, 'Goals'),
+                  _buildNavItem(2, Icons.check_circle_rounded, 'Tasks'),
+                  _buildNavItem(3, Icons.auto_awesome_rounded, 'Affirm'),
+                  _buildNavItem(4, Icons.person_rounded, 'Profile'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label) {
+    final isActive = _currentIndex == index;
+    return GestureDetector(
+      onTap: () {
+        if (_currentIndex != index) {
+          HapticFeedback.selectionClick();
+          setState(() => _currentIndex = index);
+        }
+      },
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive
+              ? AppColors.accentBlue.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              child: Icon(
+                icon,
+                size: isActive ? 24 : 22,
+                color: isActive
+                    ? AppColors.accentBlue
+                    : Colors.white.withValues(alpha: 0.35),
+              ),
+            ),
+            const SizedBox(height: 3),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 250),
+              style: GoogleFonts.outfit(
+                color: isActive
+                    ? AppColors.accentBlue
+                    : Colors.white.withValues(alpha: 0.35),
+                fontSize: isActive ? 10.5 : 9.5,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                letterSpacing: 0.3,
+              ),
+              child: Text(label),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAB 1: Home (original ClassicDashboardWidget content)
+// ─────────────────────────────────────────────────────────────────────────────
+class _HomeTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(osStateProvider);
@@ -27,150 +159,135 @@ class ClassicDashboardWidget extends ConsumerWidget {
     final now = DateTime.now();
     final formattedDate = DateFormat('EEEE, MMMM d').format(now);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF070A13),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF0F1524),
-              Color(0xFF070A13),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF0F1524),
+            Color(0xFF070A13),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 1. Header Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              'Welcome back,',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.5),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 1. Header Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Welcome back,',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          if (!isLoggedIn) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: Colors.amber.withValues(alpha: 0.3),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.cloud_off_rounded, size: 10, color: Colors.amber),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Stored on this device only',
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.amber,
+                                      fontSize: 8.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            if (!isLoggedIn) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(
-                                    color: Colors.amber.withValues(alpha: 0.3),
-                                    width: 0.8,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.cloud_off_rounded, size: 10, color: Colors.amber),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Stored on this device only',
-                                      style: GoogleFonts.outfit(
-                                        color: Colors.amber,
-                                        fontSize: 8.5,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
                           ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        userName,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          userName,
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        // Quick Customize Button
-                        IconButton(
-                          icon: const Icon(Icons.tune_rounded, color: Colors.white70),
-                          onPressed: () {
-                            HapticFeedback.lightImpact();
-                            WorkspaceCustomizationSheet.show(context);
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                        // Vision Room quick access
-                        IconButton(
-                          icon: const Icon(Icons.door_sliding_rounded, color: AppColors.accentBlue),
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const VisionRoomScreen()),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  formattedDate,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.35),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 20),
-
-                // 2. Cloud Save Promo Card (if Guest)
-                if (!isLoggedIn) ...[
-                  _buildCloudSavePromo(context),
-                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      // Quick Customize Button
+                      IconButton(
+                        icon: const Icon(Icons.tune_rounded, color: Colors.white70),
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          WorkspaceCustomizationSheet.show(context);
+                        },
+                      ),
+                    ],
+                  ),
                 ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                formattedDate,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.35),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 20),
 
-                // 3. Stats Row
-                _buildStatsGrid(state),
-                const SizedBox(height: 24),
-
-                // 4. Daily Quote Frame
-                _buildDailyQuoteCard(state),
-                const SizedBox(height: 24),
-
-                // 5. Today's Habits Checklist
-                _buildHabitsSection(state, notifier),
-                const SizedBox(height: 24),
-
-                // 6. Active Goals
-                _buildGoalsSection(ref),
-                const SizedBox(height: 24),
-
-                // 7. Reading, Health & Finance Trackers
-                _buildTrackersGrid(ref, state, notifier),
-                const SizedBox(height: 30),
+              // 2. Cloud Save Promo Card (if Guest)
+              if (!isLoggedIn) ...[
+                _buildCloudSavePromo(context),
+                const SizedBox(height: 20),
               ],
-            ),
+
+              // 3. Stats Row
+              _buildStatsGrid(state),
+              const SizedBox(height: 24),
+
+              // 4. Daily Quote Frame
+              _buildDailyQuoteCard(state),
+              const SizedBox(height: 24),
+
+              // 5. Today's Habits Checklist
+              _buildHabitsSection(state, notifier),
+              const SizedBox(height: 24),
+
+              // 6. Active Goals
+              _buildGoalsSection(ref),
+              const SizedBox(height: 24),
+
+              // 7. Reading, Health & Finance Trackers
+              _buildTrackersGrid(ref, state, notifier),
+              const SizedBox(height: 30),
+            ],
           ),
         ),
       ),
@@ -853,6 +970,938 @@ class ClassicDashboardWidget extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAB 2: Affirmations
+// ─────────────────────────────────────────────────────────────────────────────
+class _AffirmationsTab extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final affState = ref.watch(affirmationsProvider);
+    final affirmations = affState.affirmations;
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0F1524), Color(0xFF070A13)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'AFFIRMATIONS',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Speak Your Truth',
+                        style: GoogleFonts.playfairDisplay(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.accentBlue.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: AppColors.accentBlue.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.add_rounded, color: AppColors.accentBlue, size: 22),
+                      onPressed: () {
+                        HapticFeedback.mediumImpact();
+                        AffirmationBottomSheet.show(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Stats bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.02),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _affStat('Total', '${affirmations.length}', Icons.format_quote_rounded),
+                    Container(width: 1, height: 24, color: Colors.white10),
+                    _affStat('Practiced', '${affState.completedTodayCount}', Icons.check_circle_outline_rounded),
+                    Container(width: 1, height: 24, color: Colors.white10),
+                    _affStat('Favorites', '${affirmations.where((a) => a.isFavorite).length}', Icons.favorite_rounded),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // List
+            Expanded(
+              child: affirmations.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.auto_awesome_rounded, size: 48,
+                              color: AppColors.accentBlue.withValues(alpha: 0.3)),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No affirmations yet',
+                            style: GoogleFonts.outfit(
+                              color: Colors.white54,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Tap + to create your first affirmation',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: affirmations.length,
+                      itemBuilder: (context, index) {
+                        final aff = affirmations[index];
+                        return GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ReaderViewScreen(affirmation: aff),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.02),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: aff.isPinned
+                                    ? AppColors.accentBlue.withValues(alpha: 0.15)
+                                    : Colors.white.withValues(alpha: 0.04),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                // Emoji / Icon
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: _affThemeColor(aff.colorTheme).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    aff.emoji ?? '✨',
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          if (aff.isPinned)
+                                            Padding(
+                                              padding: const EdgeInsets.only(right: 6),
+                                              child: Icon(Icons.push_pin_rounded,
+                                                  size: 12,
+                                                  color: AppColors.accentBlue.withValues(alpha: 0.6)),
+                                            ),
+                                          Expanded(
+                                            child: Text(
+                                              aff.title,
+                                              style: GoogleFonts.outfit(
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '"${aff.text}"',
+                                        style: GoogleFonts.playfairDisplay(
+                                          color: Colors.white.withValues(alpha: 0.5),
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                if (aff.isFavorite)
+                                  Icon(Icons.favorite_rounded,
+                                      size: 16, color: Colors.redAccent.withValues(alpha: 0.6)),
+                                const Icon(Icons.chevron_right_rounded,
+                                    size: 20, color: Colors.white24),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _affStat(String label, String value, IconData icon) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: AppColors.accentBlue.withValues(alpha: 0.5)),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.35),
+            fontSize: 10,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color _affThemeColor(String theme) {
+    switch (theme) {
+      case 'Ocean Blue':
+        return Colors.blue;
+      case 'Sunrise Orange':
+        return Colors.orange;
+      case 'Forest Green':
+        return Colors.green;
+      case 'Lavender':
+        return Colors.purple;
+      case 'Coffee Brown':
+        return Colors.brown;
+      case 'Midnight Black':
+        return Colors.blueGrey;
+      case 'Dark Glass':
+        return Colors.cyan;
+      default:
+        return AppColors.accentBlue;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAB 4: Profile
+// ─────────────────────────────────────────────────────────────────────────────
+class _ProfileTab extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final isLoggedIn = authState.hasValue && authState.value != null;
+    final user = authState.valueOrNull;
+    final state = ref.watch(osStateProvider);
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0F1524), Color(0xFF070A13)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header
+              Text(
+                'PROFILE',
+                style: GoogleFonts.outfit(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Avatar & Name Section
+              Center(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.accentBlue.withValues(alpha: 0.3),
+                            AppColors.accentBlue.withValues(alpha: 0.08),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        border: Border.all(
+                          color: AppColors.accentBlue.withValues(alpha: 0.25),
+                          width: 2,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        isLoggedIn
+                            ? (user?.name ?? 'U').substring(0, 1).toUpperCase()
+                            : '?',
+                        style: GoogleFonts.outfit(
+                          color: AppColors.accentBlue,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      isLoggedIn ? (user?.name ?? 'User') : 'Guest User',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isLoggedIn ? (user?.mobile ?? '') : 'Not signed in',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        fontSize: 13,
+                      ),
+                    ),
+                    if (!isLoggedIn) ...[
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          HapticFeedback.mediumImpact();
+                          PremiumAuthSheet.show(context);
+                        },
+                        icon: const Icon(Icons.login_rounded, size: 18),
+                        label: Text(
+                          'Sign In',
+                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accentBlue,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Stats Section
+              _buildProfileStatRow('Level', '${state.level}', Icons.workspace_premium_rounded, Colors.amber),
+              _buildProfileStatRow('XP', '${state.xp}', Icons.stars_rounded, AppColors.accentBlue),
+              _buildProfileStatRow('Current Streak', '${state.currentStreak} days', Icons.local_fire_department_rounded, Colors.orange),
+              _buildProfileStatRow('Best Streak', '${state.bestStreak} days', Icons.emoji_events_rounded, Colors.amber),
+              _buildProfileStatRow('Identity', state.activeIdentity, Icons.fingerprint_rounded, AppColors.accentEmerald),
+              const SizedBox(height: 24),
+
+              // Settings Section
+              Text(
+                'SETTINGS',
+                style: GoogleFonts.outfit(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildSettingsTile(
+                context,
+                'Workspace Customization',
+                Icons.tune_rounded,
+                AppColors.accentBlue,
+                () => WorkspaceCustomizationSheet.show(context),
+              ),
+              if (isLoggedIn)
+                _buildSettingsTile(
+                  context,
+                  'Sign Out',
+                  Icons.logout_rounded,
+                  Colors.redAccent,
+                  () {
+                    HapticFeedback.mediumImpact();
+                    ref.read(authProvider.notifier).logout();
+                  },
+                ),
+              const SizedBox(height: 30),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileStatRow(String label, String value, IconData icon, Color color) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.outfit(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsTile(
+    BuildContext context,
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.02),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 18, color: color),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: color == Colors.redAccent ? Colors.redAccent : Colors.white70,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, size: 20, color: Colors.white.withValues(alpha: 0.2)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAB 5: Roadmap
+// ─────────────────────────────────────────────────────────────────────────────
+class _RoadmapTab extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(osStateProvider);
+    final hiveDb = ref.read(hiveDatabaseProvider);
+    final selectedGoals = hiveDb.getSelectedGoals();
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0F1524), Color(0xFF070A13)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header
+              Text(
+                'ROADMAP',
+                style: GoogleFonts.outfit(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Your Journey',
+                style: GoogleFonts.playfairDisplay(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Level Progress
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.accentBlue.withValues(alpha: 0.08),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.12)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'LEVEL ${state.level}',
+                          style: GoogleFonts.outfit(
+                            color: AppColors.accentBlue,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        Text(
+                          '${state.xp} XP',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white54,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: (state.xp % 1000) / 1000,
+                        minHeight: 8,
+                        backgroundColor: Colors.white.withValues(alpha: 0.05),
+                        valueColor: const AlwaysStoppedAnimation(AppColors.accentBlue),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${1000 - (state.xp % 1000)} XP to next level',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.35),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Milestone Timeline
+              Text(
+                'MILESTONES',
+                style: GoogleFonts.outfit(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildMilestone(
+                '7-Day Streak',
+                state.bestStreak >= 7 ? 'Achieved' : '${7 - state.currentStreak} days left',
+                Icons.local_fire_department_rounded,
+                Colors.orange,
+                state.bestStreak >= 7,
+              ),
+              _buildMilestone(
+                '30-Day Streak',
+                state.bestStreak >= 30 ? 'Achieved' : '${30 - state.currentStreak} days left',
+                Icons.whatshot_rounded,
+                Colors.deepOrange,
+                state.bestStreak >= 30,
+              ),
+              _buildMilestone(
+                'First 1000 XP',
+                state.xp >= 1000 ? 'Achieved' : '${1000 - state.xp} XP remaining',
+                Icons.stars_rounded,
+                Colors.amber,
+                state.xp >= 1000,
+              ),
+              _buildMilestone(
+                'Level 5 Mastery',
+                state.level >= 5 ? 'Achieved' : 'Currently Level ${state.level}',
+                Icons.workspace_premium_rounded,
+                AppColors.accentBlue,
+                state.level >= 5,
+              ),
+              _buildMilestone(
+                'All Habits Done',
+                state.disciplineScore >= 100 ? 'Achieved today!' : '${state.disciplineScore.toInt()}% complete',
+                Icons.check_circle_rounded,
+                AppColors.accentEmerald,
+                state.disciplineScore >= 100,
+              ),
+              const SizedBox(height: 24),
+
+              // Goals Roadmap
+              if (selectedGoals.isNotEmpty) ...[
+                Text(
+                  'GOAL PROGRESS',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white.withValues(alpha: 0.4),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...selectedGoals.map((goal) {
+                  final title = goal['title'] as String? ?? 'Goal';
+                  final category = goal['category'] as String? ?? 'General';
+                  final current = (goal['currentProgress'] as num?)?.toDouble() ?? 30.0;
+                  final target = (goal['target'] as num?)?.toDouble() ?? 100.0;
+                  final progress = (current / target).clamp(0.0, 1.0);
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.02),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: AppColors.accentBlue.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(Icons.flag_rounded, size: 18, color: AppColors.accentBlue),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    category,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.35),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '${(progress * 100).toInt()}%',
+                              style: GoogleFonts.outfit(
+                                color: AppColors.accentBlue,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 6,
+                            backgroundColor: Colors.white.withValues(alpha: 0.04),
+                            valueColor: const AlwaysStoppedAnimation(AppColors.accentBlue),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+              const SizedBox(height: 30),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMilestone(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
+    bool achieved,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          // Timeline dot + line
+          Column(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: achieved
+                      ? color.withValues(alpha: 0.2)
+                      : Colors.white.withValues(alpha: 0.03),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: achieved ? color : Colors.white.withValues(alpha: 0.1),
+                    width: 1.5,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  achieved ? Icons.check_rounded : icon,
+                  size: 14,
+                  color: achieved ? color : Colors.white30,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: achieved
+                    ? color.withValues(alpha: 0.04)
+                    : Colors.white.withValues(alpha: 0.02),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: achieved
+                      ? color.withValues(alpha: 0.1)
+                      : Colors.white.withValues(alpha: 0.04),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: GoogleFonts.outfit(
+                            color: achieved ? Colors.white : Colors.white70,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            color: achieved
+                                ? color.withValues(alpha: 0.7)
+                                : Colors.white.withValues(alpha: 0.35),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (achieved)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '✓',
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NEW TAB: Goals (Placeholder)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _GoalsTab extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFF070A13),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.flag_rounded, size: 64, color: Colors.white24),
+            const SizedBox(height: 16),
+            Text(
+              'Goals Module',
+              style: GoogleFonts.outfit(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Coming Soon',
+              style: GoogleFonts.outfit(
+                color: Colors.white54,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

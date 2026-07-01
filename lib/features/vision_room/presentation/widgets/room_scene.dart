@@ -1,7 +1,18 @@
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../domain/models/vision_customization.dart';
 import '../../domain/models/vision_item.dart';
+import '../providers/canvas_providers.dart';
+import '../providers/sticky_note_provider.dart';
+import 'quote_card_widget.dart';
+import 'goal_card_widget.dart';
+import 'premium_cards.dart';
+import 'sticky_note_bottom_sheet.dart';
+import 'smart_object_sheets.dart';
 
 class RoomScene extends StatelessWidget {
   final VisionCustomization customization;
@@ -59,9 +70,6 @@ class RoomScene extends StatelessWidget {
           ),
         ),
 
-
-
-
         // 5. Border lighting — soft warm glow on left & right walls only
         Positioned(
           top: 0,
@@ -80,6 +88,16 @@ class RoomScene extends StatelessWidget {
 
         // 6. The actual wall content (VisionBoard, items, etc.)
         Positioned.fill(child: child),
+
+        // 3D Horizontally Scrollable Shelf Items (placed on top of child stack layer so gestures can reach it!)
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 132,
+          child: RepaintBoundary(
+            child: parallaxLayer(const _ShelfItemsScrollWidget(), 0.05),
+          ),
+        ),
       ],
     );
   }
@@ -876,4 +894,217 @@ class _BorderLightPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _ShelfItemsScrollWidget extends ConsumerWidget {
+  const _ShelfItemsScrollWidget();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final canvasItems = ref
+        .watch(canvasStateProvider)
+        .items
+        .where((item) => item.metadata?['isOnShelf'] == true)
+        .toList();
+
+    final notesAsItems = ref
+        .watch(stickyNotesProvider)
+        .where((note) => note.category.contains('#shelf'))
+        .map((note) {
+          final colorHex = note.color.replaceFirst('#', '0xFF');
+          final colorVal = int.tryParse(colorHex) ?? 0xFFF59E0B;
+          return VisionItem(
+            id: note.id,
+            type: VisionItemType.stickyNote.name,
+            content: note.title,
+            secondaryContent: note.description,
+            colorValue: colorVal,
+            countdownDate: note.dueDate,
+            metadata: {'progress': note.progress.toDouble(), 'isOnShelf': true},
+          );
+        })
+        .toList();
+
+    final combinedItems = [...canvasItems, ...notesAsItems]
+      ..sort((a, b) {
+        // Primary sort: createdAt timestamp from metadata (ISO-8601 string)
+        final aCreated = a.metadata?['createdAt'] as String?;
+        final bCreated = b.metadata?['createdAt'] as String?;
+        if (aCreated != null && bCreated != null) {
+          return aCreated.compareTo(bCreated);
+        }
+        // Fallback: zIndex (increments on each addItem call, so works as creation order)
+        return a.zIndex.compareTo(b.zIndex);
+      });
+
+    if (combinedItems.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return SizedBox(
+      height: 95,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        itemCount: combinedItems.length,
+        itemBuilder: (context, index) {
+          final item = combinedItems[index];
+          return Padding(
+            padding: const EdgeInsets.only(right: 18),
+            child: _buildShelfItem(context, ref, item),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildShelfItem(BuildContext context, WidgetRef ref, VisionItem item) {
+    Widget cardChild;
+    final isSticky = item.type == VisionItemType.stickyNote.name;
+
+    if (isSticky) {
+      final Color paperColor = Color(item.colorValue);
+      cardChild = Container(
+        width: 160,
+        height: 160,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: paperColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 6,
+              offset: const Offset(2, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item.content,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.kalam(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black.withValues(alpha: 0.85),
+              ),
+            ),
+            if (item.secondaryContent != null &&
+                item.secondaryContent!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Expanded(
+                child: Text(
+                  item.secondaryContent!,
+                  maxLines: 3,
+                  overflow: TextOverflow.fade,
+                  style: GoogleFonts.kalam(
+                    fontSize: 12,
+                    color: Colors.black.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    } else if (item.type == VisionItemType.image.name) {
+      cardChild = Container(
+        width: 320,
+        height: 240,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: item.content.startsWith('http')
+              ? Image.network(item.content, fit: BoxFit.cover)
+              : Image.file(
+                  File(item.content),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(color: Colors.grey),
+                ),
+        ),
+      );
+    } else if (item.type == VisionItemType.quote.name) {
+      cardChild = QuoteCardWidget(item: item);
+    } else if (item.type == VisionItemType.goal.name) {
+      cardChild = GoalCardWidget(item: item);
+    } else if (item.type == VisionItemType.plan.name) {
+      cardChild = PlanCardWidget(item: item);
+    } else if (item.type == VisionItemType.task.name) {
+      cardChild = TaskCardWidget(item: item);
+    } else if (item.type == VisionItemType.financeGoal.name) {
+      cardChild = FinanceCardWidget(item: item);
+    } else if (item.type == VisionItemType.countdown.name) {
+      cardChild = CountdownCardWidget(item: item);
+    } else {
+      cardChild = Container(
+        color: Color(item.colorValue),
+        child: Center(child: Text(item.content)),
+      );
+    }
+
+    final double cardW = isSticky ? 160 : 320;
+    final double cardH = isSticky ? 160 : 240;
+    final double shelfW = isSticky ? 64 : 85;
+    final double shelfH = 64;
+
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          final originalNotes = ref.read(stickyNotesProvider);
+          final matchIndex = originalNotes.indexWhere((n) => n.id == item.id);
+          if (matchIndex != -1) {
+            StickyNoteBottomSheet.show(
+              context,
+              existingNote: originalNotes[matchIndex],
+            );
+          } else {
+            SmartObjectSheetRouter.open(context, item);
+          }
+        },
+        child: Transform(
+          alignment: Alignment.bottomCenter,
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.0025)
+            ..rotateX(-0.16)
+            ..rotateY(0.04)
+            ..rotateZ(-0.01),
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.55),
+                  blurRadius: 8,
+                  spreadRadius: -2,
+                  offset: const Offset(2, 8),
+                ),
+              ],
+            ),
+            child: IgnorePointer(
+              child: SizedBox(
+                width: shelfW,
+                height: shelfH,
+                child: FittedBox(
+                  fit: BoxFit.fill,
+                  child: SizedBox(
+                    width: cardW,
+                    height: cardH,
+                    child: cardChild,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

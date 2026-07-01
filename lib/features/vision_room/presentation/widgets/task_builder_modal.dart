@@ -33,6 +33,8 @@ class _TaskBuilderModalState extends State<TaskBuilderModal> {
     super.dispose();
   }
 
+  bool _addToShelf = false;
+
   void _submit() {
     if (_titleController.text.trim().isEmpty) return;
     widget.onSubmit({
@@ -40,6 +42,7 @@ class _TaskBuilderModalState extends State<TaskBuilderModal> {
       'priority': _priority,
       'progress': _progress,
       'dueDate': _dueDate?.toIso8601String(),
+      'isOnShelf': _addToShelf,
     });
     Navigator.pop(context);
   }
@@ -104,6 +107,29 @@ class _TaskBuilderModalState extends State<TaskBuilderModal> {
                 onProgressChanged: (p) => setState(() => _progress = p),
               ),
               const SizedBox(height: 24),
+
+              // Add to Shelf Option
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Add to Wooden Shelf',
+                        style: AppTypography.titleMedium(color: Colors.white70).copyWith(fontSize: 15),
+                      ),
+                    ],
+                  ),
+                  Switch(
+                    value: _addToShelf,
+                    activeColor: Colors.orangeAccent,
+                    onChanged: (val) => setState(() => _addToShelf = val),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
@@ -115,8 +141,9 @@ class _TaskBuilderModalState extends State<TaskBuilderModal> {
                           'priority': _priority,
                           'progress': _progress,
                           'dueDate': _dueDate?.toIso8601String(),
+                          'isOnShelf': _addToShelf,
                         });
-                        // Reset form for next task
+                        // Reset form for next task, keep _addToShelf preference
                         setState(() {
                           _titleController.clear();
                           _priority = 'High';

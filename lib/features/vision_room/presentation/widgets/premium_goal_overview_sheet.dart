@@ -455,6 +455,48 @@ class _PremiumGoalOverviewSheetState
           ),
           const SizedBox(height: 12),
 
+          // Show Progress Toggle
+          _buildGlassCard(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.pie_chart_rounded, color: Colors.blueAccent, size: 16),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Show Progress on Card',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 24,
+                  child: Transform.scale(
+                    scale: 0.7,
+                    child: Switch(
+                      value: metadata['showProgress'] as bool? ?? false,
+                      activeTrackColor: Colors.blueAccent,
+                      onChanged: (val) {
+                        ref.read(canvasStateProvider.notifier).updateItemDetails(
+                          item.id,
+                          metadata: {'showProgress': val},
+                        );
+                        HapticFeedback.lightImpact();
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
           // 2. Statistics 4-Grid Cards
           Row(
             children: [

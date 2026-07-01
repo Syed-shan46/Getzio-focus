@@ -428,7 +428,6 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
                             author: _author.trim().isEmpty ? null : _author.trim(),
                             category: _category,
                             colorTheme: _colorTheme,
-                            backgroundStyle: _colorTheme,
                             emoji: _emoji?.trim().isEmpty ?? true ? null : _emoji!.trim(),
                             createdAt: DateTime.now(),
                             updatedAt: DateTime.now(),

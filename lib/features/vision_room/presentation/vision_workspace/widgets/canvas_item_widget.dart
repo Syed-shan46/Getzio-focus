@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/models/vision_item.dart';
 import '../../../domain/models/vision_customization.dart';
+import '../../../domain/models/smart_object_models.dart';
 import '../../providers/canvas_providers.dart';
 import '../../providers/customization_provider.dart';
 import '../../widgets/attachment_widgets.dart';
@@ -19,11 +20,7 @@ class _ShapePainter extends CustomPainter {
   final Color color;
   final double opacity;
 
-  _ShapePainter({
-    required this.shape,
-    required this.color,
-    this.opacity = 1.0,
-  });
+  _ShapePainter({required this.shape, required this.color, this.opacity = 1.0});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -44,9 +41,19 @@ class _ShapePainter extends CustomPainter {
         canvas.drawCircle(Offset(cx, cy), r, paint);
         canvas.drawCircle(Offset(cx, cy), r, borderPaint);
       case 'square':
-        final rect = Rect.fromCenter(center: Offset(cx, cy), width: r * 2, height: r * 2);
-        canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(4)), paint);
-        canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(4)), borderPaint);
+        final rect = Rect.fromCenter(
+          center: Offset(cx, cy),
+          width: r * 2,
+          height: r * 2,
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(rect, const Radius.circular(4)),
+          paint,
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(rect, const Radius.circular(4)),
+          borderPaint,
+        );
       case 'triangle':
         final path = Path()
           ..moveTo(cx, cy - r)
@@ -61,7 +68,11 @@ class _ShapePainter extends CustomPainter {
           final angle = -pi / 2 + i * pi / 5;
           final radius = i.isEven ? r : r * 0.4;
           final pt = Offset(cx + radius * cos(angle), cy + radius * sin(angle));
-          if (i == 0) { path.moveTo(pt.dx, pt.dy); } else { path.lineTo(pt.dx, pt.dy); }
+          if (i == 0) {
+            path.moveTo(pt.dx, pt.dy);
+          } else {
+            path.lineTo(pt.dx, pt.dy);
+          }
         }
         path.close();
         canvas.drawPath(path, paint);
@@ -80,7 +91,11 @@ class _ShapePainter extends CustomPainter {
         for (var i = 0; i < 6; i++) {
           final angle = -pi / 2 + i * pi / 3;
           final pt = Offset(cx + r * cos(angle), cy + r * sin(angle));
-          if (i == 0) { path.moveTo(pt.dx, pt.dy); } else { path.lineTo(pt.dx, pt.dy); }
+          if (i == 0) {
+            path.moveTo(pt.dx, pt.dy);
+          } else {
+            path.lineTo(pt.dx, pt.dy);
+          }
         }
         path.close();
         canvas.drawPath(path, paint);
@@ -88,8 +103,22 @@ class _ShapePainter extends CustomPainter {
       case 'heart':
         final path = Path();
         path.moveTo(cx, cy + r * 0.3);
-        path.cubicTo(cx - r * 1.2, cy - r * 0.4, cx - r * 0.3, cy - r * 0.9, cx, cy - r * 0.2);
-        path.cubicTo(cx + r * 0.3, cy - r * 0.9, cx + r * 1.2, cy - r * 0.4, cx, cy + r * 0.3);
+        path.cubicTo(
+          cx - r * 1.2,
+          cy - r * 0.4,
+          cx - r * 0.3,
+          cy - r * 0.9,
+          cx,
+          cy - r * 0.2,
+        );
+        path.cubicTo(
+          cx + r * 0.3,
+          cy - r * 0.9,
+          cx + r * 1.2,
+          cy - r * 0.4,
+          cx,
+          cy + r * 0.3,
+        );
         path.close();
         canvas.drawPath(path, paint);
         canvas.drawPath(path, borderPaint);
@@ -98,7 +127,9 @@ class _ShapePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ShapePainter oldDelegate) =>
-      oldDelegate.shape != shape || oldDelegate.color != color || oldDelegate.opacity != opacity;
+      oldDelegate.shape != shape ||
+      oldDelegate.color != color ||
+      oldDelegate.opacity != opacity;
 }
 
 class CanvasItemWidget extends ConsumerStatefulWidget {
@@ -171,13 +202,16 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
+    final bool showProgress = item.metadata?['showProgress'] == true;
+    final int progressPercent = item.smartProgressPercent;
     final cust = ref.watch(visionCustomizationProvider);
     final cardCfg = cust.cardCustomization;
     Widget contentWidget;
 
     final double baseShadow = cardCfg.shadowIntensity * 30;
-    final double shadowBlur =
-        widget.isInteracting ? baseShadow * 1.5 : baseShadow;
+    final double shadowBlur = widget.isInteracting
+        ? baseShadow * 1.5
+        : baseShadow;
     final Offset shadowOffset = widget.isInteracting
         ? const Offset(0, 15)
         : Offset(0, 8 * cardCfg.shadowIntensity);
@@ -194,22 +228,29 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
         opacity: cardCfg.opacity,
         child: Container(
           decoration: BoxDecoration(
-            borderRadius:
-                BorderRadius.circular(cardCfg.glassMode ? cr : cr.clamp(4, 20)),
-            border: selectionBorder ??
+            borderRadius: BorderRadius.circular(
+              cardCfg.glassMode ? cr : cr.clamp(4, 20),
+            ),
+            border:
+                selectionBorder ??
                 Border.all(
-                    color: Colors.white.withValues(alpha: 0.3), width: bt),
+                  color: Colors.white.withValues(alpha: 0.3),
+                  width: bt,
+                ),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withValues(
-                      alpha: 0.5 * cardCfg.shadowIntensity),
-                  blurRadius: shadowBlur,
-                  offset: shadowOffset)
+                color: Colors.black.withValues(
+                  alpha: 0.5 * cardCfg.shadowIntensity,
+                ),
+                blurRadius: shadowBlur,
+                offset: shadowOffset,
+              ),
             ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(
-                cardCfg.roundedMode ? cr : cr.clamp(4, 20)),
+              cardCfg.roundedMode ? cr : cr.clamp(4, 20),
+            ),
             child: item.content.startsWith('http')
                 ? Image.network(
                     item.content,
@@ -217,8 +258,11 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: Colors.grey[800],
                       child: const Center(
-                        child: Icon(Icons.broken_image_rounded,
-                            color: Colors.white54, size: 40),
+                        child: Icon(
+                          Icons.broken_image_rounded,
+                          color: Colors.white54,
+                          size: 40,
+                        ),
                       ),
                     ),
                   )
@@ -228,8 +272,11 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: Colors.grey[800],
                       child: const Center(
-                        child: Icon(Icons.broken_image_rounded,
-                            color: Colors.white54, size: 40),
+                        child: Icon(
+                          Icons.broken_image_rounded,
+                          color: Colors.white54,
+                          size: 40,
+                        ),
                       ),
                     ),
                   ),
@@ -250,20 +297,24 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
                   topLeft: Radius.circular(cardCfg.roundedMode ? cr : 2),
                   topRight: Radius.circular(cardCfg.roundedMode ? cr : 2),
                   bottomLeft: Radius.circular(cardCfg.roundedMode ? cr : 2),
-                  bottomRight:
-                      Radius.circular(cardCfg.roundedMode ? 24 : cr),
+                  bottomRight: Radius.circular(cardCfg.roundedMode ? 24 : cr),
                 ),
-          border: selectionBorder ??
+          border:
+              selectionBorder ??
               (bt > 0
                   ? Border.all(
-                      color: Colors.white.withValues(alpha: 0.1), width: bt)
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: bt,
+                    )
                   : null),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(
-                    alpha: 0.4 * cardCfg.shadowIntensity),
-                blurRadius: shadowBlur,
-                offset: shadowOffset)
+              color: Colors.black.withValues(
+                alpha: 0.4 * cardCfg.shadowIntensity,
+              ),
+              blurRadius: shadowBlur,
+              offset: shadowOffset,
+            ),
           ],
         ),
         child: Center(
@@ -274,21 +325,24 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
                   maxLines: null,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      color: cardCfg.glassMode ? Colors.white : Colors.black87,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600),
+                    color: cardCfg.glassMode ? Colors.white : Colors.black87,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
                   decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
                   onSubmitted: (_) => _commitText(),
                 )
               : Text(
                   item.content,
                   style: TextStyle(
-                      color: cardCfg.glassMode ? Colors.white : Colors.black87,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600),
+                    color: cardCfg.glassMode ? Colors.white : Colors.black87,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
                   textAlign: TextAlign.center,
                 ),
         ),
@@ -325,8 +379,15 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
         ),
       );
     } else if (item.type == VisionItemType.decoration.name &&
-        ['circle','square','triangle','star','diamond','hexagon','heart']
-            .contains(item.content.toLowerCase())) {
+        [
+          'circle',
+          'square',
+          'triangle',
+          'star',
+          'diamond',
+          'hexagon',
+          'heart',
+        ].contains(item.content.toLowerCase())) {
       final shapeColor = Color(item.colorValue);
       contentWidget = ClipRRect(
         borderRadius: BorderRadius.circular(cr),
@@ -352,16 +413,17 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
               decoration: BoxDecoration(
                 color: cardCfg.glassMode
                     ? Colors.white.withValues(alpha: 0.08)
-                    : Color(item.colorValue)
-                        .withValues(alpha: cardCfg.opacity),
+                    : Color(item.colorValue).withValues(alpha: cardCfg.opacity),
                 borderRadius: cardCfg.squareMode
                     ? BorderRadius.zero
                     : BorderRadius.circular(cr),
-                border: selectionBorder ??
+                border:
+                    selectionBorder ??
                     (bt > 0
                         ? Border.all(
                             color: Colors.white.withValues(alpha: 0.2),
-                            width: bt)
+                            width: bt,
+                          )
                         : null),
               ),
               child: Center(
@@ -371,16 +433,23 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
                         focusNode: _focusNode,
                         maxLines: null,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
                         decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
                         onSubmitted: (_) => _commitText(),
                       )
                     : Text(
                         item.content,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
                         textAlign: TextAlign.center,
                       ),
               ),
@@ -390,7 +459,8 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
       );
     }
 
-    final boardAdjustedWidget = widget.boardStyle == VisionBoardStyle.floatingGallery
+    final boardAdjustedWidget =
+        widget.boardStyle == VisionBoardStyle.floatingGallery
         ? ClipRRect(
             borderRadius: BorderRadius.circular(cr),
             child: BackdropFilter(
@@ -423,13 +493,63 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
                 SizedBox(
                   width: item.width,
                   height: item.height,
-                  child: boardAdjustedWidget,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned.fill(child: boardAdjustedWidget),
+                      if (showProgress && item.type != VisionItemType.goal.name)
+                        Positioned(
+                          top: -12,
+                          right: -12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.75),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.trending_up_rounded,
+                                  color: Colors.greenAccent,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '$progressPercent%',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 if (item.attachmentType == 'pin')
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 150),
                     curve: Curves.easeOutCubic,
-                    top: (20 * (item.width / 200.0)) -
+                    top:
+                        (20 * (item.width / 200.0)) -
                         36 -
                         (widget.isInteracting
                             ? (10 * (item.width / 200.0))
@@ -445,10 +565,9 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 150),
                     curve: Curves.easeOutCubic,
-                    top: -12 -
-                        (widget.isInteracting
-                            ? (5 * (item.width / 200.0))
-                            : 0),
+                    top:
+                        -12 -
+                        (widget.isInteracting ? (5 * (item.width / 200.0)) : 0),
                     left: item.width / 2 - 40,
                     child: Transform.scale(
                       scale: item.width / 200.0,

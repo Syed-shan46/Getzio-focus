@@ -40,6 +40,8 @@ class _QuoteBuilderModalState extends State<QuoteBuilderModal> {
     super.dispose();
   }
 
+  bool _addToShelf = false;
+
   void _submit() {
     if (_quoteController.text.trim().isEmpty) return;
 
@@ -47,6 +49,7 @@ class _QuoteBuilderModalState extends State<QuoteBuilderModal> {
       'quote': _quoteController.text.trim(),
       'author': _authorController.text.trim().isEmpty ? 'Unknown' : _authorController.text.trim(),
       'style': _selectedStyle,
+      'isOnShelf': _addToShelf,
     });
     Navigator.pop(context);
   }
@@ -61,7 +64,7 @@ class _QuoteBuilderModalState extends State<QuoteBuilderModal> {
       child: Container(
         padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
         decoration: BoxDecoration(
-          color: const Color(0xFF0F172A).withValues(alpha: 0.9),
+          color: const Color(0xFF0F172A).withValues(alpha: 0.95),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
         ),
@@ -138,6 +141,29 @@ class _QuoteBuilderModalState extends State<QuoteBuilderModal> {
                   },
                 ),
               ),
+              const SizedBox(height: 24),
+
+              // Add to Shelf Option
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Add to Wooden Shelf',
+                        style: AppTypography.titleMedium(color: Colors.white70).copyWith(fontSize: 15),
+                      ),
+                    ],
+                  ),
+                  Switch(
+                    value: _addToShelf,
+                    activeColor: AppColors.accentBlue,
+                    onChanged: (val) => setState(() => _addToShelf = val),
+                  ),
+                ],
+              ),
               const SizedBox(height: 32),
 
               // Submit
@@ -148,7 +174,7 @@ class _QuoteBuilderModalState extends State<QuoteBuilderModal> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                child: Text('Drop onto Canvas', style: AppTypography.titleMedium(color: Colors.white)),
+                child: Text('Add Quote to Board', style: AppTypography.titleMedium(color: Colors.white)),
               ),
             ],
           ),

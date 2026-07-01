@@ -45,6 +45,8 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> w
   
   late TabController _tabController;
 
+  bool _addToShelf = false;
+  
   @override
   void initState() {
     super.initState();
@@ -54,7 +56,9 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> w
     _descController = TextEditingController(text: widget.existingNote?.description ?? '');
     _progress = (widget.existingNote?.progress ?? 0).toDouble();
     _priority = widget.existingNote?.priority ?? 'Low';
-    _category = widget.existingNote?.category ?? 'Personal';
+    final rawCategory = widget.existingNote?.category ?? 'Personal';
+    _category = rawCategory.split('#').first;
+    _addToShelf = rawCategory.contains('#shelf');
     _dueDate = widget.existingNote?.dueDate;
   }
 
@@ -91,12 +95,14 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> w
       }
     }
 
+    final savedCategory = _addToShelf ? '$_category#shelf' : _category;
+
     final note = widget.existingNote?.copyWith(
           title: _titleController.text.trim(),
           description: _descController.text.trim(),
           progress: _progress.toInt(),
           priority: _priority,
-          category: _category,
+          category: savedCategory,
           dueDate: _dueDate,
         ) ??
         StickyNote(
@@ -106,7 +112,7 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> w
           description: _descController.text.trim(),
           progress: _progress.toInt(),
           priority: _priority,
-          category: _category,
+          category: savedCategory,
           dueDate: _dueDate,
         );
 
@@ -299,6 +305,27 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> w
           ),
         ),
         
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Add to Wooden Shelf',
+                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 16),
+                ),
+              ],
+            ),
+            Switch(
+              value: _addToShelf,
+              activeColor: Colors.blueAccent,
+              onChanged: (val) => setState(() => _addToShelf = val),
+            ),
+          ],
+        ),
         const SizedBox(height: 32),
         ElevatedButton(
           style: ElevatedButton.styleFrom(

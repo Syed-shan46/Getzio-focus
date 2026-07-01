@@ -87,7 +87,6 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
           text:
               'Challenges are opportunities to grow and expand my capabilities.',
           category: 'Mindset',
-          backgroundStyle: 'Minimal White',
           colorTheme: 'Minimal White',
           isPinned: true,
           syncStatus: SyncStatus.synced,
@@ -98,7 +97,6 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
           text:
               'I choose consistency over temporary motivation. I finish what I start.',
           category: 'Discipline',
-          backgroundStyle: 'Midnight Black',
           colorTheme: 'Midnight Black',
           syncStatus: SyncStatus.synced,
         ),
@@ -108,7 +106,6 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
           text:
               'I appreciate the little details today. Peace is within my control.',
           category: 'Gratitude',
-          backgroundStyle: 'Sunrise Orange',
           colorTheme: 'Sunrise Orange',
           syncStatus: SyncStatus.synced,
         ),

@@ -406,4 +406,26 @@ class HiveDatabase {
   Future<void> setSeenPreview(String feature) async {
     await _settingsBox.put('focus_seen_preview_$feature', true);
   }
+
+  // ─── Premium Tasks Module ──────────────────────────────────────────────
+
+  Future<void> saveTasks(List<Map<String, dynamic>> tasks) async {
+    await _settingsBox.put('focus_tasks', tasks);
+  }
+
+  List<Map<String, dynamic>> getTasks() {
+    final list = _settingsBox.get('focus_tasks') as List?;
+    if (list == null) return [];
+    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  Future<void> savePendingTaskActions(List<Map<String, dynamic>> actions) async {
+    await _syncBox.put('pending_tasks_actions', actions);
+  }
+
+  List<Map<String, dynamic>> getPendingTaskActions() {
+    final list = _syncBox.get('pending_tasks_actions') as List?;
+    if (list == null) return [];
+    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
 }

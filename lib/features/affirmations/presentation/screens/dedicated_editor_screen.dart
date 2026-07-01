@@ -21,17 +21,6 @@ class _DedicatedEditorScreenState extends ConsumerState<DedicatedEditorScreen> {
   late String _author;
   late String _category;
   late String _colorTheme;
-  final List<String> _schedule = [];
-  late String _fontStyle;
-  late String _fontWeight;
-  late String _quoteAlignment;
-  late double _quoteSize;
-  late String _woodFinish;
-  late String _frameStyle;
-  late String _frameColor;
-  late String _glassReflection;
-  late double _bgBlur;
-  late String _borderDecoration;
   String? _emoji;
 
   // Text Controllers
@@ -106,19 +95,7 @@ class _DedicatedEditorScreenState extends ConsumerState<DedicatedEditorScreen> {
     _author = aff.author ?? '';
     _category = aff.category;
     _colorTheme = aff.colorTheme;
-    _fontStyle = aff.fontStyle;
-    _fontWeight = aff.fontWeight;
-    _quoteAlignment = aff.quoteAlignment;
-    _quoteSize = aff.quoteSize;
-    _woodFinish = aff.woodFinish;
-    _frameStyle = aff.frameStyle;
-    _frameColor = aff.frameColor;
-    _glassReflection = aff.glassReflection;
-    _bgBlur = aff.bgBlur;
-    _borderDecoration = aff.borderDecoration;
     _emoji = aff.emoji;
-    _schedule.clear();
-    _schedule.addAll(aff.schedule);
   }
 
   @override
@@ -139,23 +116,9 @@ class _DedicatedEditorScreenState extends ConsumerState<DedicatedEditorScreen> {
       author: _author.isEmpty ? null : _author,
       category: _category,
       colorTheme: _colorTheme,
-      fontStyle: _fontStyle,
-      backgroundStyle: _colorTheme, // theme maps to backgroundStyle too
       isPinned: widget.affirmation.isPinned,
       isFavorite: widget.affirmation.isFavorite,
-      schedule: _schedule,
-      woodFinish: _woodFinish,
-      frameStyle: _frameStyle,
-      frameColor: _frameColor,
-      glassReflection: _glassReflection,
-      fontWeight: _fontWeight,
-      quoteAlignment: _quoteAlignment,
-      quoteSize: _quoteSize,
-      accentColor: _colorTheme == 'Minimal White' ? 'Grey' : 'Amber',
-      bgBlur: _bgBlur,
-      borderDecoration: _borderDecoration,
       emoji: _emoji?.isEmpty ?? true ? null : _emoji,
-      icon: widget.affirmation.icon,
       createdAt: widget.affirmation.createdAt,
       updatedAt: DateTime.now(),
     );
@@ -295,11 +258,7 @@ class _DedicatedEditorScreenState extends ConsumerState<DedicatedEditorScreen> {
         break;
     }
 
-    final TextAlign align = _quoteAlignment == 'Left' 
-        ? TextAlign.left 
-        : _quoteAlignment == 'Right' 
-            ? TextAlign.right 
-            : TextAlign.center;
+    final TextAlign align = TextAlign.center;
 
     return Container(
       width: double.infinity,
@@ -318,11 +277,7 @@ class _DedicatedEditorScreenState extends ConsumerState<DedicatedEditorScreen> {
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment: _quoteAlignment == 'Left'
-            ? CrossAxisAlignment.start
-            : _quoteAlignment == 'Right'
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -352,10 +307,10 @@ class _DedicatedEditorScreenState extends ConsumerState<DedicatedEditorScreen> {
             _text.isEmpty ? '"Type your affirmation text..."' : '"$_text"',
             textAlign: align,
             style: GoogleFonts.playfairDisplay(
-              fontSize: _quoteSize,
+              fontSize: 15.0,
               color: textCol,
               height: 1.4,
-              fontWeight: _fontWeight == 'Bold' ? FontWeight.bold : FontWeight.w500,
+              fontWeight: FontWeight.w500,
             ),
             maxLines: 4,
             overflow: TextOverflow.ellipsis,
@@ -568,79 +523,9 @@ class _DedicatedEditorScreenState extends ConsumerState<DedicatedEditorScreen> {
                         hint: 'e.g., 🌱',
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Text Alignment',
-                            style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w500),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.03),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.white.withOpacity(0.08)),
-                            ),
-                            child: DropdownButton<String>(
-                              value: _quoteAlignment,
-                              dropdownColor: const Color(0xFF131722),
-                              underline: const SizedBox(),
-                              isExpanded: true,
-                              style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
-                              items: ['Left', 'Center', 'Right'].map((val) {
-                                return DropdownMenuItem<String>(
-                                  value: val,
-                                  child: Text(val),
-                                );
-                              }).toList(),
-                              onChanged: (val) {
-                                if (val != null) {
-                                  _pushToUndoStack();
-                                  setState(() {
-                                    _quoteAlignment = val;
-                                  });
-                                  _onStateModified();
-                                }
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
-
-                // Font size slider
-                Text(
-                  'Font Size: ${_quoteSize.toStringAsFixed(1)}',
-                  style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w500),
-                ),
-                Slider(
-                  value: _quoteSize,
-                  min: 12.0,
-                  max: 28.0,
-                  divisions: 16,
-                  activeColor: const Color(0xFF3B82F6),
-                  inactiveColor: Colors.white12,
-                  onChanged: (val) {
-                    setState(() {
-                      _quoteSize = val;
-                    });
-                  },
-                  onChangeEnd: (val) {
-                    _pushToUndoStack();
-                    setState(() {
-                      _quoteSize = val;
-                    });
-                    _onStateModified();
-                  },
-                ),
-                const SizedBox(height: 20),
 
                 // Save button bottom
                 SizedBox(
