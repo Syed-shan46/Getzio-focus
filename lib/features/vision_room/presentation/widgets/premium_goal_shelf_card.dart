@@ -10,12 +10,14 @@ class PremiumGoalShelfCard extends StatefulWidget {
   final VisionItem item;
   final bool isSelected;
   final double scale;
+  final VoidCallback? onDelete;
 
   const PremiumGoalShelfCard({
     super.key,
     required this.item,
     this.isSelected = false,
     this.scale = 1.0,
+    this.onDelete,
   });
 
   @override
@@ -77,7 +79,7 @@ class _PremiumGoalShelfCardState extends State<PremiumGoalShelfCard> {
         setState(() => _isHovered = true);
         HapticFeedback.lightImpact();
       },
-      onTapUp: (_) {
+      onTap: () {
         setState(() => _isHovered = false);
         SmartObjectSheetRouter.open(context, widget.item);
       },
@@ -191,6 +193,43 @@ class _PremiumGoalShelfCardState extends State<PremiumGoalShelfCard> {
                             ),
                           ),
                         ),
+                        // Top Right Delete Button
+                        if (widget.onDelete != null)
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                                HapticFeedback.mediumImpact();
+                                widget.onDelete!();
+                              },
+                              child: Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade700,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    width: 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.5),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),

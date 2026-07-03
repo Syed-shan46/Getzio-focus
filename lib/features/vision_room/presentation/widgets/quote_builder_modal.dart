@@ -40,7 +40,7 @@ class _QuoteBuilderModalState extends State<QuoteBuilderModal> {
     super.dispose();
   }
 
-  bool _addToShelf = false;
+
 
   void _submit() {
     if (_quoteController.text.trim().isEmpty) return;
@@ -49,7 +49,7 @@ class _QuoteBuilderModalState extends State<QuoteBuilderModal> {
       'quote': _quoteController.text.trim(),
       'author': _authorController.text.trim().isEmpty ? 'Unknown' : _authorController.text.trim(),
       'style': _selectedStyle,
-      'isOnShelf': _addToShelf,
+      'isOnShelf': false,
     });
     Navigator.pop(context);
   }
@@ -142,29 +142,6 @@ class _QuoteBuilderModalState extends State<QuoteBuilderModal> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Add to Shelf Option
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Add to Wooden Shelf',
-                        style: AppTypography.titleMedium(color: Colors.white70).copyWith(fontSize: 15),
-                      ),
-                    ],
-                  ),
-                  Switch(
-                    value: _addToShelf,
-                    activeColor: AppColors.accentBlue,
-                    onChanged: (val) => setState(() => _addToShelf = val),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
 
               // Submit
               ElevatedButton(

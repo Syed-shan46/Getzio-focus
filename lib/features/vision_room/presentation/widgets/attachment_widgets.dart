@@ -10,35 +10,57 @@ class PushPinWidget extends StatelessWidget {
     Color primaryColor;
     Color highlightColor;
     
-    switch (style) {
+    final normalized = style.replaceAll('Pin', '').toLowerCase();
+    
+    switch (normalized) {
       case 'blue':
-        primaryColor = Colors.blue.shade700;
-        highlightColor = Colors.blue.shade400;
+        primaryColor = const Color(0xFF1D4ED8);
+        highlightColor = const Color(0xFF93C5FD);
         break;
       case 'black':
-        primaryColor = Colors.black87;
-        highlightColor = Colors.grey.shade700;
+        primaryColor = const Color(0xFF1E293B);
+        highlightColor = const Color(0xFF94A3B8);
         break;
       case 'gold':
-        primaryColor = const Color(0xFFD4AF37);
-        highlightColor = const Color(0xFFF3E5AB);
+      case 'brass':
+      case 'luxurybrass':
+      case 'green':
+      case 'emerald':
+        primaryColor = const Color(0xFF047857); // Premium Emerald Green
+        highlightColor = const Color(0xFF6EE7B7); // Glassy light green
         break;
       case 'silver':
-        primaryColor = Colors.grey.shade400;
+        primaryColor = Colors.grey.shade600;
         highlightColor = Colors.grey.shade200;
+        break;
+      case 'wood':
+      case 'wooden':
+        primaryColor = const Color(0xFF8D6E63);
+        highlightColor = const Color(0xFFD7CCC8);
+        break;
+      case 'transparent':
+        primaryColor = Colors.white.withValues(alpha: 0.25);
+        highlightColor = Colors.white.withValues(alpha: 0.7);
         break;
       case 'red':
       default:
-        primaryColor = Colors.red.shade700;
-        highlightColor = Colors.red.shade400;
+        primaryColor = const Color(0xFFB91C1C);
+        highlightColor = const Color(0xFFFCA5A5);
         break;
     }
 
-    return SizedBox(
-      width: 24,
-      height: 36,
-      child: CustomPaint(
-        painter: _PushPinPainter(primaryColor, highlightColor),
+    return Transform(
+      transform: Matrix4.identity()
+        ..setEntry(3, 2, 0.003) // Perspective distortion
+        ..rotateX(-0.25) // Tilt forward
+        ..rotateY(0.08), // Slight angle
+      alignment: Alignment.bottomCenter,
+      child: SizedBox(
+        width: 24,
+        height: 36,
+        child: CustomPaint(
+          painter: _PushPinPainter(primaryColor, highlightColor),
+        ),
       ),
     );
   }
@@ -52,49 +74,46 @@ class _PushPinPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Draw Shadow
+    final double w = size.width;
+    final double h = size.height;
+    
+    // Position of the sphere center (resting flush on the paper)
+    final Offset sphereCenter = Offset(w / 2, h - 14);
+    final double sphereRadius = w / 2.2;
+
+    // 1. Draw Drop Shadow
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.4)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+      ..color = Colors.black.withValues(alpha: 0.35)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5);
     
-    // Needle shadow
-    canvas.drawLine(
-      Offset(size.width / 2 + 1, size.height / 2 + 10),
-      Offset(size.width / 2 + 3, size.height),
-      shadowPaint..strokeWidth = 1,
-    );
-    
-    // Head shadow
-    canvas.drawCircle(Offset(size.width / 2 + 2, size.height / 3 + 2), size.width / 2.5, shadowPaint);
+    canvas.drawCircle(Offset(sphereCenter.dx + 2.0, sphereCenter.dy + 3.5), sphereRadius, shadowPaint);
 
-    // 2. Draw Needle
-    final needlePaint = Paint()
-      ..color = Colors.grey.shade400
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-    
-    canvas.drawLine(
-      Offset(size.width / 2, size.height / 2),
-      Offset(size.width / 2, size.height),
-      needlePaint,
-    );
-
-    // 3. Draw Pin Head (Plastic/Metal bulb)
-    final headPaint = Paint()
+    // 2. Draw 3D Spherical Head (Radial gradient for depth)
+    final Rect sphereRect = Rect.fromCircle(center: sphereCenter, radius: sphereRadius);
+    final spherePaint = Paint()
       ..shader = RadialGradient(
-        colors: [highlight, color, Colors.black87],
-        stops: const [0.0, 0.6, 1.0],
-        center: const Alignment(-0.3, -0.3),
-        radius: 0.8,
-      ).createShader(Rect.fromCircle(center: Offset(size.width / 2, size.height / 3), radius: size.width / 2.5));
-
-    canvas.drawCircle(Offset(size.width / 2, size.height / 3), size.width / 2.5, headPaint);
+        colors: [
+          const Color(0xFFECFDF5), // Bright glassy glint center
+          highlight,              // Mid highlight
+          color,                  // Body color
+          color.withValues(alpha: 0.8), // Darker edge shade
+        ],
+        stops: const [0.0, 0.25, 0.75, 1.0],
+        center: const Alignment(-0.35, -0.35),
+        radius: 0.9,
+      ).createShader(sphereRect);
     
-    // Specular highlight dot
-    final highlightPaint = Paint()..color = Colors.white.withValues(alpha: 0.6);
+    canvas.drawCircle(sphereCenter, sphereRadius, spherePaint);
+
+    // 3. Specular reflection dot (glint) for high-gloss glass look
+    final glintPaint = Paint()..color = Colors.white.withValues(alpha: 0.85);
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(size.width / 2 - 3, size.height / 3 - 3), width: 4, height: 2),
-      highlightPaint,
+      Rect.fromCenter(
+        center: Offset(sphereCenter.dx - 2.5, sphereCenter.dy - 2.5),
+        width: 3.0,
+        height: 2.0,
+      ),
+      glintPaint,
     );
   }
 
@@ -131,15 +150,15 @@ class TapeWidget extends StatelessWidget {
     return Transform.rotate(
       angle: -0.15,
       child: Container(
-        width: 80,
-        height: 24,
+        width: 48,
+        height: 14,
         decoration: BoxDecoration(
           color: tapeColor.withValues(alpha: tapeOpacity),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 2,
-              offset: const Offset(0, 2),
+              offset: const Offset(0, 1),
             )
           ],
         ),

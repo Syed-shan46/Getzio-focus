@@ -48,16 +48,9 @@ class QuoteCardWidget extends StatelessWidget {
   Widget _buildElegantMinimal(String quote, String author) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.zero,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -104,12 +97,6 @@ class QuoteCardWidget extends StatelessWidget {
         color: const Color(0xFF111111),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFD4AF37), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD4AF37).withValues(alpha: 0.2),
-            blurRadius: 20,
-          ),
-        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -152,9 +139,6 @@ class QuoteCardWidget extends StatelessWidget {
         color: Colors.black87,
         borderRadius: BorderRadius.zero,
         border: Border.all(color: Colors.pinkAccent.withValues(alpha: 0.5), width: 1.5),
-        boxShadow: const [
-          BoxShadow(color: Colors.pinkAccent, blurRadius: 15, spreadRadius: 2),
-        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -194,13 +178,6 @@ class QuoteCardWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF4F1EA),
         borderRadius: BorderRadius.circular(4),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 10,
-            offset: const Offset(2, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

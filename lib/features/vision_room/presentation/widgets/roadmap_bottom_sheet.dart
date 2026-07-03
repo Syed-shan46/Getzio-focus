@@ -44,7 +44,11 @@ class _RoadmapBottomSheetState extends ConsumerState<RoadmapBottomSheet> {
     final title = item.content.isNotEmpty ? item.content : 'Dream';
     final progress = _extractProgress(metadata);
     final targetDate = _extractTargetDate(metadata);
-    final daysRemaining = targetDate?.difference(DateTime.now()).inDays;
+    final daysRemaining = targetDate != null
+        ? DateTime(targetDate.year, targetDate.month, targetDate.day)
+            .difference(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day))
+            .inDays
+        : null;
     final currentMilestone = metadata['currentMilestone'] as String? ?? 'Getting Started';
     final nextAction = metadata['nextAction'] as String? ?? 'Define your first milestone';
     final milestones = _extractMilestones(metadata);

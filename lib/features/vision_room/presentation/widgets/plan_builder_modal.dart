@@ -39,7 +39,7 @@ class _PlanBuilderModalState extends State<PlanBuilderModal> {
     super.dispose();
   }
 
-  bool _addToShelf = false;
+
 
   void _submit() {
     if (_titleController.text.trim().isEmpty) return;
@@ -54,7 +54,7 @@ class _PlanBuilderModalState extends State<PlanBuilderModal> {
       'progress': _progress,
       'dueDate': _dueDate?.toIso8601String(),
       'objectives': objectives.isEmpty ? ['Task 1', 'Task 2'] : objectives,
-      'isOnShelf': _addToShelf,
+      'isOnShelf': false,
     });
     Navigator.pop(context);
   }
@@ -118,28 +118,7 @@ class _PlanBuilderModalState extends State<PlanBuilderModal> {
               ),
               const SizedBox(height: 24),
 
-              // Add to Shelf Option
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Add to Wooden Shelf',
-                        style: AppTypography.titleMedium(color: Colors.white70).copyWith(fontSize: 15),
-                      ),
-                    ],
-                  ),
-                  Switch(
-                    value: _addToShelf,
-                    activeColor: AppColors.accentEmerald,
-                    onChanged: (val) => setState(() => _addToShelf = val),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+
               ElevatedButton(
                 onPressed: _submit,
                 style: ElevatedButton.styleFrom(

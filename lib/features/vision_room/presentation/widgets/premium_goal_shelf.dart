@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/models/vision_item.dart';
 import '../providers/canvas_providers.dart';
+import '../providers/vision_room_providers.dart';
 import 'premium_goal_shelf_card.dart';
 import 'vision_creation_sheet.dart';
 
@@ -66,6 +67,7 @@ class _PremiumGoalShelfState extends ConsumerState<PremiumGoalShelf> {
       onAddFrame: () {},
       onAddText: () {},
       onEnterEditMode: () {},
+      onExitRoom: () {},
     );
   }
 
@@ -99,6 +101,7 @@ class _PremiumGoalShelfState extends ConsumerState<PremiumGoalShelf> {
   }
 
   Widget _buildCarouselCard(VisionItem goal, int index) {
+    final isEditMode = ref.watch(editModeProvider);
     // 3D Perspective calculation
     final difference = index - _currentPageValue;
     final isSelected = difference.abs() < 0.5;
@@ -120,6 +123,11 @@ class _PremiumGoalShelfState extends ConsumerState<PremiumGoalShelf> {
           item: goal,
           isSelected: isSelected,
           scale: scale,
+          onDelete: isEditMode
+              ? () {
+                  ref.read(canvasStateProvider.notifier).removeItem(goal.id);
+                }
+              : null,
         ),
       ),
     );

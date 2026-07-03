@@ -8,6 +8,8 @@ import '../../domain/models/canvas_state.dart';
 import '../../domain/models/vision_item.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/domain/models/auth_user_model.dart';
+import '../../data/repositories/vision_room_repository.dart';
+import '../../../../core/storage/sync_manager.dart';
 
 class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   final HiveDatabase _hiveDb;
@@ -18,124 +20,50 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   Timer? _viewportDebouncer;
 
   CanvasHistoryNotifier(this._hiveDb, this._ref) : super(CanvasState(items: [])) {
-    _loadInitialItems();
+    fetchRoomItems().catchError((e) {
+      debugPrint('[CanvasHistoryNotifier] Initial fetch error: $e');
+    });
 
-    // Listen to authentication state changes to reload vision items
     _ref.listen<AsyncValue<AuthUserModel?>>(authProvider, (previous, next) {
       if (next.hasValue) {
         debugPrint('[CanvasHistoryNotifier] Auth state changed, reloading initial items...');
-        _loadInitialItems();
+        fetchRoomItems().catchError((e) {
+          debugPrint('[CanvasHistoryNotifier] Auth fetch error: $e');
+        });
       }
     });
   }
 
-  void _loadInitialItems() {
+  Future<void> fetchRoomItems() async {
+    _loadLocalCached();
+
     final hasToken = _hiveDb.getAuthToken() != null;
-    if (hasToken) {
-      try {
-        final dio = _ref.read(dioClientProvider);
-        dio.get('/focus/vision-room').then((response) {
-          if (response.data != null && response.data['success'] == true) {
-            final data = response.data['data'];
-            debugPrint('[CanvasSync] GET focus/vision-room response data: $data');
-            final itemsList = data['items'] as List?;
-            if (itemsList != null) {
-              final items = itemsList.map((itemJson) {
-                Map<String, dynamic> parsedMeta = {};
-                final fontStr = itemJson['font'] as String?;
-                if (fontStr != null && fontStr.trim().startsWith('{') && fontStr.trim().endsWith('}')) {
-                  try {
-                    parsedMeta = Map<String, dynamic>.from(jsonDecode(fontStr));
-                  } catch (_) {}
-                }
+    if (!hasToken) return;
 
-                final scaleVal = (itemJson['scale'] as num?)?.toDouble() ?? parsedMeta['scale'] ?? 1.0;
-                final opacityVal = (itemJson['opacity'] as num?)?.toDouble() ?? parsedMeta['opacity'] ?? 1.0;
+    final repo = _ref.read(visionRoomRepositoryProvider);
+    try {
+      final remoteItems = await repo.fetchVisionRoomFromServer();
+      if (remoteItems == null) return;
 
-                final rawId = itemJson['itemId'] ?? itemJson['id'] ?? '';
-                final rawType = itemJson['type'] ?? '';
-                final rawContent = itemJson['type'] == 'image'
-                    ? (itemJson['imageUrl'] ?? itemJson['content'] ?? '')
-                    : (itemJson['text'] ?? itemJson['content'] ?? '');
-                final rawX = (itemJson['xPosition'] as num?)?.toDouble() ?? (itemJson['x'] as num?)?.toDouble() ?? 0.0;
-                final rawY = (itemJson['yPosition'] as num?)?.toDouble() ?? (itemJson['y'] as num?)?.toDouble() ?? 0.0;
-                final rawWidth = (itemJson['width'] as num?)?.toDouble() ?? (itemJson['w'] as num?)?.toDouble() ?? 180.0;
-                final rawHeight = (itemJson['height'] as num?)?.toDouble() ?? (itemJson['h'] as num?)?.toDouble() ?? 120.0;
-                final rawRotation = (itemJson['rotation'] as num?)?.toDouble() ?? (itemJson['r'] as num?)?.toDouble() ?? 0.0;
+      final localJson = jsonEncode(state.items.map((i) => i.toJson()).toList());
+      final remoteJson = jsonEncode(remoteItems.map((i) => i.toJson()).toList());
 
-                final rawColorVal = itemJson['color'] != null && itemJson['color'].toString().isNotEmpty
-                    ? (int.tryParse(itemJson['color'], radix: 16) ?? (itemJson['colorValue'] as int?) ?? 0xFF1E1B4B)
-                    : ((itemJson['colorValue'] as int?) ?? 0xFF1E1B4B);
-
-                final rawIsPinned = itemJson['locked'] ?? itemJson['isPinned'] ?? false;
-
-                return VisionItem(
-                  id: rawId,
-                  type: rawType,
-                  content: rawContent,
-                  x: rawX,
-                  y: rawY,
-                  width: rawWidth,
-                  height: rawHeight,
-                  rotation: rawRotation,
-                  colorValue: rawColorVal,
-                  isPinned: rawIsPinned,
-                  zIndex: (itemJson['zIndex'] as num?)?.toInt() ?? 0,
-                  attachmentType: 'tape',
-                  attachmentStyle: 'beige',
-                  materialStyle: 'default',
-                  countdownDate: itemJson['countdownDate'] != null ? DateTime.parse(itemJson['countdownDate']) : null,
-                  metadata: {
-                    ...parsedMeta,
-                    'scale': scaleVal,
-                    'opacity': opacityVal,
-                    'font': fontStr ?? '',
-                    'isOnShelf': parsedMeta['isOnShelf'] == true || itemJson['isOnShelf'] == true || itemJson['isShelfItem'] == true,
-                  }
-                );
-              }).toList();
-              
-              items.sort((a, b) => a.zIndex.compareTo(b.zIndex));
-              
-              final remoteViewport = data['viewport'] as List?;
-              List<double>? parsedViewport;
-              
-              if (remoteViewport != null) {
-                parsedViewport = remoteViewport.map((e) => (e as num).toDouble()).toList();
-                _hiveDb.saveVisionViewport(parsedViewport);
-              } else {
-                parsedViewport = _hiveDb.getVisionViewport();
-              }
-              
-              state = CanvasState(
-                items: items,
-                viewportTransform: parsedViewport != null ? Matrix4.fromList(parsedViewport) : null,
-              );
-              
-              final serialized = items.map((i) => i.toJson()).toList();
-              _hiveDb.saveVisionItems(serialized);
-              return;
-            }
-          }
-          _loadLocalCached();
-        }).catchError((e) {
-          debugPrint('[CanvasSync] Error loading initial items from backend: $e');
-          _loadLocalCached();
-        });
-      } catch (e) {
-        debugPrint('[CanvasSync] Exception loading initial items: $e');
-        _loadLocalCached();
+      if (localJson != remoteJson) {
+        await repo.saveLocalVisionItems(remoteItems);
+        state = state.copyWith(items: remoteItems);
       }
-    } else {
-      _loadLocalCached();
+      _ref.read(syncManagerProvider).processQueue();
+    } catch (e) {
+      debugPrint('[CanvasSync] Background fetch error: $e');
+      rethrow;
     }
   }
 
   void _loadLocalCached() {
-    final cached = _hiveDb.getVisionItems();
-    var items = cached.map((json) => VisionItem.fromJson(json)).toList();
+    final repo = _ref.read(visionRoomRepositoryProvider);
+    final items = repo.getLocalVisionItems();
     if (items.isEmpty) {
-      items = [
+      final defaults = [
         VisionItem(
           id: 'sample_note_1',
           type: VisionItemType.stickyNote.name,
@@ -176,23 +104,27 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
           metadata: const {'targetDate': '2026-12-31', 'category': 'Growth'},
         ),
       ];
-      final serialized = items.map((i) => i.toJson()).toList();
-      _hiveDb.saveVisionItems(serialized);
+      repo.saveLocalVisionItems(defaults);
+      state = state.copyWith(items: defaults);
+    } else {
+      state = state.copyWith(items: items);
     }
+
     final cachedViewport = _hiveDb.getVisionViewport();
-    state = CanvasState(
-      items: items,
-      viewportTransform: cachedViewport != null ? Matrix4.fromList(cachedViewport) : null,
-    );
+    if (cachedViewport != null) {
+      state = state.copyWith(viewportTransform: Matrix4.fromList(cachedViewport));
+    }
   }
 
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
 
   void _saveState() {
-    final serializedItems = state.items.map((i) => i.toJson()).toList();
-    _hiveDb.saveVisionItems(serializedItems);
-    _hiveDb.saveVisionViewport(state.viewportTransform.storage.toList());
+    final repo = _ref.read(visionRoomRepositoryProvider);
+    repo.saveLocalVisionItems(state.items);
+    if (state.viewportTransform != null) {
+      _hiveDb.saveVisionViewport(state.viewportTransform!.storage.toList());
+    }
   }
 
   Future<void> saveRoomToServer() async {
@@ -201,12 +133,13 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
 
     try {
       final dio = _ref.read(dioClientProvider);
-      final serializedItems = state.items.map((i) => _mapItemToDbKeys(i)).toList();
+      final repo = _ref.read(visionRoomRepositoryProvider);
+      final serializedItems = state.items.map((i) => repo.mapItemToDbKeys(i)).toList();
       await dio.post(
         '/focus/vision-room',
         data: {
           'items': serializedItems,
-          'viewport': state.viewportTransform.storage.toList(),
+          'viewport': state.viewportTransform?.storage.toList(),
         },
       );
       debugPrint('[CanvasSync] Saved entire room to server successfully');
@@ -214,39 +147,6 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
       debugPrint('[CanvasSync] Error saving entire room: $e');
       rethrow;
     }
-  }
-
-  Map<String, dynamic> _mapItemToDbKeys(VisionItem item) {
-    final metaMap = {
-      'isOnShelf': item.metadata?['isOnShelf'] == true,
-      'createdAt': item.metadata?['createdAt'] ?? DateTime.now().toIso8601String(),
-      'scale': item.metadata?['scale'] ?? 1.0,
-      'opacity': item.metadata?['opacity'] ?? 1.0,
-      ...?item.metadata,
-    };
-    return {
-      'itemId': item.id,
-      'type': item.type,
-      'imageUrl': item.type == 'image' ? item.content : '',
-      'text': item.type != 'image' ? item.content : '',
-      'color': item.colorValue.toRadixString(16),
-      'font': jsonEncode(metaMap),
-      'xPosition': item.x,
-      'yPosition': item.y,
-      'width': item.width,
-      'height': item.height,
-      'rotation': item.rotation,
-      'scale': item.metadata?['scale'] ?? 1.0,
-      'zIndex': item.zIndex,
-      'opacity': item.metadata?['opacity'] ?? 1.0,
-      'locked': item.isPinned,
-      'countdownDate': item.countdownDate?.toIso8601String(),
-      'isOnShelf': item.metadata?['isOnShelf'] == true,
-      'isShelfItem': item.metadata?['isOnShelf'] == true,
-      // Persist full metadata including isOnShelf so the shelf state
-      // survives logout/login and multi-session reloads from the backend.
-      'metadata': metaMap,
-    };
   }
 
   void _debouncePatchItem(String id) {
@@ -259,12 +159,14 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
         final itemIndex = state.items.indexWhere((i) => i.id == id);
         if (itemIndex == -1) return;
         final item = state.items[itemIndex];
-        final data = _mapItemToDbKeys(item);
+        final repo = _ref.read(visionRoomRepositoryProvider);
+        final data = repo.mapItemToDbKeys(item);
         final dio = _ref.read(dioClientProvider);
         dio.patch('/focus/vision-room/item/$id', data: data).then((_) {
           debugPrint('[CanvasSync] Patched item $id successfully');
-        }).catchError((e) {
-          debugPrint('[CanvasSync] Failed to patch item $id: $e');
+        }).catchError((e) async {
+          debugPrint('[CanvasSync] Failed to patch item $id, queuing sync: $e');
+          await repo.queueItemUpsert(item, 'update');
         });
       } catch (e) {
         debugPrint('[CanvasSync] Exception patching item $id: $e');
@@ -335,9 +237,9 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     final hasToken = _hiveDb.getAuthToken() != null;
     if (hasToken) {
       try {
+        final repo = _ref.read(visionRoomRepositoryProvider);
         final dio = _ref.read(dioClientProvider);
-        final payload = _mapItemToDbKeys(newItem);
-        // Stamp creation timestamp into metadata for ordering shelf items later
+        final payload = repo.mapItemToDbKeys(newItem);
         final createdAt = DateTime.now().toIso8601String();
         payload['metadata'] = {
           ...?(newItem.metadata),
@@ -346,8 +248,9 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
         payload['countdownDate'] = newItem.countdownDate?.toIso8601String();
         dio.post('/focus/vision-room/item', data: payload).then((_) {
           debugPrint('[CanvasSync] Created item ${newItem.id} on backend');
-        }).catchError((e) {
-          debugPrint('[CanvasSync] Failed to create item ${newItem.id}: $e');
+        }).catchError((e) async {
+          debugPrint('[CanvasSync] Failed to create item ${newItem.id}, queuing sync: $e');
+          await repo.queueItemUpsert(newItem, 'create');
         });
       } catch (e) {
         debugPrint('[CanvasSync] Exception creating item: $e');
@@ -502,11 +405,13 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     final hasToken = _hiveDb.getAuthToken() != null;
     if (hasToken) {
       try {
+        final repo = _ref.read(visionRoomRepositoryProvider);
         final dio = _ref.read(dioClientProvider);
         dio.delete('/focus/vision-room/item/$id').then((_) {
           debugPrint('[CanvasSync] Deleted item $id on backend');
-        }).catchError((e) {
-          debugPrint('[CanvasSync] Failed to delete item $id: $e');
+        }).catchError((e) async {
+          debugPrint('[CanvasSync] Failed to delete item $id, queuing sync: $e');
+          await repo.queueItemDeletion(id);
         });
       } catch (e) {
         debugPrint('[CanvasSync] Exception deleting item: $e');
@@ -519,11 +424,8 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   }
 
   void commitViewport() {
-    // Save viewport locally via Hive immediately
     commitState(state);
 
-    // Debounce-sync the viewport to the backend so it survives logout/login.
-    // After a pan/zoom gesture ends, we wait 800ms then push the full room state.
     final hasToken = _hiveDb.getAuthToken() != null;
     if (!hasToken) return;
     _viewportDebouncer?.cancel();
@@ -531,11 +433,10 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
       try {
         final dio = _ref.read(dioClientProvider);
         dio.patch('/focus/vision-room/viewport', data: {
-          'viewport': state.viewportTransform.storage.toList(),
+          'viewport': state.viewportTransform?.storage.toList(),
         }).then((_) {
           debugPrint('[CanvasSync] Viewport synced to backend');
         }).catchError((e) {
-          // Fallback: try full room save if viewport-only endpoint not available
           debugPrint('[CanvasSync] Viewport patch failed ($e), falling back to full save');
           saveRoomToServer().catchError((_) {});
         });

@@ -73,7 +73,9 @@ class SteamWisp {
 }
 
 class OSDashboardScreen extends ConsumerStatefulWidget {
-  const OSDashboardScreen({super.key});
+  final bool isTab;
+
+  const OSDashboardScreen({super.key, this.isTab = false});
 
   @override
   ConsumerState<OSDashboardScreen> createState() => _OSDashboardScreenState();
@@ -456,7 +458,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
     final isLoggedIn = authState.hasValue && authState.value != null;
     final customization = ref.watch(visionCustomizationProvider);
 
-    if (state.homeExperience == 'classic') {
+    if (!widget.isTab && state.homeExperience == 'classic') {
       return const ClassicDashboardWidget();
     }
     final totalXp = state.xp;
@@ -604,7 +606,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                       Positioned(
                         left: 16,
                         right: 16,
-                        top: screenH * 0.36 + 32,
+                        top: screenH * 0.36 + 12,
                         child: _buildLowerWindow(screenW - 32, screenH, state),
                       ),
 
@@ -2026,16 +2028,6 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
 
   // 8. AFFIRMATIONS EDIT SHEETS (Picture Frame click)
   Widget _buildAffirmationsSheetContent() {
-    final authState = ref.watch(authProvider);
-    final isGuest = authState.value == null;
-
-    if (isGuest) {
-      return const ClipRRect(
-        borderRadius: BorderRadius.all(Radius.circular(28)),
-        child: GuestAffirmationsView(),
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

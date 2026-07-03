@@ -129,7 +129,10 @@ class ProgressEngine {
           : item.countdownDate;
       if (targetDate == null) return 0.0;
       final totalDays = (metadata['totalDays'] as num?)?.toDouble() ?? 30.0;
-      final remaining = targetDate.difference(DateTime.now()).inDays.toDouble();
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final target = DateTime(targetDate.year, targetDate.month, targetDate.day);
+      final remaining = target.difference(today).inDays.toDouble();
       if (totalDays <= 0) return 0.0;
       final elapsed = totalDays - max(0.0, remaining);
       return (elapsed / totalDays).clamp(0.0, 1.0);

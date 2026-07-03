@@ -17,6 +17,7 @@ class VisionCreationSheet extends StatelessWidget {
   final VoidCallback onAddFrame;
   final VoidCallback onAddText;
   final VoidCallback onEnterEditMode;
+  final VoidCallback onExitRoom;
 
   const VisionCreationSheet({
     super.key,
@@ -31,6 +32,7 @@ class VisionCreationSheet extends StatelessWidget {
     required this.onAddFrame,
     required this.onAddText,
     required this.onEnterEditMode,
+    required this.onExitRoom,
   });
 
   static void show(
@@ -46,6 +48,7 @@ class VisionCreationSheet extends StatelessWidget {
     required VoidCallback onAddFrame,
     required VoidCallback onAddText,
     required VoidCallback onEnterEditMode,
+    required VoidCallback onExitRoom,
   }) {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
@@ -69,6 +72,7 @@ class VisionCreationSheet extends StatelessWidget {
         onAddFrame: onAddFrame,
         onAddText: onAddText,
         onEnterEditMode: onEnterEditMode,
+        onExitRoom: onExitRoom,
       ),
     );
   }
@@ -80,15 +84,10 @@ class VisionCreationSheet extends StatelessWidget {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
       child: Container(
-        height: screenHeight * 0.85,
+        height: screenHeight * 0.76,
         decoration: const BoxDecoration(
           color: Color(0xFF0F172A),
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          border: Border(
-            top: BorderSide(color: Colors.white, width: 0.5),
-            left: BorderSide(color: Colors.white, width: 0.5),
-            right: BorderSide(color: Colors.white, width: 0.5),
-          ),
         ),
         child: Column(
           children: [
@@ -213,27 +212,17 @@ class VisionCreationSheet extends StatelessWidget {
                           color: const Color(0xFF14B8A6),
                           onTap: () => _dismissAndCall(context, onAddFinance),
                         ),
-                        _CreateItem(
-                          icon: Icons.crop_square_rounded,
-                          title: 'Vision Frame',
-                          description: 'Decorative frame',
-                          color: const Color(0xFFEC4899),
-                          onTap: () => _dismissAndCall(context, onAddFrame),
-                        ),
-                        _CreateItem(
-                          icon: Icons.text_fields_rounded,
-                          title: 'Text',
-                          description: 'Plain text',
-                          color: const Color(0xFF64748B),
-                          onTap: () => _dismissAndCall(context, onAddText),
-                        ),
                       ],
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 20),
 
                     // Edit Mode Card
                     _EditModeCard(onTap: () => _enterEditMode(context)),
+                    const SizedBox(height: 12),
+                    
+                    // Exit Room Card
+                    _ExitRoomCard(onTap: () => _exitRoom(context)),
                   ],
                 ),
               ),
@@ -253,6 +242,11 @@ class VisionCreationSheet extends StatelessWidget {
     Navigator.pop(context);
     onEnterEditMode();
   }
+
+  void _exitRoom(BuildContext context) {
+    Navigator.pop(context);
+    onExitRoom();
+  }
 }
 
 // ─── CREATE GRID ───────────────────────────────────────────────────────────
@@ -269,9 +263,9 @@ class _CreateGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 2.1,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
+        childAspectRatio: 2.6,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) => items[index],
@@ -316,10 +310,10 @@ class _CreateItemState extends State<_CreateItem> {
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: _isPressed ? 0.08 : 0.04),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: widget.color.withValues(alpha: _isPressed ? 0.5 : 0.2),
               width: 1,
@@ -328,13 +322,13 @@ class _CreateItemState extends State<_CreateItem> {
           child: Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 30,
+                height: 30,
                 decoration: BoxDecoration(
                   color: widget.color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(widget.icon, color: widget.color, size: 20),
+                child: Icon(widget.icon, color: widget.color, size: 16),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -348,18 +342,18 @@ class _CreateItemState extends State<_CreateItem> {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 1),
                     Text(
                       widget.description,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 11,
+                        fontSize: 9,
                       ),
                     ),
                   ],
@@ -403,7 +397,7 @@ class _EditModeCardState extends State<_EditModeCard> {
         curve: Curves.easeOut,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -415,37 +409,37 @@ class _EditModeCardState extends State<_EditModeCard> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: AppColors.accentBlue.withValues(
                 alpha: _isPressed ? 0.6 : 0.3,
               ),
-              width: 1.5,
+              width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
                 color: AppColors.accentBlue.withValues(alpha: 0.1),
-                blurRadius: 20,
-                spreadRadius: 1,
+                blurRadius: 16,
+                spreadRadius: 0,
               ),
             ],
           ),
           child: Row(
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.accentBlue.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(16),
+                  color: AppColors.accentBlue.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.edit_rounded,
                   color: AppColors.accentBlue,
-                  size: 26,
+                  size: 18,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,16 +448,16 @@ class _EditModeCardState extends State<_EditModeCard> {
                       'Edit Vision Room',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       'Move, resize and organize your workspace',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 13,
+                        fontSize: 11,
                       ),
                     ),
                   ],
@@ -472,7 +466,116 @@ class _EditModeCardState extends State<_EditModeCard> {
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 color: AppColors.accentBlue.withValues(alpha: 0.6),
-                size: 18,
+                size: 14,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExitRoomCard extends StatefulWidget {
+  final VoidCallback onTap;
+
+  const _ExitRoomCard({required this.onTap});
+
+  @override
+  State<_ExitRoomCard> createState() => _ExitRoomCardState();
+}
+
+class _ExitRoomCardState extends State<_ExitRoomCard> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    const exitColor = Color(0xFFEF4444);
+
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _isPressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                exitColor.withValues(
+                  alpha: _isPressed ? 0.25 : 0.12,
+                ),
+                exitColor.withValues(alpha: 0.04),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: exitColor.withValues(
+                alpha: _isPressed ? 0.6 : 0.25,
+              ),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: exitColor.withValues(alpha: 0.08),
+                blurRadius: 16,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: exitColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.door_back_door_outlined,
+                  color: exitColor,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Exit Vision Room',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Return to your main dashboard',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: exitColor.withValues(alpha: 0.6),
+                size: 14,
               ),
             ],
           ),

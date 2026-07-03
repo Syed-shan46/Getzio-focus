@@ -1,12 +1,14 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/models/task_model.dart';
+import '../providers/tasks_provider.dart';
 
-class TaskCard extends StatelessWidget {
+class TaskCard extends ConsumerStatefulWidget {
   final TaskModel task;
   final VoidCallback onTap;
   final Function(bool?) onToggleComplete;
@@ -17,6 +19,13 @@ class TaskCard extends StatelessWidget {
     required this.onTap,
     required this.onToggleComplete,
   });
+
+  @override
+  ConsumerState<TaskCard> createState() => _TaskCardState();
+}
+
+class _TaskCardState extends ConsumerState<TaskCard> {
+  bool _expanded = false;
 
   Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
@@ -34,196 +43,323 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCompleted = task.effectiveCompleted;
-    final categoryColor = _getCategoryColor(task.category);
+    final isCompleted = widget.task.effectiveCompleted;
+    final categoryColor = _getCategoryColor(widget.task.category);
 
     return GestureDetector(
       onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
+        debugPrint("TaskCard: Outer card tapped! subtasks count: ${widget.task.subtasks.length}");
+        if (widget.task.subtasks.isNotEmpty) {
+          HapticFeedback.selectionClick();
+          setState(() {
+            _expanded = !_expanded;
+          });
+        } else {
+          HapticFeedback.lightImpact();
+        }
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12, left: 16, right: 16),
+        margin: const EdgeInsets.only(bottom: 8, left: 16, right: 16),
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: const Color(0xFF131722),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Left Colored Strip
-              Container(
+        child: Stack(
+          children: [
+            // Left Colored Strip
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
                 width: 4,
-                decoration: BoxDecoration(
-                  color: categoryColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    bottomLeft: Radius.circular(16),
-                  ),
-                ),
+                color: categoryColor,
               ),
-              
-              // Main Content
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Checkbox
-                      GestureDetector(
-                        onTap: () {
-                          HapticFeedback.mediumImpact();
-                          onToggleComplete(!isCompleted);
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(top: 2, right: 12),
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isCompleted ? Colors.amber : Colors.white24,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: isCompleted
-                              ? const Icon(Icons.check, size: 14, color: Colors.amber)
-                              : null,
-                        ),
-                      ),
-                      
-                      // Text Info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              task.title,
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                decoration: isCompleted ? TextDecoration.lineThrough : null,
+            ),
+            
+            // Content
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Main Content Row
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Checkbox
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.mediumImpact();
+                            widget.onToggleComplete(!isCompleted);
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(top: 2, right: 10),
+                            width: 18,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isCompleted ? Colors.amber : Colors.white24,
+                                width: 1.5,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            
-                            // Badges & Time Row
+                            child: isCompleted
+                                ? const Icon(Icons.check, size: 12, color: Colors.amber)
+                                : null,
+                          ),
+                        ),
+                        
+                        // Text Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.task.title,
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              
+                              // Badges & Time Row
+                              Row(
+                                children: [
+                                  // Category Badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: categoryColor.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      widget.task.category,
+                                      style: GoogleFonts.outfit(
+                                        color: categoryColor,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  
+                                  // Due Date
+                                  if (widget.task.dueDate != null) ...[
+                                    const Icon(Icons.calendar_today_rounded, size: 10, color: Colors.white54),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${DateFormat('MMM d').format(widget.task.dueDate!)}${widget.task.dueTime != null ? ', ${widget.task.dueTime}' : ''}',
+                                      style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  
+                                  // Estimated Duration
+                                  if (widget.task.estimatedMinutes != null) ...[
+                                    const Icon(Icons.access_time_rounded, size: 10, color: Colors.white54),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${widget.task.estimatedMinutes}m',
+                                      style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              
+                              const SizedBox(height: 10),
+                              
+                              // Bottom Row (Checklist & Priority)
+                              Row(
+                                  children: [
+                                    if (widget.task.subtasks.isNotEmpty) ...[
+                                      const Icon(Icons.check_box_outlined, size: 14, color: Colors.white54),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${widget.task.subtasks.where((c) => c.completed).length}/${widget.task.subtasks.length}',
+                                        style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 8),
+                                        child: Text('•', style: TextStyle(color: Colors.white24)),
+                                      ),
+                                    ],
+                                    
+                                    if (widget.task.priority == TaskPriority.high) ...[
+                                      Container(
+                                        width: 4,
+                                        height: 4,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.redAccent,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'High Priority',
+                                        style: GoogleFonts.outfit(color: Colors.redAccent, fontSize: 12),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ),
+                        
+                        // Right Icons Column
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
                             Row(
                               children: [
-                                // Category Badge
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: categoryColor.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    task.category,
-                                    style: GoogleFonts.outfit(
-                                      color: categoryColor,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                GestureDetector(
+                                  onTap: () {
+                                    debugPrint("TaskCard: Star icon tapped!");
+                                    HapticFeedback.lightImpact();
+                                    ref.read(tasksProvider.notifier).updateTask(
+                                      widget.task.copyWith(pinned: !widget.task.pinned),
+                                    );
+                                  },
+                                  child: Icon(
+                                    widget.task.pinned ? Icons.star_rounded : Icons.star_border_rounded,
+                                    color: widget.task.pinned ? Colors.amber : Colors.white54,
+                                    size: 20,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                
-                                // Due Date
-                                if (task.dueDate != null) ...[
-                                  const Icon(Icons.calendar_today_rounded, size: 12, color: Colors.white54),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${DateFormat('MMM d').format(task.dueDate!)}${task.dueTime != null ? ', ${task.dueTime}' : ''}',
-                                    style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+                                GestureDetector(
+                                  onTap: () {
+                                    debugPrint("TaskCard: Edit icon tapped!");
+                                    HapticFeedback.lightImpact();
+                                    widget.onTap();
+                                  },
+                                  child: const Icon(
+                                    Icons.edit_outlined,
+                                    color: Colors.white54,
+                                    size: 18,
                                   ),
+                                ),
+                                if (widget.task.subtasks.isNotEmpty) ...[
                                   const SizedBox(width: 12),
-                                ],
-                                
-                                // Estimated Duration
-                                if (task.estimatedMinutes != null) ...[
-                                  const Icon(Icons.access_time_rounded, size: 12, color: Colors.white54),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${task.estimatedMinutes}m',
-                                    style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+                                  GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      setState(() {
+                                        _expanded = !_expanded;
+                                      });
+                                    },
+                                    child: AnimatedRotation(
+                                      turns: _expanded ? 0.5 : 0,
+                                      duration: const Duration(milliseconds: 200),
+                                      child: const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: Colors.white70,
+                                        size: 20,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ],
                             ),
-                            
-                            const SizedBox(height: 10),
-                            
-                            // Bottom Row (Checklist & Priority)
-                            Row(
-                              children: [
-                                if (task.subtasks.isNotEmpty) ...[
-                                  const Icon(Icons.check_box_outlined, size: 14, color: Colors.white54),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${task.subtasks.where((c) => c.completed).length}/${task.subtasks.length}',
-                                    style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
-                                  ),
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 8),
-                                    child: Text('•', style: TextStyle(color: Colors.white24)),
-                                  ),
-                                ],
-                                
-                                if (task.priority == TaskPriority.high) ...[
-                                  Container(
-                                    width: 4,
-                                    height: 4,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.redAccent,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'High Priority',
-                                    style: GoogleFonts.outfit(color: Colors.redAccent, fontSize: 12),
-                                  ),
-                                ],
-                              ],
+                            const SizedBox(height: 16),
+                            Icon(
+                              Icons.alarm,
+                              color: categoryColor.withValues(alpha: 0.8),
+                              size: 18,
                             ),
                           ],
                         ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Subtask Panel
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    child: _expanded && widget.task.subtasks.isNotEmpty
+                        ? _buildSubtaskPanel(context, categoryColor)
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubtaskPanel(BuildContext context, Color categoryColor) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(left: 42, right: 16, bottom: 12, top: 4),
+      child: Column(
+        children: widget.task.subtasks.asMap().entries.map((entry) {
+          final idx = entry.key;
+          final subtask = entry.value;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    final updatedSubtasks = List<SubtaskModel>.from(widget.task.subtasks);
+                    updatedSubtasks[idx] = subtask.copyWith(completed: !subtask.completed);
+                    ref.read(tasksProvider.notifier).updateTask(
+                      widget.task.copyWith(subtasks: updatedSubtasks),
+                    );
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: subtask.completed 
+                          ? Colors.amber.withValues(alpha: 0.1) 
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: subtask.completed ? Colors.amber : Colors.white24,
+                        width: 1.5,
                       ),
-                      
-                      // Right Icons Column
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                task.pinned ? Icons.star_rounded : Icons.star_border_rounded,
-                                color: task.pinned ? Colors.amber : Colors.white54,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              const Icon(Icons.more_horiz_rounded, color: Colors.white54, size: 20),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Icon(
-                            Icons.alarm,
-                            color: categoryColor.withValues(alpha: 0.8),
-                            size: 18,
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
+                    child: subtask.completed
+                        ? const Center(
+                            child: Icon(
+                              Icons.check,
+                              size: 10,
+                              color: Colors.amber,
+                            ),
+                          )
+                        : null,
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: GoogleFonts.outfit(
+                      color: subtask.completed ? Colors.white30 : Colors.white70,
+                      fontSize: 12,
+                      decoration: subtask.completed ? TextDecoration.lineThrough : null,
+                      decorationColor: Colors.white24,
+                    ),
+                    child: Text(subtask.title),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }

@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
 import '../../../../core/storage/hive_database.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../shared/providers/app_providers.dart';
@@ -13,19 +12,16 @@ class AffirmationsRepository {
 
   AffirmationsRepository(this._hiveDb, this._ref);
 
-  // Read local affirmations from Hive
   List<DailyAffirmation> getLocalAffirmations() {
     final List<Map<String, dynamic>> maps = _hiveDb.getSelectedAffirmations();
     return maps.map((m) => DailyAffirmation.fromMap(m)).toList();
   }
 
-  // Save affirmations locally to Hive
   Future<void> saveLocalAffirmations(List<DailyAffirmation> list) async {
     final mapped = list.map((a) => a.toMap()).toList();
     await _hiveDb.saveSelectedAffirmations(mapped);
   }
 
-  // Fetch affirmations from server
   Future<List<DailyAffirmation>?> fetchAffirmationsFromServer() async {
     final hasToken = _hiveDb.getAuthToken() != null;
     if (!hasToken) return null;
@@ -64,13 +60,15 @@ class AffirmationsRepository {
                 } else {
                   mutable['category'] = affCategory;
                 }
+                
+                mutable['syncStatus'] = SyncStatus.synced.name;
+                mutable['updatedAt'] = DateTime.now().toIso8601String();
                 fetched.add(DailyAffirmation.fromMap(mutable));
               }
             }
           }
         }
 
-        // Filter out pending deletions so they do not reappear
         final pendingDeletions = _hiveDb.getPendingDeletions();
         fetched.removeWhere((item) => pendingDeletions.contains(item.id));
 
@@ -83,23 +81,38 @@ class AffirmationsRepository {
     }
   }
 
-  // Sync affirmations to backend
+  Future<void> queueAffirmationUpsert(DailyAffirmation aff) async {
+    final action = {
+      'id': 'affirmation_${aff.id}_${DateTime.now().millisecondsSinceEpoch}',
+      'operation': 'update',
+      'collection': 'affirmations',
+      'documentId': aff.id,
+      'payload': aff.toMap(),
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+    await _hiveDb.addToPendingSync(action);
+  }
+
+  Future<void> queueAffirmationDeletion(String id) async {
+    final action = {
+      'id': 'affirmation_delete_${id}_${DateTime.now().millisecondsSinceEpoch}',
+      'operation': 'delete',
+      'collection': 'affirmations',
+      'documentId': id,
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+    await _hiveDb.addToPendingSync(action);
+  }
+
   Future<bool> syncWithBackend(List<DailyAffirmation> list) async {
     final hasToken = _hiveDb.getAuthToken() != null;
-    if (!hasToken) {
-      dev.log('[AffirmationsRepo] No auth token, skipping backend sync.');
-      return false;
-    }
+    if (!hasToken) return false;
 
     try {
       final dio = _ref.read(dioClientProvider);
-
-      // Build grouped categories format for sync
       final payload = {
         'affirmations': list
-            .map(
-              (a) {
-                return {
+            .map((a) => {
                   'id': a.id,
                   'localId': a.id,
                   'title': a.title,
@@ -111,16 +124,12 @@ class AffirmationsRepository {
                   'isPinned': a.isPinned,
                   'colorTheme': a.colorTheme,
                   'createdAt': a.createdAt?.toIso8601String(),
-                };
-              },
-            )
+                })
             .toList(),
       };
 
       final response = await dio.post('/focus/sync', data: payload);
       if (response.statusCode == 200) {
-        dev.log('[AffirmationsRepo] Online sync completed successfully.');
-        // Clear pending deletions queue since server matches local state now
         await _hiveDb.savePendingDeletions([]);
         return true;
       }
@@ -139,10 +148,7 @@ class AffirmationsRepository {
     }
   }
 
-  // Single-affirmation create on backend (optional fallback/direct CRUD)
-  Future<DailyAffirmation?> createAffirmationOnServer(
-    DailyAffirmation affirmation,
-  ) async {
+  Future<DailyAffirmation?> createAffirmationOnServer(DailyAffirmation affirmation) async {
     final hasToken = _hiveDb.getAuthToken() != null;
     if (!hasToken) return null;
 
@@ -166,7 +172,6 @@ class AffirmationsRepository {
   }
 }
 
-// Providers
 final affirmationsRepositoryProvider = Provider<AffirmationsRepository>((ref) {
   final hiveDb = ref.watch(hiveDatabaseProvider);
   return AffirmationsRepository(hiveDb, ref);

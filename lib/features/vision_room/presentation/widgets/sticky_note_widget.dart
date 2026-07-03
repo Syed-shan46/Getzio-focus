@@ -148,20 +148,26 @@ class _StickyNoteWidgetState extends ConsumerState<StickyNoteWidget> {
                 ),
               ),
 
-              // Edit mode delete button
               if (isEditMode)
                 Positioned(
-                  right: -8,
-                  top: -8,
+                  right: 0,
+                  top: 0,
                   child: GestureDetector(
-                    onTap: () => ref.read(stickyNotesProvider.notifier).deleteNote(widget.note.id),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.redAccent,
-                        shape: BoxShape.circle,
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      ref.read(stickyNotesProvider.notifier).deleteNote(widget.note.id);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.redAccent,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close, color: Colors.white, size: 16),
                       ),
-                      child: const Icon(Icons.close, color: Colors.white, size: 16),
                     ),
                   ),
                 ),

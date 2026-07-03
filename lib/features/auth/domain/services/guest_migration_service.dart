@@ -76,7 +76,8 @@ class GuestDataMigrationService {
       'profile': {
         'identity': identity,
         'lifeAreas': lifeAreas,
-        'workspaceTheme': workspaceSettings['theme'] ?? 'default'
+        'workspaceTheme': workspaceSettings['theme'] ?? 'default',
+        'customTaskCategories': hiveDb.getCustomCategories()
       },
       'habits': selectedHabits.map((h) => {
         'localId': h['localId'] ?? h['id'] ?? h['_id'] ?? 'h_${h.hashCode}',
@@ -231,6 +232,9 @@ class GuestDataMigrationService {
             } catch (e) {
               await hiveDb.saveWorkspaceSettings({'theme': themeVal});
             }
+          }
+          if (profileData['customTaskCategories'] != null) {
+            await hiveDb.saveCustomCategories(List<String>.from(profileData['customTaskCategories'] as List));
           }
         }
       }

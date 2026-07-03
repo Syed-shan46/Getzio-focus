@@ -47,18 +47,6 @@ class GoalCardWidget extends StatelessWidget {
               color: themeColor.withValues(alpha: 0.35),
               width: 1.5,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: themeColor.withValues(alpha: 0.12),
-                blurRadius: 24,
-                spreadRadius: -4,
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

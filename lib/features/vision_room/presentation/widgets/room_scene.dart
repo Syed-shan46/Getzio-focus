@@ -8,6 +8,7 @@ import '../../domain/models/vision_customization.dart';
 import '../../domain/models/vision_item.dart';
 import '../providers/canvas_providers.dart';
 import '../providers/sticky_note_provider.dart';
+import '../providers/vision_room_providers.dart';
 import 'quote_card_widget.dart';
 import 'goal_card_widget.dart';
 import 'premium_cards.dart';
@@ -51,7 +52,7 @@ class RoomScene extends StatelessWidget {
               CustomPaint(
                 painter: RoomBackgroundPainter(
                   wallGradient: wallGradient,
-                  floorHeight: 90,
+                  floorHeight: 0,
                 ),
                 size: Size.infinite,
               ),
@@ -60,44 +61,8 @@ class RoomScene extends StatelessWidget {
           ),
         ),
 
-        // 2. Full-Width Wooden Shelf sitting on lower wall above floorboards
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 105,
-          child: RepaintBoundary(
-            child: parallaxLayer(const _FullWidthFloatingShelf(), 0.05),
-          ),
-        ),
-
-        // 5. Border lighting — soft warm glow on left & right walls only
-        Positioned(
-          top: 0,
-          bottom: 105,
-          left: 0,
-          right: 0,
-          child: IgnorePointer(
-            child: RepaintBoundary(
-              child: CustomPaint(
-                painter: _BorderLightPainter(),
-                size: Size.infinite,
-              ),
-            ),
-          ),
-        ),
-
         // 6. The actual wall content (VisionBoard, items, etc.)
         Positioned.fill(child: child),
-
-        // 3D Horizontally Scrollable Shelf Items (placed on top of child stack layer so gestures can reach it!)
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 132,
-          child: RepaintBoundary(
-            child: parallaxLayer(const _ShelfItemsScrollWidget(), 0.05),
-          ),
-        ),
       ],
     );
   }
@@ -107,7 +72,7 @@ class RoomScene extends StatelessWidget {
       VisionBackground.scandinavianWall => const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFFFBE8CE), Color(0xFFF5DEC0), Color(0xFFEDD4B2)],
+        colors: [Color(0xFF24190F), Color(0xFF1F150C), Color(0xFF150E08)],
       ),
       VisionBackground.oceanView => const LinearGradient(
         begin: Alignment.topCenter,
@@ -137,12 +102,12 @@ class RoomScene extends StatelessWidget {
       VisionBackground.matteBlack => const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFFFBE8CE), Color(0xFFF5DEC0), Color(0xFFEDD4B2)],
+        colors: [Color(0xFF24190F), Color(0xFF1F150C), Color(0xFF150E08)],
       ),
       _ => const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFFFBE8CE), Color(0xFFF5DEC0), Color(0xFFEDD4B2)],
+        colors: [Color(0xFF24190F), Color(0xFF1F150C), Color(0xFF150E08)],
       ),
     };
   }
@@ -741,94 +706,200 @@ class RoomBackgroundPainter extends CustomPainter {
     final double wallH = h - floorHeight;
 
     final Rect wallRect = Rect.fromLTRB(0, 0, w, wallH);
-    final Rect floorRect = Rect.fromLTRB(0, wallH, w, h);
 
     // 1. Wall Background Gradient
     final Paint wallPaint = Paint()
       ..shader = wallGradient.createShader(wallRect);
     canvas.drawRect(wallRect, wallPaint);
 
-    // Soft wall shadow / ambient gradient in corners
-    final cornerShadow = RadialGradient(
-      colors: [Colors.black.withValues(alpha: 0.12), Colors.transparent],
-      radius: 1.3,
-    ).createShader(Rect.fromLTRB(-100, -100, w + 100, wallH + 100));
-    canvas.drawRect(
-      wallRect,
-      Paint()
-        ..shader = cornerShadow
-        ..blendMode = BlendMode.multiply,
-    );
-
-    // 2. Baseboard / Skirting Molding (floor depth)
-    final double baseboardH = 12.0;
-    final Rect baseboardRect = Rect.fromLTRB(0, wallH - baseboardH, w, wallH);
-    final baseboardPaint = Paint()
-      ..shader = const LinearGradient(
-        colors: [Color(0xFF8D6E63), Color(0xFF5D4037)],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(baseboardRect);
-    canvas.drawRect(baseboardRect, baseboardPaint);
-    canvas.drawLine(
-      Offset(0, wallH - baseboardH),
-      Offset(w, wallH - baseboardH),
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.2)
-        ..strokeWidth = 0.8,
-    );
-    canvas.drawLine(
-      Offset(0, wallH),
-      Offset(w, wallH),
-      Paint()
-        ..color = Colors.black.withValues(alpha: 0.3)
-        ..strokeWidth = 1.2,
-    );
-
-    // 3. Wooden Floorboards in perspective
-    final floorGradient = const LinearGradient(
-      colors: [Color(0xFF5D4037), Color(0xFF3E2723)],
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-    );
-    canvas.drawRect(
-      floorRect,
-      Paint()..shader = floorGradient.createShader(floorRect),
-    );
-
-    // Horizontal floorboard spacing lines
-    final plankPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.5)
-      ..strokeWidth = 1.4;
-    final int plankCount = 6;
-    for (int j = 0; j <= plankCount; j++) {
-      final double t = j / plankCount;
-      final double y = wallH + floorHeight * math.pow(t, 1.38);
-      canvas.drawLine(Offset(0, y), Offset(w, y), plankPaint);
-      if (j > 0 && j < plankCount) {
-        canvas.drawLine(
-          Offset(0, y + 1),
-          Offset(w, y + 1),
-          Paint()
-            ..color = Colors.white.withValues(alpha: 0.03)
-            ..strokeWidth = 0.6,
-        );
-      }
+    // 2. Large aging tone patches (board unevenness / worn surface)
+    final patchPaint = Paint();
+    final rPatch = math.Random(17);
+    final patchColors = [
+      const Color(0xFF4A2E2E), // rose highlight
+      const Color(0xFF221010), // very dark
+      const Color(0xFF3C2020), // mid shadow
+      const Color(0xFF3E1818), // warm rust
+      const Color(0xFF2A1414), // deeper shadow
+    ];
+    for (int i = 0; i < 10; i++) {
+      final cx = rPatch.nextDouble() * w;
+      final cy = rPatch.nextDouble() * wallH;
+      final r = 70.0 + rPatch.nextDouble() * 180.0;
+      final color = patchColors[rPatch.nextInt(patchColors.length)];
+      final alpha = 0.06 + rPatch.nextDouble() * 0.14;
+      patchPaint.shader = RadialGradient(
+        colors: [color.withValues(alpha: alpha), Colors.transparent],
+        stops: const [0.0, 1.0],
+      ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: r));
+      canvas.drawCircle(Offset(cx, cy), r, patchPaint);
     }
 
-    // Converging vertical joint lines
-    final jointPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.4)
-      ..strokeWidth = 1.0;
-    final Offset vanishingPoint = Offset(w / 2, -h * 0.15);
-    for (int k = -3; k <= 7; k++) {
-      final double startX = (w / 4.5) * k;
-      final Offset startFloor = Offset(startX, wallH);
-      final double dirX = startFloor.dx - vanishingPoint.dx;
-      final double dirY = startFloor.dy - vanishingPoint.dy;
-      final double scale = (h - wallH) / dirY;
-      final Offset endFloor = Offset(startFloor.dx + dirX * scale, h);
-      canvas.drawLine(startFloor, endFloor, jointPaint);
+    // 3. Overhead top-center lamp light (warm amber beam)
+    final topLightPaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(0.0, -1.25),
+        radius: 1.40,
+        colors: [
+          const Color(0xFFE8C090).withValues(alpha: 0.22),
+          const Color(0xFFD4A060).withValues(alpha: 0.10),
+          const Color(0xFFB88040).withValues(alpha: 0.04),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.28, 0.54, 0.82],
+      ).createShader(Rect.fromLTWH(0, 0, w, wallH));
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, wallH), topLightPaint);
+
+    // Bright central hotspot — the lamp's nearest point
+    final hotspotPaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(0.0, -0.92),
+        radius: 0.42,
+        colors: [
+          Colors.white.withValues(alpha: 0.07),
+          Colors.white.withValues(alpha: 0.02),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.38, 0.78],
+      ).createShader(Rect.fromLTWH(0, 0, w, wallH));
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, wallH), hotspotPaint);
+
+    // 4. Multi-tonal dust grain
+    final dustPaint = Paint()..style = PaintingStyle.fill;
+    final rDust = math.Random(42);
+    for (int i = 0; i < 1800; i++) {
+      final x = rDust.nextDouble() * w;
+      final y = rDust.nextDouble() * wallH;
+      final r = 0.2 + rDust.nextDouble() * 0.95;
+      final pick = rDust.nextInt(5);
+      Color dc;
+      double alpha;
+      switch (pick) {
+        case 0: // warm rust dust
+          dc = const Color(0xFFD47060);
+          alpha = 0.025 + rDust.nextDouble() * 0.065;
+          break;
+        case 1: // white chalk dust
+          dc = Colors.white;
+          alpha = 0.020 + rDust.nextDouble() * 0.075;
+          break;
+        case 2: // rose-pink dust
+          dc = const Color(0xFFE08070);
+          alpha = 0.012 + rDust.nextDouble() * 0.040;
+          break;
+        case 3: // dark mote
+          dc = Colors.black;
+          alpha = 0.05 + rDust.nextDouble() * 0.09;
+          break;
+        default: // parchment warm dust
+          dc = const Color(0xFFD4A880);
+          alpha = 0.015 + rDust.nextDouble() * 0.055;
+      }
+      dustPaint.color = dc.withValues(alpha: alpha);
+      canvas.drawCircle(Offset(x, y), r, dustPaint);
+    }
+
+    // 5. Horizontal surface scratch lines (worn board)
+    final scratchPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.3;
+    final rScratch = math.Random(99);
+    for (int i = 0; i < 60; i++) {
+      final y = rScratch.nextDouble() * wallH;
+      final x0 = rScratch.nextDouble() * w * 0.15;
+      final len = 20.0 + rScratch.nextDouble() * w * 0.72;
+      final alpha = 0.010 + rScratch.nextDouble() * 0.038;
+      scratchPaint.color = Colors.white.withValues(alpha: alpha);
+      canvas.drawLine(Offset(x0, y), Offset(x0 + len, y), scratchPaint);
+    }
+
+    // 6. Edge vignette (corners and sides fade to near-black)
+    final vignette = Paint()
+      ..shader = RadialGradient(
+        center: Alignment.center,
+        radius: 1.12,
+        colors: [
+          Colors.transparent,
+          const Color(0xFF180808).withValues(alpha: 0.52),
+          const Color(0xFF0D0303).withValues(alpha: 0.80),
+        ],
+        stops: const [0.38, 0.74, 1.0],
+      ).createShader(Rect.fromLTWH(0, 0, w, wallH));
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, wallH), vignette);
+
+    if (floorHeight > 0.0) {
+      final Rect floorRect = Rect.fromLTRB(0, wallH, w, h);
+
+      // 7. Baseboard / Skirting Molding (floor depth)
+      final double baseboardH = 12.0;
+      final Rect baseboardRect = Rect.fromLTRB(0, wallH - baseboardH, w, wallH);
+      final baseboardPaint = Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF8D6E63), Color(0xFF5D4037)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(baseboardRect);
+      canvas.drawRect(baseboardRect, baseboardPaint);
+      canvas.drawLine(
+        Offset(0, wallH - baseboardH),
+        Offset(w, wallH - baseboardH),
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.2)
+          ..strokeWidth = 0.8,
+      );
+      canvas.drawLine(
+        Offset(0, wallH),
+        Offset(w, wallH),
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.3)
+          ..strokeWidth = 1.2,
+      );
+
+      // 8. Wooden Floorboards in perspective
+      final floorGradient = const LinearGradient(
+        colors: [Color(0xFF5D4037), Color(0xFF3E2723)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+      canvas.drawRect(
+        floorRect,
+        Paint()..shader = floorGradient.createShader(floorRect),
+      );
+
+      // Horizontal floorboard spacing lines
+      final plankPaint = Paint()
+        ..color = Colors.black.withValues(alpha: 0.5)
+        ..strokeWidth = 1.4;
+      final int plankCount = 6;
+      for (int j = 0; j <= plankCount; j++) {
+        final double t = j / plankCount;
+        final double y = wallH + floorHeight * math.pow(t, 1.38);
+        canvas.drawLine(Offset(0, y), Offset(w, y), plankPaint);
+        if (j > 0 && j < plankCount) {
+          canvas.drawLine(
+            Offset(0, y + 1),
+            Offset(w, y + 1),
+            Paint()
+              ..color = Colors.white.withValues(alpha: 0.03)
+              ..strokeWidth = 0.6,
+          );
+        }
+      }
+
+      // Converging vertical joint lines
+      final jointPaint = Paint()
+        ..color = Colors.black.withValues(alpha: 0.4)
+        ..strokeWidth = 1.0;
+      final Offset vanishingPoint = Offset(w / 2, -h * 0.15);
+      for (int k = -3; k <= 7; k++) {
+        final double startX = (w / 4.5) * k;
+        final Offset startFloor = Offset(startX, wallH);
+        final double dirX = startFloor.dx - vanishingPoint.dx;
+        final double dirY = startFloor.dy - vanishingPoint.dy;
+        final double scale = (h - wallH) / dirY;
+        final Offset endFloor = Offset(startFloor.dx + dirX * scale, h);
+        canvas.drawLine(startFloor, endFloor, jointPaint);
+      }
     }
   }
 
@@ -838,63 +909,8 @@ class RoomBackgroundPainter extends CustomPainter {
       oldDelegate.wallGradient != wallGradient;
 }
 
-/// Paints a soft warm light glow along the left and right wall edges only.
-/// Does not affect the floor or shelf area.
-class _BorderLightPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final edgeWidth = w * 0.12;
 
-    // Left edge warm light glow
-    final leftPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: [
-          const Color(0xFFFFD54F).withValues(alpha: 0.08),
-          const Color(0xFFFFB74D).withValues(alpha: 0.04),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.5, 1.0],
-      ).createShader(Rect.fromLTWH(0, 0, edgeWidth, h));
-    canvas.drawRect(Rect.fromLTWH(0, 0, edgeWidth, h), leftPaint);
 
-    // Right edge warm light glow
-    final rightPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.centerRight,
-        end: Alignment.centerLeft,
-        colors: [
-          const Color(0xFFFFD54F).withValues(alpha: 0.08),
-          const Color(0xFFFFB74D).withValues(alpha: 0.04),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.5, 1.0],
-      ).createShader(Rect.fromLTWH(w - edgeWidth, 0, edgeWidth, h));
-    canvas.drawRect(Rect.fromLTWH(w - edgeWidth, 0, edgeWidth, h), rightPaint);
-
-    // Subtle vertical light streaks
-    final streakPaint = Paint()
-      ..color = const Color(0xFFFFF8E1).withValues(alpha: 0.03)
-      ..strokeWidth = 1.0;
-
-    canvas.drawLine(
-      Offset(edgeWidth * 0.3, 0),
-      Offset(edgeWidth * 0.3, h),
-      streakPaint,
-    );
-    canvas.drawLine(
-      Offset(w - edgeWidth * 0.3, 0),
-      Offset(w - edgeWidth * 0.3, h),
-      streakPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
 class _ShelfItemsScrollWidget extends ConsumerWidget {
   const _ShelfItemsScrollWidget();
@@ -946,6 +962,7 @@ class _ShelfItemsScrollWidget extends ConsumerWidget {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
+        clipBehavior: Clip.none,
         padding: const EdgeInsets.symmetric(horizontal: 24),
         itemCount: combinedItems.length,
         itemBuilder: (context, index) {
@@ -1014,13 +1031,24 @@ class _ShelfItemsScrollWidget extends ConsumerWidget {
       cardChild = Container(
         width: 320,
         height: 240,
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12), // Elegant frame padding
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: const Color(0xFF2B1B10), // Rich dark mahogany wood frame
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: const Color(0xFFFFD54F).withValues(alpha: 0.35), // Gold inner border trim
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(6),
           child: item.content.startsWith('http')
               ? Image.network(item.content, fit: BoxFit.cover)
               : Image.file(
@@ -1054,57 +1082,127 @@ class _ShelfItemsScrollWidget extends ConsumerWidget {
     final double shelfW = isSticky ? 64 : 85;
     final double shelfH = 64;
 
+    final isEditMode = ref.watch(editModeProvider);
+
     return Align(
       alignment: Alignment.bottomCenter,
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          final originalNotes = ref.read(stickyNotesProvider);
-          final matchIndex = originalNotes.indexWhere((n) => n.id == item.id);
-          if (matchIndex != -1) {
-            StickyNoteBottomSheet.show(
-              context,
-              existingNote: originalNotes[matchIndex],
-            );
-          } else {
-            SmartObjectSheetRouter.open(context, item);
-          }
-        },
-        child: Transform(
-          alignment: Alignment.bottomCenter,
-          transform: Matrix4.identity()
-            ..setEntry(3, 2, 0.0025)
-            ..rotateX(-0.16)
-            ..rotateY(0.04)
-            ..rotateZ(-0.01),
-          child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.55),
-                  blurRadius: 8,
-                  spreadRadius: -2,
-                  offset: const Offset(2, 8),
-                ),
-              ],
-            ),
-            child: IgnorePointer(
-              child: SizedBox(
-                width: shelfW,
-                height: shelfH,
-                child: FittedBox(
-                  fit: BoxFit.fill,
-                  child: SizedBox(
-                    width: cardW,
-                    height: cardH,
-                    child: cardChild,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 5), // Align items precisely on top of the wooden shelf plank
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 12, left: 12, right: 12),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  if (isEditMode) {
+                    ref.read(canvasStateProvider.notifier).selectItem(item.id);
+                    return;
+                  }
+                  final originalNotes = ref.read(stickyNotesProvider);
+                  final matchIndex = originalNotes.indexWhere((n) => n.id == item.id);
+                  if (matchIndex != -1) {
+                    StickyNoteBottomSheet.show(
+                      context,
+                      existingNote: originalNotes[matchIndex],
+                    );
+                  } else {
+                    SmartObjectSheetRouter.open(context, item);
+                  }
+                },
+                child: Transform(
+                  alignment: Alignment.bottomCenter,
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.0025)
+                    ..rotateX(-0.16)
+                    ..rotateY(0.04)
+                    ..rotateZ(-0.01),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: ref.watch(canvasStateProvider).selectedIds.contains(item.id) 
+                          ? Border.all(color: Colors.blueAccent, width: 2)
+                          : null,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.55),
+                          blurRadius: 8,
+                          spreadRadius: -2,
+                          offset: const Offset(2, 8),
+                        ),
+                      ],
+                    ),
+                    child: IgnorePointer(
+                      child: SizedBox(
+                        width: shelfW,
+                        height: shelfH,
+                        child: FittedBox(
+                          fit: BoxFit.fill,
+                          child: SizedBox(
+                            width: cardW,
+                            height: cardH,
+                            child: cardChild,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
+          // Delete button when edit mode is active
+          if (isEditMode)
+            Positioned(
+              top: 0,
+              right: 12,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  // Check if it's a sticky note or a canvas item
+                  final originalNotes = ref.read(stickyNotesProvider);
+                  final isStickyNote = originalNotes.any((n) => n.id == item.id);
+                  if (isStickyNote) {
+                    ref.read(stickyNotesProvider.notifier).deleteNote(item.id);
+                  } else {
+                    ref.read(canvasStateProvider.notifier).removeItem(item.id);
+                  }
+                },
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade700,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
-    );
+    ),
+  );
   }
 }

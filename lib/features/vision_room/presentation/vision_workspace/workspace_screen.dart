@@ -62,6 +62,8 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
   late Animation<double> _propertiesAnim;
 
   _AutoSaveStatus _saveStatus = _AutoSaveStatus.saved;
+  bool _isUndoRedoExpanded = true;
+  bool _isSelectionControlsExpanded = true;
 
   String _pinStyleString(PinStyle style) {
     return switch (style) {
@@ -786,7 +788,7 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E1A),
+      backgroundColor: const Color(0xFF1F150C),
       body: Stack(
         children: [
           // Paper texture canvas background
@@ -794,8 +796,8 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
             child: RepaintBoundary(
               child: CustomPaint(
                 painter: PaperTexturePainter(
-                  baseColor: const Color(0xFFF5F0E8),
-                  accentColor: const Color(0xFFE8E0D0),
+                  baseColor: const Color(0xFF1F150C),
+                  accentColor: const Color(0xFF100A05),
                 ),
                 size: Size.infinite,
               ),
@@ -1139,53 +1141,124 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              if (isSelection) ...[
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    ref.read(canvasStateProvider.notifier).clearSelection();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check_rounded, color: Color(0xFF0F5132), size: 14),
+                        SizedBox(width: 4),
+                        Text(
+                          'Done',
+                          style: TextStyle(
+                            color: Color(0xFF0F5132),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               const Spacer(),
-              _buildSaveStatus(),
-              const SizedBox(width: 12),
+              // Toggle button to expand/collapse undo/redo/menu actions to select behind items
               GestureDetector(
-                onTap: () => ref.read(canvasStateProvider.notifier).undo(),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  setState(() {
+                    _isUndoRedoExpanded = !_isUndoRedoExpanded;
+                  });
+                },
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: Colors.white.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.undo_rounded,
-                    size: 18,
-                    color: Color(0xFF1A1A2E),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () => ref.read(canvasStateProvider.notifier).redo(),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.redo_rounded,
-                    size: 18,
-                    color: Color(0xFF1A1A2E),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () => VisionCustomizationSheet.show(context),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.more_horiz_rounded,
+                  child: Icon(
+                    _isUndoRedoExpanded ? Icons.chevron_right_rounded : Icons.chevron_left_rounded,
                     size: 20,
-                    color: Color(0xFF1A1A2E),
+                    color: const Color(0xFF1A1A2E),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOutCubic,
+                child: ClipRect(
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxWidth: _isUndoRedoExpanded ? 320.0 : 0.0,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(width: 8),
+                        _buildSaveStatus(),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () => ref.read(canvasStateProvider.notifier).undo(),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.undo_rounded,
+                              size: 18,
+                              color: Color(0xFF1A1A2E),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => ref.read(canvasStateProvider.notifier).redo(),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.redo_rounded,
+                              size: 18,
+                              color: Color(0xFF1A1A2E),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => VisionCustomizationSheet.show(context),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.more_horiz_rounded,
+                              size: 20,
+                              color: Color(0xFF1A1A2E),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1359,7 +1432,7 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(24),
@@ -1372,63 +1445,105 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
                 ),
               ],
             ),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _selectionAction(Icons.edit_note_rounded, 'Edit Details', () {
-                    final items = ref.read(canvasStateProvider).items;
-                    final item = items.firstWhere((i) => i.id == itemId);
-                    SmartObjectSheetRouter.open(context, item);
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Toggle Button to collapse/expand selection controls
+                GestureDetector(
+                  onTap: () {
                     HapticFeedback.lightImpact();
-                  }),
-                  _selectionAction(Icons.copy_rounded, 'Duplicate', () {
-                    final items = ref.read(canvasStateProvider).items;
-                    final item = items.firstWhere((i) => i.id == itemId);
-                    final newItem = item.copyWith(
-                      id: const Uuid().v4(),
-                      x: item.x + 40,
-                      y: item.y + 40,
-                      zIndex: item.zIndex + 1,
-                    );
-                    ref.read(canvasStateProvider.notifier).addItem(newItem);
-                    ref
-                        .read(canvasStateProvider.notifier)
-                        .selectItem(newItem.id);
-                    _setSaving();
-                    HapticFeedback.lightImpact();
-                  }),
-                  _selectionAction(Icons.lock_outline_rounded, 'Lock', () {}),
-                  _selectionAction(Icons.delete_outline_rounded, 'Delete', () {
-                    ref.read(canvasStateProvider.notifier).removeItem(itemId);
-                    _propertiesAnimController.reverse();
-                    _setSaving();
-                    HapticFeedback.heavyImpact();
-                  }),
-                  _selectionAction(Icons.flip_to_front_rounded, 'Front', () {
-                    ref.read(canvasStateProvider.notifier).bringToFront(itemId);
-                    _setSaving();
-                  }),
-                  _selectionAction(Icons.flip_to_back_rounded, 'Back', () {
-                    ref.read(canvasStateProvider.notifier).sendToBack(itemId);
-                    _setSaving();
-                  }),
-                  _selectionAction(Icons.rotate_right_rounded, 'Rotate', () {
-                    final items = ref.read(canvasStateProvider).items;
-                    final item = items.firstWhere((i) => i.id == itemId);
-                    ref
-                        .read(canvasStateProvider.notifier)
-                        .commitTransform(
-                          itemId,
-                          item.width,
-                          item.height,
-                          item.rotation + 0.15,
-                        );
-                    _setSaving();
-                  }),
-                ],
-              ),
+                    setState(() {
+                      _isSelectionControlsExpanded = !_isSelectionControlsExpanded;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
+                    ),
+                    child: AnimatedRotation(
+                      turns: _isSelectionControlsExpanded ? 0.0 : 0.5,
+                      duration: const Duration(milliseconds: 250),
+                      child: const Icon(
+                        Icons.chevron_left_rounded,
+                        size: 20,
+                        color: Color(0xFF1A1A2E),
+                      ),
+                    ),
+                  ),
+                ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOutCubic,
+                  child: ClipRect(
+                    child: Container(
+                      constraints: BoxConstraints(
+                        maxWidth: _isSelectionControlsExpanded ? 360.0 : 0.0,
+                      ),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(width: 4),
+                            _selectionAction(Icons.edit_note_rounded, 'Edit Details', () {
+                              final items = ref.read(canvasStateProvider).items;
+                              final item = items.firstWhere((i) => i.id == itemId);
+                              SmartObjectSheetRouter.open(context, item);
+                              HapticFeedback.lightImpact();
+                            }),
+                            _selectionAction(Icons.copy_rounded, 'Duplicate', () {
+                              final items = ref.read(canvasStateProvider).items;
+                              final item = items.firstWhere((i) => i.id == itemId);
+                              final newItem = item.copyWith(
+                                id: const Uuid().v4(),
+                                x: item.x + 40,
+                                y: item.y + 40,
+                                zIndex: item.zIndex + 1,
+                              );
+                              ref.read(canvasStateProvider.notifier).addItem(newItem);
+                              ref
+                                  .read(canvasStateProvider.notifier)
+                                  .selectItem(newItem.id);
+                              _setSaving();
+                              HapticFeedback.lightImpact();
+                            }),
+                            _selectionAction(Icons.lock_outline_rounded, 'Lock', () {}),
+                            _selectionAction(Icons.delete_outline_rounded, 'Delete', () {
+                              ref.read(canvasStateProvider.notifier).removeItem(itemId);
+                              _propertiesAnimController.reverse();
+                              _setSaving();
+                              HapticFeedback.heavyImpact();
+                            }),
+                            _selectionAction(Icons.flip_to_front_rounded, 'Front', () {
+                              ref.read(canvasStateProvider.notifier).bringToFront(itemId);
+                              _setSaving();
+                            }),
+                            _selectionAction(Icons.flip_to_back_rounded, 'Back', () {
+                              ref.read(canvasStateProvider.notifier).sendToBack(itemId);
+                              _setSaving();
+                            }),
+                            _selectionAction(Icons.rotate_right_rounded, 'Rotate', () {
+                              final items = ref.read(canvasStateProvider).items;
+                              final item = items.firstWhere((i) => i.id == itemId);
+                              ref
+                                  .read(canvasStateProvider.notifier)
+                                  .commitTransform(
+                                    itemId,
+                                    item.width,
+                                    item.height,
+                                    item.rotation + 0.15,
+                                  );
+                              _setSaving();
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

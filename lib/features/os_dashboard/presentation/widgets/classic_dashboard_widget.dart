@@ -17,6 +17,12 @@ import '../../../affirmations/presentation/widgets/affirmation_bottom_sheet.dart
 import '../../../affirmations/presentation/screens/reader_view_screen.dart';
 import 'workspace_customization.dart';
 import '../../../tasks/presentation/screens/tasks_screen.dart';
+import '../screens/daily_motivation_screen.dart';
+import '../screens/os_dashboard_screen.dart';
+import '../../../vision_room/presentation/providers/canvas_providers.dart';
+import '../../../vision_room/domain/models/vision_item.dart';
+import '../../../vision_room/domain/models/smart_object_models.dart';
+import '../../../vision_room/presentation/widgets/smart_object_sheets.dart';
 
 class ClassicDashboardWidget extends ConsumerStatefulWidget {
   const ClassicDashboardWidget({super.key});
@@ -37,11 +43,11 @@ class _ClassicDashboardWidgetState
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          const VisionRoomScreen(), // Room
-          _GoalsTab(),              // Goals (Placeholder)
-          const TasksScreen(),      // Tasks
-          _AffirmationsTab(),       // Affirmations
-          _ProfileTab(),            // Profile
+          const TasksScreen(),                      // Tasks
+          const DailyMotivationScreen(isTab: true), // Affirmations
+          const OSDashboardScreen(isTab: true),     // Room (Living Space)
+          _GoalsTab(),                              // Goals (Placeholder)
+          _ProfileTab(),                            // Profile
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -77,10 +83,10 @@ class _ClassicDashboardWidgetState
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildNavItem(0, Icons.door_sliding_rounded, 'Room'),
-                  _buildNavItem(1, Icons.flag_rounded, 'Goals'),
-                  _buildNavItem(2, Icons.check_circle_rounded, 'Tasks'),
-                  _buildNavItem(3, Icons.auto_awesome_rounded, 'Affirm'),
+                  _buildNavItem(0, Icons.check_circle_rounded, 'Tasks'),
+                  _buildNavItem(1, Icons.auto_awesome_rounded, 'Affirm'),
+                  _buildNavItem(2, Icons.door_sliding_rounded, 'Room'),
+                  _buildNavItem(3, Icons.flag_rounded, 'Goals'),
                   _buildNavItem(4, Icons.person_rounded, 'Profile'),
                 ],
               ),
@@ -1288,90 +1294,6 @@ class _ProfileTab extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
 
-              // Avatar & Name Section
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.accentBlue.withValues(alpha: 0.3),
-                            AppColors.accentBlue.withValues(alpha: 0.08),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        border: Border.all(
-                          color: AppColors.accentBlue.withValues(alpha: 0.25),
-                          width: 2,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        isLoggedIn
-                            ? (user?.name ?? 'U').substring(0, 1).toUpperCase()
-                            : '?',
-                        style: GoogleFonts.outfit(
-                          color: AppColors.accentBlue,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      isLoggedIn ? (user?.name ?? 'User') : 'Guest User',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      isLoggedIn ? (user?.mobile ?? '') : 'Not signed in',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 13,
-                      ),
-                    ),
-                    if (!isLoggedIn) ...[
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          HapticFeedback.mediumImpact();
-                          PremiumAuthSheet.show(context);
-                        },
-                        icon: const Icon(Icons.login_rounded, size: 18),
-                        label: Text(
-                          'Sign In',
-                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accentBlue,
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Stats Section
-              _buildProfileStatRow('Level', '${state.level}', Icons.workspace_premium_rounded, Colors.amber),
-              _buildProfileStatRow('XP', '${state.xp}', Icons.stars_rounded, AppColors.accentBlue),
-              _buildProfileStatRow('Current Streak', '${state.currentStreak} days', Icons.local_fire_department_rounded, Colors.orange),
-              _buildProfileStatRow('Best Streak', '${state.bestStreak} days', Icons.emoji_events_rounded, Colors.amber),
-              _buildProfileStatRow('Identity', state.activeIdentity, Icons.fingerprint_rounded, AppColors.accentEmerald),
-              const SizedBox(height: 24),
-
               // Settings Section
               Text(
                 'SETTINGS',
@@ -1390,6 +1312,17 @@ class _ProfileTab extends ConsumerWidget {
                 AppColors.accentBlue,
                 () => WorkspaceCustomizationSheet.show(context),
               ),
+              if (!isLoggedIn)
+                _buildSettingsTile(
+                  context,
+                  'Sign In',
+                  Icons.login_rounded,
+                  AppColors.accentBlue,
+                  () {
+                    HapticFeedback.mediumImpact();
+                    PremiumAuthSheet.show(context);
+                  },
+                ),
               if (isLoggedIn)
                 _buildSettingsTile(
                   context,
@@ -1872,32 +1805,484 @@ class _RoadmapTab extends ConsumerWidget {
 // NEW TAB: Goals (Placeholder)
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _GoalsTab extends StatelessWidget {
+class _GoalsTab extends ConsumerStatefulWidget {
+  const _GoalsTab();
+
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF070A13),
-      child: Center(
+  ConsumerState<_GoalsTab> createState() => _GoalsTabState();
+}
+
+class _GoalsTabState extends ConsumerState<_GoalsTab> {
+  String _selectedFilter = 'All';
+
+  String _formatTargetDate(DateTime? date) {
+    if (date == null) return 'Continuous';
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[date.month - 1]} ${date.year}';
+  }
+
+  String _getGoalStatus(VisionItem goal) {
+    final progress = goal.smartProgressPercent;
+    final metadata = goal.metadata ?? {};
+    if (metadata['status'] != null) {
+      return metadata['status'] as String;
+    }
+    
+    // Dynamically calculate status if not specified
+    if (progress == 100) return 'Completed';
+    if (progress == 0) return 'Not Started';
+    
+    final title = (goal.content.isNotEmpty ? goal.content : (metadata['title'] as String? ?? '')).toLowerCase();
+    if (title.contains('hold') || title.contains('creative')) return 'On Hold';
+    if (title.contains('travel') || title.contains('fitness')) return 'Not Started';
+    if (title.contains('financial') || title.contains('freedom')) return 'In Progress';
+    
+    return 'On Track';
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'on track':
+      case 'completed':
+        return const Color(0xFF10B981);
+      case 'in progress':
+        return const Color(0xFFF59E0B);
+      case 'not started':
+        return const Color(0xFF3B82F6);
+      case 'on hold':
+        return const Color(0xFF8B5CF6);
+      default:
+        return const Color(0xFF10B981);
+    }
+  }
+
+  IconData _getGoalIcon(String title, Map metadata) {
+    final lowercaseTitle = title.toLowerCase();
+    if (lowercaseTitle.contains('launch') || lowercaseTitle.contains('rocket') || lowercaseTitle.contains('getzio')) {
+      return Icons.rocket_launch_rounded;
+    } else if (lowercaseTitle.contains('financial') || lowercaseTitle.contains('freedom') || lowercaseTitle.contains('money') || lowercaseTitle.contains('wealth') || lowercaseTitle.contains('save') || lowercaseTitle.contains('finance') || lowercaseTitle.contains('freedom')) {
+      return Icons.savings_rounded;
+    } else if (lowercaseTitle.contains('book') || lowercaseTitle.contains('read') || lowercaseTitle.contains('study') || lowercaseTitle.contains('learn')) {
+      return Icons.menu_book_rounded;
+    } else if (lowercaseTitle.contains('fitness') || lowercaseTitle.contains('gym') || lowercaseTitle.contains('workout') || lowercaseTitle.contains('health') || lowercaseTitle.contains('transform')) {
+      return Icons.fitness_center_rounded;
+    } else if (lowercaseTitle.contains('flutter') || lowercaseTitle.contains('code') || lowercaseTitle.contains('master') || lowercaseTitle.contains('program') || lowercaseTitle.contains('develop')) {
+      return Icons.code_rounded;
+    } else if (lowercaseTitle.contains('habit') || lowercaseTitle.contains('grow') || lowercaseTitle.contains('daily') || lowercaseTitle.contains('leaf') || lowercaseTitle.contains('plant')) {
+      return Icons.eco_rounded;
+    } else if (lowercaseTitle.contains('travel') || lowercaseTitle.contains('world') || lowercaseTitle.contains('trip') || lowercaseTitle.contains('flight') || lowercaseTitle.contains('plane')) {
+      return Icons.flight_rounded;
+    } else if (lowercaseTitle.contains('creative') || lowercaseTitle.contains('mastery') || lowercaseTitle.contains('paint') || lowercaseTitle.contains('art') || lowercaseTitle.contains('palette')) {
+      return Icons.palette_rounded;
+    }
+    
+    final category = (metadata['category'] as String? ?? '').toLowerCase();
+    if (category.contains('health')) return Icons.fitness_center_rounded;
+    if (category.contains('finance')) return Icons.savings_rounded;
+    if (category.contains('career') || category.contains('work')) return Icons.work_rounded;
+    if (category.contains('education') || category.contains('learn')) return Icons.school_rounded;
+    
+    return Icons.flag_rounded;
+  }
+
+  bool _matchesFilter(String status, String filter) {
+    if (filter == 'All') return true;
+    if (filter == 'Active') {
+      return status == 'On Track' || status == 'In Progress' || status == 'Not Started';
+    }
+    return status.toLowerCase() == filter.toLowerCase();
+  }
+
+  Widget _buildFilterTab({
+    required String label,
+    required int count,
+    required Widget icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 82,
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF1D1B4E) : const Color(0xFF0F121D),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF6366F1).withOpacity(0.5) : const Color(0xFF1E293B).withOpacity(0.5),
+            width: 1,
+          ),
+        ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Icon(Icons.flag_rounded, size: 64, color: Colors.white24),
-            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                icon,
+                Container(
+                  width: 4,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isSelected ? const Color(0xFF6366F1) : Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 6),
             Text(
-              'Goals Module',
+              label,
+              style: GoogleFonts.outfit(
+                color: isSelected ? Colors.white : Colors.white60,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 1),
+            Text(
+              '$count',
               style: GoogleFonts.outfit(
                 color: Colors.white,
-                fontSize: 24,
+                fontSize: 13,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Coming Soon',
-              style: GoogleFonts.outfit(
-                color: Colors.white54,
-                fontSize: 16,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoalCard(BuildContext context, VisionItem goal) {
+    final metadata = goal.metadata ?? {};
+    final title = goal.content.isNotEmpty ? goal.content : (metadata['title'] as String? ?? 'My Goal');
+    final description = metadata['description'] as String? ?? 'No description';
+    final progressPercent = goal.smartProgressPercent;
+    
+    final colorValue = metadata['color'] as int? ?? Colors.blueAccent.toARGB32();
+    final themeColor = Color(colorValue);
+    
+    final status = _getGoalStatus(goal);
+    final statusColor = _getStatusColor(status);
+    final formattedDate = _formatTargetDate(goal.countdownDate);
+    final goalIcon = _getGoalIcon(title, metadata);
+
+    return GestureDetector(
+      onTap: () {
+        SmartObjectSheetRouter.open(context, goal);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0B0E17),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.04),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Left Icon with themed circle background
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: themeColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: themeColor.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
+              child: Icon(
+                goalIcon,
+                color: themeColor,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 12),
+            
+            // Title, description and target info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white.withOpacity(0.4),
+                      fontSize: 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 2,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.calendar_today_rounded,
+                        size: 9,
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                      Text(
+                        'Target: $formattedDate',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.3),
+                          fontSize: 9.5,
+                        ),
+                      ),
+                      Text(
+                        '|',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.15),
+                          fontSize: 9.5,
+                        ),
+                      ),
+                      // Status indicator dot
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      Text(
+                        status,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.3),
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            
+            // Circular Progress on the right
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: CircularProgressIndicator(
+                    value: progressPercent / 100.0,
+                    backgroundColor: Colors.white.withOpacity(0.05),
+                    valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                    strokeWidth: 3,
+                  ),
+                ),
+                Text(
+                  '$progressPercent%',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 8),
+            
+            // Right chevron
+            Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.white.withOpacity(0.2),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canvasState = ref.watch(canvasStateProvider);
+    final goals = canvasState.items
+        .where((item) => item.type == VisionItemType.goal.name)
+        .toList();
+
+    final allCount = goals.length;
+    final activeCount = goals.where((g) {
+      final s = _getGoalStatus(g);
+      return s == 'On Track' || s == 'In Progress' || s == 'Not Started';
+    }).length;
+    final inProgressCount = goals.where((g) => _getGoalStatus(g) == 'In Progress').length;
+    final completedCount = goals.where((g) => _getGoalStatus(g) == 'Completed').length;
+    final onHoldCount = goals.where((g) => _getGoalStatus(g) == 'On Hold').length;
+
+    final filteredGoals = goals.where((g) {
+      final status = _getGoalStatus(g);
+      return _matchesFilter(status, _selectedFilter);
+    }).toList();
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0F1524), Color(0xFF070A13)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'MY GOALS',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.4),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Target & Ambitions',
+                        style: GoogleFonts.playfairDisplay(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Horizontal Filter Scroll View
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
+              child: Row(
+                children: [
+                  _buildFilterTab(
+                    label: 'All',
+                    count: allCount,
+                    icon: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2E2B88),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.grid_view_rounded, size: 14, color: Colors.white),
+                    ),
+                    isSelected: _selectedFilter == 'All',
+                    onTap: () => setState(() => _selectedFilter = 'All'),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildFilterTab(
+                    label: 'Active',
+                    count: activeCount,
+                    icon: const Icon(Icons.play_circle_fill_rounded, color: Color(0xFF10B981), size: 15),
+                    isSelected: _selectedFilter == 'Active',
+                    onTap: () => setState(() => _selectedFilter = 'Active'),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildFilterTab(
+                    label: 'In Progress',
+                    count: inProgressCount,
+                    icon: const Icon(Icons.timelapse_rounded, color: Color(0xFFF59E0B), size: 15),
+                    isSelected: _selectedFilter == 'In Progress',
+                    onTap: () => setState(() => _selectedFilter = 'In Progress'),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildFilterTab(
+                    label: 'Completed',
+                    count: completedCount,
+                    icon: const Icon(Icons.check_circle_rounded, color: Color(0xFF8B5CF6), size: 15),
+                    isSelected: _selectedFilter == 'Completed',
+                    onTap: () => setState(() => _selectedFilter = 'Completed'),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildFilterTab(
+                    label: 'On Hold',
+                    count: onHoldCount,
+                    icon: const Icon(Icons.pause_circle_filled_rounded, color: Color(0xFF3B82F6), size: 15),
+                    isSelected: _selectedFilter == 'On Hold',
+                    onTap: () => setState(() => _selectedFilter = 'On Hold'),
+                  ),
+                ],
+              ),
+            ),
+
+            // Goals list
+            Expanded(
+              child: filteredGoals.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.flag_rounded,
+                            size: 48,
+                            color: Colors.white24,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No goals in this category',
+                            style: GoogleFonts.outfit(
+                              color: Colors.white54,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Go to the Room tab to place your first goal',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.3),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: filteredGoals.length,
+                      itemBuilder: (context, index) {
+                        return _buildGoalCard(context, filteredGoals[index]);
+                      },
+                    ),
             ),
           ],
         ),

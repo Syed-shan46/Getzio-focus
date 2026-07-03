@@ -20,6 +20,7 @@ import '../widgets/premium_cards.dart'
 import '../widgets/universal_smart_object_sheet.dart';
 import '../widgets/premium_goal_overview_sheet.dart';
 import '../widgets/smart_object_sheets.dart';
+import '../widgets/polaroid_image_widget.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class VisionWall extends ConsumerStatefulWidget {
@@ -77,9 +78,7 @@ class _VisionWallState extends ConsumerState<VisionWall>
   @override
   Widget build(BuildContext context) {
     final canvasState = ref.watch(canvasStateProvider);
-    final items = canvasState.items
-        .where((item) => item.metadata?['isOnShelf'] != true)
-        .toList();
+    final items = canvasState.items.toList();
     final cust = ref.watch(visionCustomizationProvider);
     final isEditMode = ref.watch(editModeProvider);
     final selectedIds = canvasState.selectedIds;
@@ -105,16 +104,19 @@ class _VisionWallState extends ConsumerState<VisionWall>
                     );
                     _interactingItemId = null;
                     for (var item in items.reversed) {
+                      final double h = item.type == VisionItemType.task.name
+                          ? item.width * (260.0 / 200.0)
+                          : item.height;
                       final rect = Rect.fromLTWH(
                         item.x,
                         item.y,
                         item.width,
-                        item.height,
+                        h,
                       );
                       if (rect.contains(canvasPoint)) {
                         _interactingItemId = item.id;
                         _itemStartWidth = item.width;
-                        _itemStartHeight = item.height;
+                        _itemStartHeight = h;
                         _itemStartRotation = item.rotation;
                         ref
                             .read(canvasStateProvider.notifier)
@@ -168,7 +170,10 @@ class _VisionWallState extends ConsumerState<VisionWall>
                 : null,
             child: Stack(
               children: [
-                ...items.map((item) {
+                ...[
+                  ...items.where((item) => item.type != VisionItemType.countdown.name),
+                  ...items.where((item) => item.type == VisionItemType.countdown.name),
+                ].map((item) {
                   final isSelected = selectedIds.contains(item.id);
                   final isInteracting = _interactingItemId == item.id;
                   final springValue = _springItemId == item.id
@@ -281,6 +286,11 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
     final cardCfg = cust.cardCustomization;
     Widget contentWidget;
 
+    final double displayWidth = item.width;
+    final double displayHeight = item.type == VisionItemType.task.name
+        ? displayWidth * (260.0 / 200.0)
+        : item.height;
+
     final double baseShadow = cardCfg.shadowIntensity * 30;
     final double shadowBlur = widget.isInteracting
         ? baseShadow * 1.5
@@ -297,65 +307,7 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
     final double bt = cardCfg.borderThickness;
 
     if (item.type == VisionItemType.image.name) {
-      contentWidget = Opacity(
-        opacity: cardCfg.opacity,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.zero,
-            border:
-                selectionBorder ??
-                Border.all(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  width: 4.0,
-                ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(
-                  alpha: 0.5 * cardCfg.shadowIntensity,
-                ),
-                blurRadius: shadowBlur,
-                offset: shadowOffset,
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.zero,
-            child: item.content.startsWith('http')
-                ? Image.network(
-                    item.content,
-                    width: item.width,
-                    height: item.height,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[800],
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image_rounded,
-                          color: Colors.white54,
-                          size: 40,
-                        ),
-                      ),
-                    ),
-                  )
-                : Image.file(
-                    File(item.content),
-                    width: item.width,
-                    height: item.height,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[800],
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image_rounded,
-                          color: Colors.white54,
-                          size: 40,
-                        ),
-                      ),
-                    ),
-                  ),
-          ),
-        ),
-      );
+      contentWidget = PolaroidImageWidget(item: item, cardCfg: cardCfg);
     } else if (item.type == VisionItemType.stickyNote.name) {
       final Color noteColor = cardCfg.glassMode
           ? Colors.white.withValues(alpha: 0.15)
@@ -435,8 +387,8 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
       );
     } else if (item.type == VisionItemType.task.name) {
       contentWidget = SizedBox(
-        width: item.width,
-        height: item.height,
+        width: displayWidth,
+        height: displayHeight,
         child: TaskCardWidget(item: item),
       );
     } else if (item.type == VisionItemType.financeGoal.name) {
@@ -509,8 +461,8 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
             top: -6,
             child: IgnorePointer(
               child: Container(
-                width: item.width + 12,
-                height: item.height + 12,
+                width: displayWidth + 12,
+                height: displayHeight + 12,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
@@ -535,6 +487,7 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
       duration: const Duration(milliseconds: 150),
       curve: Curves.easeOutBack,
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () {
           if (widget.isEditMode) {
             ref.read(canvasStateProvider.notifier).selectItem(item.id);
@@ -555,27 +508,67 @@ class _VisionItemWidgetState extends ConsumerState<_VisionItemWidget> {
             clipBehavior: Clip.none,
             children: [
               SizedBox(
-                width: item.width,
-                height: item.height,
+                width: displayWidth,
+                height: displayHeight,
                 child: boardAdjustedWidget,
               ),
               selectionGlow,
+              // Delete button in edit mode
+              if (widget.isEditMode)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      ref.read(canvasStateProvider.notifier).removeItem(item.id);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade700,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               if (item.attachmentType == 'pin')
                 Positioned(
-                  top: (20 * (item.width / 200.0)) - 36,
-                  left: item.width / 2 - 12,
+                  top: (20 * (displayWidth / 200.0)) - 36,
+                  left: displayWidth / 2 - 12,
                   child: Transform.scale(
-                    scale: item.width / 200.0,
+                    scale: displayWidth / 200.0,
                     alignment: Alignment.bottomCenter,
                     child: PushPinWidget(style: item.attachmentStyle),
                   ),
                 )
               else if (item.attachmentType == 'tape')
                 Positioned(
-                  top: -12,
-                  left: item.width / 2 - 40,
+                  top: -8,
+                  left: displayWidth / 2 - 24,
                   child: Transform.scale(
-                    scale: item.width / 200.0,
+                    scale: displayWidth / 200.0,
                     alignment: Alignment.center,
                     child: TapeWidget(style: item.attachmentStyle),
                   ),

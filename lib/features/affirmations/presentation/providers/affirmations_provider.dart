@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/models/affirmation_model.dart';
 import '../../data/repositories/affirmations_repository.dart';
 import '../../../os_dashboard/presentation/providers/os_providers.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../../core/storage/sync_manager.dart';
+import '../../../../core/storage/hive_database.dart';
+import '../../../../shared/providers/app_providers.dart';
 
 class AffirmationsState {
   final List<DailyAffirmation> affirmations;
@@ -49,43 +53,25 @@ class AffirmationsState {
 class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
   final AffirmationsRepository _repo;
   final Ref _ref;
-  Timer? _syncTimer;
 
   AffirmationsNotifier(this._repo, this._ref) : super(AffirmationsState()) {
     _loadData();
-
-    // Auto-retry sync in background every 30 seconds if offline or has pending items
-    _syncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      final hasPending = state.affirmations.any((a) => a.syncStatus == SyncStatus.pending || a.syncStatus == SyncStatus.failed);
-      if (hasPending || state.isOffline) {
-        syncNow();
-      }
-    });
   }
 
   void clearAll() {
-    _syncTimer?.cancel();
     state = AffirmationsState(affirmations: []);
-  }
-
-  @override
-  void dispose() {
-    _syncTimer?.cancel();
-    super.dispose();
   }
 
   Future<void> _loadData() async {
     final local = _repo.getLocalAffirmations();
     final isGuest = _ref.read(authProvider).valueOrNull == null;
 
-    // If empty and user is a guest, initialize default cards
     if (local.isEmpty && isGuest) {
       final defaults = [
         DailyAffirmation(
           id: 'def_1',
           title: 'Growth Mindset',
-          text:
-              'Challenges are opportunities to grow and expand my capabilities.',
+          text: 'Challenges are opportunities to grow and expand my capabilities.',
           category: 'Mindset',
           colorTheme: 'Minimal White',
           isPinned: true,
@@ -94,8 +80,7 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
         DailyAffirmation(
           id: 'def_2',
           title: 'Daily Discipline',
-          text:
-              'I choose consistency over temporary motivation. I finish what I start.',
+          text: 'I choose consistency over temporary motivation. I finish what I start.',
           category: 'Discipline',
           colorTheme: 'Midnight Black',
           syncStatus: SyncStatus.synced,
@@ -103,8 +88,7 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
         DailyAffirmation(
           id: 'def_3',
           title: 'Grateful Heart',
-          text:
-              'I appreciate the little details today. Peace is within my control.',
+          text: 'I appreciate the little details today. Peace is within my control.',
           category: 'Gratitude',
           colorTheme: 'Sunrise Orange',
           syncStatus: SyncStatus.synced,
@@ -116,39 +100,25 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
       state = state.copyWith(affirmations: local);
     }
 
-    // Load fresh data from backend on startup if possible
-    try {
-      final remoteList = await _repo.fetchAffirmationsFromServer();
+    final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
+    if (!hasToken) return;
+
+    _repo.fetchAffirmationsFromServer().then((remoteList) async {
       if (remoteList != null) {
-        final mergedList = <DailyAffirmation>[];
-        mergedList.addAll(remoteList);
+        final localJson = jsonEncode(state.affirmations.map((a) => a.toMap()).toList());
+        final remoteJson = jsonEncode(remoteList.map((a) => a.toMap()).toList());
 
-        // Keep local pending mutations
-        final localPending = state.affirmations
-            .where((a) => a.syncStatus == SyncStatus.pending || a.syncStatus == SyncStatus.failed)
-            .toList();
-
-        for (var localItem in localPending) {
-          final idx = mergedList.indexWhere((r) => r.id == localItem.id);
-          if (idx != -1) {
-            mergedList[idx] = localItem;
-          } else {
-            mergedList.add(localItem);
-          }
+        if (localJson != remoteJson) {
+          await _repo.saveLocalAffirmations(remoteList);
+          state = state.copyWith(affirmations: remoteList, isOffline: false);
         }
-
-        await _repo.saveLocalAffirmations(mergedList);
-        state = state.copyWith(affirmations: mergedList, isOffline: false);
       }
-    } catch (e) {
-      // Offline fallback
-    }
-
-    // Try to sync initially
-    syncNow();
+      _ref.read(syncManagerProvider).processQueue();
+    }).catchError((e) {
+      print('Error fetching affirmations silently: $e');
+    });
   }
 
-  // Filtered list getter helper
   List<DailyAffirmation> getFilteredAffirmations() {
     return state.affirmations.where((a) {
       final matchesCategory =
@@ -169,7 +139,6 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
     state = state.copyWith(searchQuery: query);
   }
 
-  // Add a new affirmation
   Future<void> addAffirmation(DailyAffirmation aff) async {
     final isGuest = _ref.read(authProvider).value == null;
     if (isGuest) {
@@ -184,33 +153,60 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
     final list = [...state.affirmations, pendingAff];
     state = state.copyWith(affirmations: list);
     await _repo.saveLocalAffirmations(list);
-    // Silent background sync
-    syncNow();
+
+    final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
+    if (hasToken) {
+      _repo.createAffirmationOnServer(pendingAff).then((synced) async {
+        if (synced != null) {
+          final updatedList = state.affirmations.map((a) => a.id == aff.id ? synced : a).toList();
+          state = state.copyWith(affirmations: updatedList);
+          await _repo.saveLocalAffirmations(updatedList);
+        } else {
+          await _repo.queueAffirmationUpsert(pendingAff);
+        }
+      }).catchError((e) async {
+        await _repo.queueAffirmationUpsert(pendingAff);
+      });
+    }
   }
 
-  // Update existing affirmation
   Future<void> updateAffirmation(DailyAffirmation updated) async {
     final pendingAff = updated.copyWith(syncStatus: SyncStatus.pending);
-    final list = state.affirmations
-        .map((a) => a.id == updated.id ? pendingAff : a)
-        .toList();
+    final list = state.affirmations.map((a) => a.id == updated.id ? pendingAff : a).toList();
     state = state.copyWith(affirmations: list);
     await _repo.saveLocalAffirmations(list);
-    // Silent background sync
-    syncNow();
+
+    final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
+    if (hasToken) {
+      _repo.syncWithBackend(list).then((success) async {
+        if (success) {
+          final updatedList = state.affirmations.map((a) => a.id == updated.id ? a.copyWith(syncStatus: SyncStatus.synced) : a).toList();
+          state = state.copyWith(affirmations: updatedList);
+          await _repo.saveLocalAffirmations(updatedList);
+        } else {
+          await _repo.queueAffirmationUpsert(pendingAff);
+        }
+      }).catchError((e) async {
+        await _repo.queueAffirmationUpsert(pendingAff);
+      });
+    }
   }
 
-  // Delete affirmation
   Future<void> deleteAffirmation(String id) async {
     final list = state.affirmations.where((a) => a.id != id).toList();
     state = state.copyWith(affirmations: list);
     await _repo.saveLocalAffirmations(list);
     await _repo.trackPendingDeletion(id);
-    // Silent background sync
-    syncNow();
+
+    final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
+    if (hasToken) {
+      _repo.syncWithBackend(list).catchError((e) async {
+        await _repo.queueAffirmationDeletion(id);
+        return false;
+      });
+    }
   }
 
-  // Toggle pinned card
   Future<void> togglePin(String id) async {
     final list = state.affirmations.map((a) {
       if (a.id == id) {
@@ -223,10 +219,16 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
     }).toList();
     state = state.copyWith(affirmations: list);
     await _repo.saveLocalAffirmations(list);
-    syncNow();
+    
+    _repo.syncWithBackend(list).then((success) async {
+      if (success) {
+        final syncedList = state.affirmations.map((a) => a.syncStatus == SyncStatus.pending ? a.copyWith(syncStatus: SyncStatus.synced) : a).toList();
+        state = state.copyWith(affirmations: syncedList);
+        await _repo.saveLocalAffirmations(syncedList);
+      }
+    });
   }
 
-  // Toggle favorite
   Future<void> toggleFavorite(String id) async {
     final list = state.affirmations.map((a) {
       if (a.id == id) {
@@ -236,10 +238,16 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
     }).toList();
     state = state.copyWith(affirmations: list);
     await _repo.saveLocalAffirmations(list);
-    syncNow();
+    
+    _repo.syncWithBackend(list).then((success) async {
+      if (success) {
+        final syncedList = state.affirmations.map((a) => a.id == id ? a.copyWith(syncStatus: SyncStatus.synced) : a).toList();
+        state = state.copyWith(affirmations: syncedList);
+        await _repo.saveLocalAffirmations(syncedList);
+      }
+    });
   }
 
-  // Reorder affirmations
   Future<void> reorderAffirmations(int oldIndex, int newIndex) async {
     if (newIndex > oldIndex) newIndex -= 1;
     final list = [...state.affirmations];
@@ -249,10 +257,16 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
     final pendingList = list.map((a) => a.copyWith(syncStatus: SyncStatus.pending)).toList();
     state = state.copyWith(affirmations: pendingList);
     await _repo.saveLocalAffirmations(pendingList);
-    syncNow();
+    
+    _repo.syncWithBackend(pendingList).then((success) async {
+      if (success) {
+        final syncedList = state.affirmations.map((a) => a.copyWith(syncStatus: SyncStatus.synced)).toList();
+        state = state.copyWith(affirmations: syncedList);
+        await _repo.saveLocalAffirmations(syncedList);
+      }
+    });
   }
 
-  // Duplicate card
   Future<void> duplicateAffirmation(String id) async {
     final isGuest = _ref.read(authProvider).value == null;
     if (isGuest) {
@@ -274,21 +288,23 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
     final list = [...state.affirmations, copy];
     state = state.copyWith(affirmations: list);
     await _repo.saveLocalAffirmations(list);
-    syncNow();
+    
+    _repo.syncWithBackend(list).then((success) async {
+      if (success) {
+        final syncedList = state.affirmations.map((a) => a.id == copy.id ? a.copyWith(syncStatus: SyncStatus.synced) : a).toList();
+        state = state.copyWith(affirmations: syncedList);
+        await _repo.saveLocalAffirmations(syncedList);
+      }
+    });
   }
 
-  // Complete practicing today's affirmations (Gains small XP)
   void completePractice() {
     state = state.copyWith(completedTodayCount: state.completedTodayCount + 1);
-    // Award 15 XP through the OS dashboard system provider
-    _ref
-        .read(osStateProvider.notifier)
-        .toggleHabitCompletion(
-          'daily_affirmation_practice_${const Uuid().v4()}',
-        );
+    _ref.read(osStateProvider.notifier).toggleHabitCompletion(
+      'daily_affirmation_practice_${const Uuid().v4()}',
+    );
   }
 
-  // Force sync
   Future<void> syncNow() async {
     if (state.isSyncing) return;
     state = state.copyWith(isSyncing: true);
@@ -326,7 +342,7 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
 
 final affirmationsProvider =
     StateNotifierProvider<AffirmationsNotifier, AffirmationsState>((ref) {
-      ref.watch(authProvider); // Rebuild automatically on user login/logout/change
+      ref.watch(authProvider);
       final repo = ref.watch(affirmationsRepositoryProvider);
       return AffirmationsNotifier(repo, ref);
     });

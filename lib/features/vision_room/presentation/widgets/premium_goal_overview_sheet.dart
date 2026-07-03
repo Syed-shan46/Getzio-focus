@@ -455,55 +455,15 @@ class _PremiumGoalOverviewSheetState
           ),
           const SizedBox(height: 12),
 
-          // Show Progress Toggle
-          _buildGlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.pie_chart_rounded, color: Colors.blueAccent, size: 16),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Show Progress on Card',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 24,
-                  child: Transform.scale(
-                    scale: 0.7,
-                    child: Switch(
-                      value: metadata['showProgress'] as bool? ?? false,
-                      activeTrackColor: Colors.blueAccent,
-                      onChanged: (val) {
-                        ref.read(canvasStateProvider.notifier).updateItemDetails(
-                          item.id,
-                          metadata: {'showProgress': val},
-                        );
-                        HapticFeedback.lightImpact();
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
           // 2. Statistics 4-Grid Cards
           Row(
             children: [
               Expanded(
                 child: _buildStatCard(
                   'Days Left',
-                  '${item.countdownDate?.difference(DateTime.now()).inDays ?? 120}',
+                  item.countdownDate != null
+                      ? '${DateTime(item.countdownDate!.year, item.countdownDate!.month, item.countdownDate!.day).difference(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day)).inDays}'
+                      : '120',
                   Icons.timer_rounded,
                   const Color(0xFFF59E0B),
                 ),
@@ -577,7 +537,10 @@ class _PremiumGoalOverviewSheetState
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -604,7 +567,10 @@ class _PremiumGoalOverviewSheetState
                         _buildMilestoneTimeline(milestones, progressPercent),
                         const SizedBox(height: 16),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.04),
                             borderRadius: BorderRadius.circular(12),
@@ -616,7 +582,8 @@ class _PremiumGoalOverviewSheetState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
                                     'Overall Milestone Progress',
@@ -642,9 +609,10 @@ class _PremiumGoalOverviewSheetState
                                   value: progressRatio,
                                   minHeight: 4,
                                   backgroundColor: Colors.white10,
-                                  valueColor: const AlwaysStoppedAnimation<Color>(
-                                    Color(0xFF10B981),
-                                  ),
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                        Color(0xFF10B981),
+                                      ),
                                 ),
                               ),
                             ],
@@ -1439,7 +1407,7 @@ class _FallingParticlePainter extends CustomPainter {
 
       // Fall down continuously. Speed MUST be an integer so it loops perfectly when time resets to 0.
       // We use random integers (1 or 2) so they fall at slightly different speeds but still loop.
-      final speed = 1 + random.nextInt(2); 
+      final speed = 1 + random.nextInt(2);
       final yProgress = (initialY + time * speed) % 1.0;
       final y = yProgress * size.height;
 

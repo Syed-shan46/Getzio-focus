@@ -112,12 +112,48 @@ class _HangingPenState extends State<HangingPen> with TickerProviderStateMixin {
     });
   }
 
-  Widget _buildPenImage() {
-    return Image.asset(
-      'assets/images/hanging_pen.png',
-      width: 72,
-      height: 240,
-      fit: BoxFit.contain,
+  Widget _buildPenImage(double topPadding) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Dynamic string length to clear safe area exactly without wasting space
+        Container(
+          width: 2,
+          height: topPadding + 20, // Just clears the safe area
+          decoration: BoxDecoration(
+            color: Colors.brown.shade700,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 2,
+                offset: const Offset(1, 0),
+              ),
+            ],
+          ),
+        ),
+        // Small transparent container with border
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.transparent, // bg transparent
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.brown.shade800, // border needed
+              width: 1.5,
+            ),
+          ),
+          child: Text(
+            'Vision',
+            style: TextStyle(
+              fontFamily: 'Kalam',
+              fontWeight: FontWeight.bold,
+              fontSize: 14, // Made text smaller
+              color: Colors.brown.shade900,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -126,9 +162,8 @@ class _HangingPenState extends State<HangingPen> with TickerProviderStateMixin {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Pen with pendulum + tap animation + glow starting from top: 0
         Positioned(
-          top: 0,
+          top: -10, // Just enough off-screen to hide the top anchor
           left: 0,
           right: 0,
           child: Center(
@@ -177,7 +212,7 @@ class _HangingPenState extends State<HangingPen> with TickerProviderStateMixin {
                         child: GestureDetector(
                           onTap: _onPenTap,
                           behavior: HitTestBehavior.opaque,
-                          child: _buildPenImage(),
+                          child: _buildPenImage(MediaQuery.paddingOf(context).top),
                         ),
                       ),
                     ),

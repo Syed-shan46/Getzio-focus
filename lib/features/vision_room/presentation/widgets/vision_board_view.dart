@@ -9,6 +9,7 @@ import '../providers/customization_provider.dart';
 import 'attachment_widgets.dart';
 import 'quote_card_widget.dart';
 import 'goal_card_widget.dart';
+import 'polaroid_image_widget.dart';
 import 'premium_cards.dart'
     show PlanCardWidget, TaskCardWidget, FinanceCardWidget, CountdownCardWidget;
 import 'universal_smart_object_sheet.dart';
@@ -21,9 +22,7 @@ class VisionBoardView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final canvasState = ref.watch(canvasStateProvider);
-    final items = canvasState.items
-        .where((item) => item.metadata?['isOnShelf'] != true)
-        .toList();
+    final items = canvasState.items.toList();
     final cust = ref.watch(visionCustomizationProvider);
     final cardCfg = cust.cardCustomization;
 
@@ -61,7 +60,10 @@ class VisionBoardView extends ConsumerWidget {
               ),
             ),
           ),
-        ...items.map((item) {
+        ...[
+          ...items.where((item) => item.type != VisionItemType.countdown.name),
+          ...items.where((item) => item.type == VisionItemType.countdown.name),
+        ].map((item) {
           return Positioned(
             left: item.x,
             top: item.y,
@@ -160,6 +162,11 @@ class _ViewItemWidget extends StatelessWidget {
           )
         : contentWidget;
 
+    final double displayWidth = item.width;
+    final double displayHeight = item.type == VisionItemType.task.name
+        ? displayWidth * (260.0 / 200.0)
+        : item.height;
+
     return GestureDetector(
       onTap: () => SmartObjectSheetRouter.open(context, item),
       child: Transform.rotate(
@@ -168,26 +175,26 @@ class _ViewItemWidget extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             SizedBox(
-              width: item.width,
-              height: item.height,
+              width: displayWidth,
+              height: displayHeight,
               child: boardAdjusted,
             ),
             if (item.attachmentType == 'pin')
               Positioned(
-                top: (20 * (item.width / 200.0)) - 36,
-                left: item.width / 2 - 12,
+                top: (20 * (displayWidth / 200.0)) - 36,
+                left: displayWidth / 2 - 12,
                 child: Transform.scale(
-                  scale: item.width / 200.0,
+                  scale: displayWidth / 200.0,
                   alignment: Alignment.bottomCenter,
                   child: PushPinWidget(style: item.attachmentStyle),
                 ),
               )
             else if (item.attachmentType == 'tape')
               Positioned(
-                top: -12,
-                left: item.width / 2 - 40,
+                top: -8,
+                left: displayWidth / 2 - 24,
                 child: Transform.scale(
-                  scale: item.width / 200.0,
+                  scale: displayWidth / 200.0,
                   alignment: Alignment.center,
                   child: TapeWidget(style: item.attachmentStyle),
                 ),
@@ -201,46 +208,7 @@ class _ViewItemWidget extends StatelessWidget {
   Widget _buildContent() {
     final double cr = cardCfg.cornerRadius;
     if (item.type == VisionItemType.image.name) {
-      return Opacity(
-        opacity: cardCfg.opacity,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(cardCfg.glassMode ? cr : cr.clamp(4, 20)),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: cardCfg.borderThickness),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5 * cardCfg.shadowIntensity),
-                blurRadius: cardCfg.shadowIntensity * 30,
-                offset: Offset(0, 8 * cardCfg.shadowIntensity),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(cardCfg.roundedMode ? cr : cr.clamp(4, 20)),
-            child: item.content.startsWith('http')
-                ? Image.network(
-                    item.content,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[800],
-                      child: const Center(
-                        child: Icon(Icons.broken_image_rounded, color: Colors.white54, size: 40),
-                      ),
-                    ),
-                  )
-                : Image.file(
-                    File(item.content),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[800],
-                      child: const Center(
-                        child: Icon(Icons.broken_image_rounded, color: Colors.white54, size: 40),
-                      ),
-                    ),
-                  ),
-          ),
-        ),
-      );
+      return PolaroidImageWidget(item: item, cardCfg: cardCfg);
     }
 
     if (item.type == VisionItemType.stickyNote.name) {

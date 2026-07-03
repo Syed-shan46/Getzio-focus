@@ -26,7 +26,176 @@ class HiveDatabase {
     _syncBox = await Hive.openBox(_syncBoxName);
     _settingsBox = await Hive.openBox(_settingsBoxName);
 
+    // Initial user boxes
+    await openUserBoxes();
+
     log('[Hive] Database initialized');
+  }
+
+  Future<void> openUserBoxes() async {
+    final userId = getUserId() ?? 'guest';
+    final goalsBox = await Hive.openBox('goals_$userId');
+    final tasksBox = await Hive.openBox('tasks_$userId');
+    final visionItemsBox = await Hive.openBox('vision_items_$userId');
+    final affirmationsBox = await Hive.openBox('affirmations_$userId');
+    await Hive.openBox('pending_sync_$userId');
+
+    // Migrate legacy data if isolated boxes are empty
+    if (goalsBox.isEmpty) {
+      final oldGoals = _settingsBox.get('focus_selected_goals') as List?;
+      if (oldGoals != null) {
+        for (var item in oldGoals) {
+          final id = item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
+          if (id != null) goalsBox.put(id.toString(), Map<String, dynamic>.from(item as Map));
+        }
+      }
+    }
+    if (tasksBox.isEmpty) {
+      final oldTasks = _settingsBox.get('focus_tasks') as List?;
+      if (oldTasks != null) {
+        for (var item in oldTasks) {
+          final id = item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
+          if (id != null) tasksBox.put(id.toString(), Map<String, dynamic>.from(item as Map));
+        }
+      }
+    }
+    if (visionItemsBox.isEmpty) {
+      final oldVision = _settingsBox.get('focus_vision_items') as List?;
+      if (oldVision != null) {
+        for (var item in oldVision) {
+          final id = item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
+          if (id != null) visionItemsBox.put(id.toString(), Map<String, dynamic>.from(item as Map));
+        }
+      }
+    }
+    if (affirmationsBox.isEmpty) {
+      final oldAff = _settingsBox.get('focus_selected_affirmations_$userId') as List?;
+      if (oldAff != null) {
+        for (var item in oldAff) {
+          final id = item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
+          if (id != null) affirmationsBox.put(id.toString(), Map<String, dynamic>.from(item as Map));
+        }
+      }
+    }
+    log('[Hive] Opened user-isolated boxes for user: $userId and migrated legacy data if any');
+  }
+
+  Future<Box> _getUserBox(String boxPrefix) async {
+    final userId = getUserId() ?? 'guest';
+    final boxName = '${boxPrefix}_$userId';
+    if (Hive.isBoxOpen(boxName)) {
+      return Hive.box(boxName);
+    }
+    return await Hive.openBox(boxName);
+  }
+
+  // ─── Generic User-Isolated Operations ──────────────────────────────
+
+  Future<void> saveUserItem(String boxPrefix, String id, Map<String, dynamic> data) async {
+    final box = await _getUserBox(boxPrefix);
+    await box.put(id, data);
+  }
+
+  Future<void> saveUserItems(String boxPrefix, List<Map<String, dynamic>> items) async {
+    final box = await _getUserBox(boxPrefix);
+    await box.clear();
+    final Map<String, Map> map = {};
+    for (var item in items) {
+      final id = item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
+      if (id != null) {
+        map[id.toString()] = item;
+      }
+    }
+    if (map.isNotEmpty) {
+      await box.putAll(map);
+    }
+  }
+
+  List<Map<String, dynamic>> getUserItems(String boxPrefix) {
+    final userId = getUserId() ?? 'guest';
+    final boxName = '${boxPrefix}_$userId';
+    if (!Hive.isBoxOpen(boxName)) {
+      log('[Hive] getUserItems: box $boxName is NOT open, returning []');
+      return [];
+    }
+    final box = Hive.box(boxName);
+    log('[Hive] getUserItems($boxPrefix): box has ${box.length} items');
+    return box.values.map((e) => _deepCast(e)).toList();
+  }
+
+  /// Recursively converts Hive internal types to standard Dart types
+  Map<String, dynamic> _deepCast(dynamic raw) {
+    final map = Map<String, dynamic>.from(raw as Map);
+    for (final key in map.keys.toList()) {
+      final value = map[key];
+      if (value is Map) {
+        map[key] = _deepCast(value);
+      } else if (value is List) {
+        map[key] = value.map((e) => e is Map ? _deepCast(e) : e).toList();
+      }
+    }
+    return map;
+  }
+
+  Future<void> deleteUserItem(String boxPrefix, String id) async {
+    final box = await _getUserBox(boxPrefix);
+    await box.delete(id);
+  }
+
+  Future<void> clearUserBox(String boxPrefix) async {
+    final box = await _getUserBox(boxPrefix);
+    await box.clear();
+  }
+
+  // ─── Legacy/Compatibility Getters and Setters ────────────────────────
+
+  Future<void> saveSelectedGoals(List<Map<String, dynamic>> goals) async {
+    await saveUserItems('goals', goals);
+  }
+
+  List<Map<String, dynamic>> getSelectedGoals() {
+    return getUserItems('goals');
+  }
+
+  Future<void> saveTasks(List<Map<String, dynamic>> tasks) async {
+    await saveUserItems('tasks', tasks);
+  }
+
+  List<Map<String, dynamic>> getTasks() {
+    return getUserItems('tasks');
+  }
+
+  Future<void> saveVisionItems(List<Map<String, dynamic>> items) async {
+    await saveUserItems('vision_items', items);
+  }
+
+  List<Map<String, dynamic>> getVisionItems() {
+    return getUserItems('vision_items');
+  }
+
+  Future<void> saveSelectedAffirmations(List<Map<String, dynamic>> affirmations) async {
+    await saveUserItems('affirmations', affirmations);
+  }
+
+  List<Map<String, dynamic>> getSelectedAffirmations() {
+    return getUserItems('affirmations');
+  }
+
+  // ─── Pending Sync Operations (User Isolated) ───────────────────────
+
+  Future<void> addToPendingSync(Map<String, dynamic> action) async {
+    final box = await _getUserBox('pending_sync');
+    final id = action['id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
+    await box.put(id, action);
+  }
+
+  Future<void> removeFromPendingSync(String id) async {
+    final box = await _getUserBox('pending_sync');
+    await box.delete(id);
+  }
+
+  List<Map<String, dynamic>> getPendingSyncQueue() {
+    return getUserItems('pending_sync');
   }
 
   // ─── Todos ──────────────────────────────────────────────────────────────
@@ -59,7 +228,7 @@ class HiveDatabase {
     await _todosBox.clear();
   }
 
-  // ─── Sync Queue ─────────────────────────────────────────────────────────
+  // ─── Sync Queue (Legacy Global) ─────────────────────────────────────────
 
   Future<void> addToSyncQueue(Map<String, dynamic> op) async {
     final id = op['id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
@@ -92,6 +261,7 @@ class HiveDatabase {
 
   Future<void> saveUserId(String id) async {
     await _settingsBox.put('user_id', id);
+    await openUserBoxes();
   }
 
   String? getUserId() {
@@ -185,25 +355,35 @@ class HiveDatabase {
     await _settingsBox.delete('user_id');
     await _settingsBox.delete('user_name');
     await _settingsBox.delete('user_phone');
+    await openUserBoxes();
   }
 
   Future<void> clearAll() async {
     await _todosBox.clear();
     await _syncBox.clear();
     await _settingsBox.clear();
+    final userId = getUserId() ?? 'guest';
+    await (await _getUserBox('goals')).clear();
+    await (await _getUserBox('tasks')).clear();
+    await (await _getUserBox('vision_items')).clear();
+    await (await _getUserBox('affirmations')).clear();
+    await (await _getUserBox('pending_sync')).clear();
   }
 
   Future<void> clearAllGuestData() async {
-    // Wait, the guest data is in _todosBox and _syncBox? Actually, guest data is just data without an auth_token.
-    // So clearing the boxes except for auth info would be best. 
-    // Wait, GuestDataMigrationService.clearGuestData() is a better place for this.
-    // Let's implement it here for simplicity.
     final token = _settingsBox.get('auth_token');
     final userData = _settingsBox.get('user_data');
     
     await _todosBox.clear();
     await _syncBox.clear();
     await _settingsBox.clear();
+    
+    // Clear user guest boxes
+    await (await _getUserBox('goals')).clear();
+    await (await _getUserBox('tasks')).clear();
+    await (await _getUserBox('vision_items')).clear();
+    await (await _getUserBox('affirmations')).clear();
+    await (await _getUserBox('pending_sync')).clear();
     
     // Restore auth info
     if (token != null) await _settingsBox.put('auth_token', token);
@@ -254,21 +434,13 @@ class HiveDatabase {
     return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
   }
 
-  Future<void> saveSelectedAffirmations(List<Map<String, dynamic>> affirmations) async {
-    final userId = getUserId() ?? 'guest';
-    await _settingsBox.put('focus_selected_affirmations_$userId', affirmations);
-  }
-
-  List<Map<String, dynamic>> getSelectedAffirmations() {
-    final userId = getUserId() ?? 'guest';
-    final list = _settingsBox.get('focus_selected_affirmations_$userId') as List?;
-    if (list == null) return [];
-    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-  }
-
   Future<void> clearUserAffirmationsCache(String userId) async {
     await _settingsBox.delete('focus_selected_affirmations_$userId');
     await _settingsBox.delete('focus_pending_deletions_$userId');
+    final boxName = 'affirmations_$userId';
+    if (Hive.isBoxOpen(boxName)) {
+      await Hive.box<Map>(boxName).clear();
+    }
   }
 
   Future<void> savePendingDeletions(List<String> ids) async {
@@ -293,7 +465,6 @@ class HiveDatabase {
     return Map<String, dynamic>.from(map);
   }
 
-  // Habit completion logs formatted as: { "yyyy-MM-dd": [ "habitId1", "habitId2" ] }
   Future<void> saveHabitLogs(Map<String, dynamic> logs) async {
     await _settingsBox.put('focus_habit_logs', logs);
   }
@@ -326,16 +497,6 @@ class HiveDatabase {
     return List<String>.from(list);
   }
 
-  Future<void> saveSelectedGoals(List<Map<String, dynamic>> goals) async {
-    await _settingsBox.put('focus_selected_goals', goals);
-  }
-
-  List<Map<String, dynamic>> getSelectedGoals() {
-    final list = _settingsBox.get('focus_selected_goals') as List?;
-    if (list == null) return [];
-    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-  }
-
   Future<void> saveReadingPreferences(Map<String, dynamic> prefs) async {
     await _settingsBox.put('focus_reading_prefs', prefs);
   }
@@ -364,18 +525,6 @@ class HiveDatabase {
     final map = _settingsBox.get('focus_finance_prefs') as Map?;
     if (map == null) return null;
     return Map<String, dynamic>.from(map);
-  }
-
-  // ─── Vision Items Persistence ──────────────────────────────────────────
-
-  Future<void> saveVisionItems(List<Map<String, dynamic>> items) async {
-    await _settingsBox.put('focus_vision_items', items);
-  }
-
-  List<Map<String, dynamic>> getVisionItems() {
-    final list = _settingsBox.get('focus_vision_items') as List?;
-    if (list == null) return [];
-    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
   }
 
   Future<void> saveVisionViewport(List<double> matrix) async {
@@ -409,23 +558,32 @@ class HiveDatabase {
 
   // ─── Premium Tasks Module ──────────────────────────────────────────────
 
-  Future<void> saveTasks(List<Map<String, dynamic>> tasks) async {
-    await _settingsBox.put('focus_tasks', tasks);
-  }
-
-  List<Map<String, dynamic>> getTasks() {
-    final list = _settingsBox.get('focus_tasks') as List?;
-    if (list == null) return [];
-    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-  }
-
   Future<void> savePendingTaskActions(List<Map<String, dynamic>> actions) async {
-    await _syncBox.put('pending_tasks_actions', actions);
+    final box = await _getUserBox('pending_sync');
+    await box.put('pending_tasks_actions', actions);
   }
 
   List<Map<String, dynamic>> getPendingTaskActions() {
-    final list = _syncBox.get('pending_tasks_actions') as List?;
+    final userId = getUserId() ?? 'guest';
+    final boxName = 'pending_sync_$userId';
+    if (!Hive.isBoxOpen(boxName)) return [];
+    final box = Hive.box(boxName);
+    final list = box.get('pending_tasks_actions') as List?;
     if (list == null) return [];
     return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  // ─── Custom Categories ──────────────────────────────────────────────────
+  
+  Future<void> saveCustomCategories(List<String> categories) async {
+    final userId = getUserId() ?? 'guest';
+    await _settingsBox.put('custom_categories_$userId', categories);
+  }
+
+  List<String> getCustomCategories() {
+    final userId = getUserId() ?? 'guest';
+    final list = _settingsBox.get('custom_categories_$userId') as List?;
+    if (list == null) return [];
+    return List<String>.from(list);
   }
 }

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getzio_todo_app/features/vision_room/presentation/vision_workspace/animations/realistic_sticky_note_wrapper.dart';
 import '../../../domain/models/vision_item.dart';
 import '../../../domain/models/vision_customization.dart';
 import '../../../domain/models/smart_object_models.dart';
@@ -11,6 +12,7 @@ import '../../providers/customization_provider.dart';
 import '../../widgets/attachment_widgets.dart';
 import '../../widgets/quote_card_widget.dart';
 import '../../widgets/goal_card_widget.dart';
+import '../../widgets/polaroid_image_widget.dart';
 import '../../widgets/premium_cards.dart'
     show PlanCardWidget, TaskCardWidget, FinanceCardWidget, CountdownCardWidget;
 import '../../../../../core/theme/app_theme.dart';
@@ -223,142 +225,138 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
     final double cr = cardCfg.cornerRadius;
     final double bt = cardCfg.borderThickness;
 
+    final double displayWidth = item.width;
+    final double displayHeight = item.type == VisionItemType.task.name
+        ? displayWidth * (260.0 / 200.0)
+        : item.height;
+
     if (item.type == VisionItemType.image.name) {
-      contentWidget = Opacity(
-        opacity: cardCfg.opacity,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(
-              cardCfg.glassMode ? cr : cr.clamp(4, 20),
+      contentWidget = DecoratedBox(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F0A05).withValues(alpha: 0.68),
+              blurRadius: shadowBlur,
+              offset: shadowOffset,
+              spreadRadius: 2,
             ),
-            border:
-                selectionBorder ??
-                Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: bt,
-                ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(
-                  alpha: 0.5 * cardCfg.shadowIntensity,
-                ),
-                blurRadius: shadowBlur,
-                offset: shadowOffset,
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(
-              cardCfg.roundedMode ? cr : cr.clamp(4, 20),
+            BoxShadow(
+              color: const Color(0xFF1C1108).withValues(alpha: 0.35),
+              blurRadius: shadowBlur * 2.2,
+              offset: shadowOffset * 1.6,
             ),
-            child: item.content.startsWith('http')
-                ? Image.network(
-                    item.content,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[800],
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image_rounded,
-                          color: Colors.white54,
-                          size: 40,
-                        ),
-                      ),
-                    ),
-                  )
-                : Image.file(
-                    File(item.content),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[800],
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image_rounded,
-                          color: Colors.white54,
-                          size: 40,
-                        ),
-                      ),
-                    ),
-                  ),
-          ),
+          ],
         ),
+        child: PolaroidImageWidget(item: item, cardCfg: cardCfg),
       );
     } else if (item.type == VisionItemType.stickyNote.name) {
       final Color noteColor = cardCfg.glassMode
           ? Colors.white.withValues(alpha: 0.15)
           : Color(item.colorValue).withValues(alpha: cardCfg.opacity);
-      contentWidget = Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: noteColor,
-          borderRadius: cardCfg.squareMode
-              ? BorderRadius.zero
-              : BorderRadius.only(
-                  topLeft: Radius.circular(cardCfg.roundedMode ? cr : 2),
-                  topRight: Radius.circular(cardCfg.roundedMode ? cr : 2),
-                  bottomLeft: Radius.circular(cardCfg.roundedMode ? cr : 2),
-                  bottomRight: Radius.circular(cardCfg.roundedMode ? 24 : cr),
-                ),
-          border:
-              selectionBorder ??
-              (bt > 0
-                  ? Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      width: bt,
-                    )
-                  : null),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(
-                alpha: 0.4 * cardCfg.shadowIntensity,
+      contentWidget = RealisticStickyNoteWrapper(
+        noteId: item.id,
+        paperColor: noteColor,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: noteColor,
+            borderRadius: cardCfg.squareMode
+                ? BorderRadius.zero
+                : BorderRadius.only(
+                    topLeft: Radius.circular(cardCfg.roundedMode ? cr : 2),
+                    topRight: Radius.circular(cardCfg.roundedMode ? cr : 2),
+                    bottomLeft: Radius.circular(cardCfg.roundedMode ? cr : 2),
+                    bottomRight: Radius.circular(cardCfg.roundedMode ? 24 : cr),
+                  ),
+            border:
+                selectionBorder ??
+                (bt > 0
+                    ? Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        width: bt,
+                      )
+                    : null),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F0A05).withValues(alpha: 0.62),
+                blurRadius: shadowBlur,
+                offset: shadowOffset,
+                spreadRadius: 1,
               ),
-              blurRadius: shadowBlur,
-              offset: shadowOffset,
-            ),
-          ],
-        ),
-        child: Center(
-          child: _isEditing
-              ? TextField(
-                  controller: _textController,
-                  focusNode: _focusNode,
-                  maxLines: null,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: cardCfg.glassMode ? Colors.white : Colors.black87,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+              BoxShadow(
+                color: const Color(0xFF1C1108).withValues(alpha: 0.32),
+                blurRadius: shadowBlur * 2.0,
+                offset: shadowOffset * 1.5,
+              ),
+            ],
+          ),
+          child: Center(
+            child: _isEditing
+                ? TextField(
+                    controller: _textController,
+                    focusNode: _focusNode,
+                    maxLines: null,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: cardCfg.glassMode ? Colors.white : Colors.black87,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    onSubmitted: (_) => _commitText(),
+                  )
+                : Text(
+                    item.content,
+                    style: TextStyle(
+                      color: cardCfg.glassMode ? Colors.white : Colors.black87,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  onSubmitted: (_) => _commitText(),
-                )
-              : Text(
-                  item.content,
-                  style: TextStyle(
-                    color: cardCfg.glassMode ? Colors.white : Colors.black87,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+          ),
         ),
       );
     } else if (item.type == VisionItemType.quote.name) {
-      contentWidget = QuoteCardWidget(item: item);
+      contentWidget = _withBoardShadow(
+        QuoteCardWidget(item: item),
+        shadowBlur,
+        shadowOffset,
+      );
     } else if (item.type == VisionItemType.goal.name) {
-      contentWidget = GoalCardWidget(item: item);
+      contentWidget = _withBoardShadow(
+        GoalCardWidget(item: item),
+        shadowBlur,
+        shadowOffset,
+      );
     } else if (item.type == VisionItemType.plan.name) {
-      contentWidget = PlanCardWidget(item: item);
+      contentWidget = _withBoardShadow(
+        PlanCardWidget(item: item),
+        shadowBlur,
+        shadowOffset,
+      );
     } else if (item.type == VisionItemType.task.name) {
-      contentWidget = TaskCardWidget(item: item);
+      contentWidget = _withBoardShadow(
+        TaskCardWidget(item: item),
+        shadowBlur,
+        shadowOffset,
+      );
     } else if (item.type == VisionItemType.financeGoal.name) {
-      contentWidget = FinanceCardWidget(item: item);
+      contentWidget = _withBoardShadow(
+        FinanceCardWidget(item: item),
+        shadowBlur,
+        shadowOffset,
+      );
     } else if (item.type == VisionItemType.countdown.name) {
-      contentWidget = CountdownCardWidget(item: item);
+      contentWidget = _withBoardShadow(
+        CountdownCardWidget(item: item),
+        shadowBlur,
+        shadowOffset,
+      );
     } else if (item.type == VisionItemType.decoration.name &&
         item.content.startsWith('frame_')) {
       final frameColor = Color(item.colorValue);
@@ -491,8 +489,8 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
               clipBehavior: Clip.none,
               children: [
                 SizedBox(
-                  width: item.width,
-                  height: item.height,
+                  width: displayWidth,
+                  height: displayHeight,
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -549,14 +547,14 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
                     duration: const Duration(milliseconds: 150),
                     curve: Curves.easeOutCubic,
                     top:
-                        (20 * (item.width / 200.0)) -
+                        (20 * (displayWidth / 200.0)) -
                         36 -
                         (widget.isInteracting
-                            ? (10 * (item.width / 200.0))
+                            ? (10 * (displayWidth / 200.0))
                             : 0),
-                    left: item.width / 2 - 12,
+                    left: displayWidth / 2 - 12,
                     child: Transform.scale(
-                      scale: item.width / 200.0,
+                      scale: displayWidth / 200.0,
                       alignment: Alignment.bottomCenter,
                       child: PushPinWidget(style: item.attachmentStyle),
                     ),
@@ -566,11 +564,11 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
                     duration: const Duration(milliseconds: 150),
                     curve: Curves.easeOutCubic,
                     top:
-                        -12 -
-                        (widget.isInteracting ? (5 * (item.width / 200.0)) : 0),
-                    left: item.width / 2 - 40,
+                        -8 -
+                        (widget.isInteracting ? (5 * (displayWidth / 200.0)) : 0),
+                    left: displayWidth / 2 - 24,
                     child: Transform.scale(
-                      scale: item.width / 200.0,
+                      scale: displayWidth / 200.0,
                       alignment: Alignment.center,
                       child: TapeWidget(style: item.attachmentStyle),
                     ),
@@ -580,6 +578,34 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Wraps a widget with a two-layer board drop-shadow.
+  Widget _withBoardShadow(
+    Widget child,
+    double blurRadius,
+    Offset offset,
+  ) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        boxShadow: [
+          // Sharp contact shadow — warm brown tone
+          BoxShadow(
+            color: const Color(0xFF0F0A05).withValues(alpha: 0.65),
+            blurRadius: blurRadius,
+            offset: offset,
+            spreadRadius: 1,
+          ),
+          // Wide ambient diffusion — soft brown-shadow halo
+          BoxShadow(
+            color: const Color(0xFF1C1108).withValues(alpha: 0.32),
+            blurRadius: blurRadius * 2.0,
+            offset: offset * 1.5,
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 }

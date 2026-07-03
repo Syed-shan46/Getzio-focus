@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import '../../../affirmations/domain/models/affirmation_model.dart'; // Reuse SyncStatus enum
 
 enum TaskPriority { high, medium, low }
 enum TaskStatus { pending, inProgress, completed, overdue, cancelled }
@@ -92,14 +93,14 @@ class SubtaskModel {
 }
 
 class TaskModel {
-  final String id; // maps to _id from MongoDB
+  final String id;
   final String title;
   final String description;
   final String category;
   final TaskPriority priority;
   final TaskStatus status;
-  final double progress; // 0 to 100
-  final double manualProgress; // 0 to 100
+  final double progress;
+  final double manualProgress;
   final bool completed;
   final bool pinned;
   final String? color;
@@ -114,6 +115,8 @@ class TaskModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? completedAt;
+  final SyncStatus syncStatus;
+  final DateTime? lastSyncedAt;
 
   TaskModel({
     required this.id,
@@ -138,9 +141,10 @@ class TaskModel {
     this.createdAt,
     this.updatedAt,
     this.completedAt,
+    this.syncStatus = SyncStatus.synced,
+    this.lastSyncedAt,
   });
 
-  // Calculate optimistic progress locally to keep UI instant offline
   double get effectiveProgress {
     if (subtasks.isEmpty) return manualProgress;
     int completedCount = subtasks.where((item) => item.completed).length;
@@ -171,12 +175,11 @@ class TaskModel {
     List<SubtaskModel> parsedSubtasks = [];
     if (map['subtasks'] != null) {
       parsedSubtasks = List<SubtaskModel>.from(
-        map['subtasks'].map((x) => SubtaskModel.fromMap(x)),
+        (map['subtasks'] as List).map((x) => SubtaskModel.fromMap(Map<String, dynamic>.from(x as Map))),
       );
     } else if (map['checklist'] != null) {
-      // Backwards compatibility for older local data
       parsedSubtasks = List<SubtaskModel>.from(
-        map['checklist'].map((x) => SubtaskModel.fromMap(x)),
+        (map['checklist'] as List).map((x) => SubtaskModel.fromMap(Map<String, dynamic>.from(x as Map))),
       );
     }
 
@@ -203,13 +206,17 @@ class TaskModel {
       createdAt: map['createdAt'] != null ? DateTime.tryParse(map['createdAt'].toString()) : null,
       updatedAt: map['updatedAt'] != null ? DateTime.tryParse(map['updatedAt'].toString()) : null,
       completedAt: map['completedAt'] != null ? DateTime.tryParse(map['completedAt'].toString()) : null,
+      syncStatus: map['syncStatus'] != null
+          ? SyncStatus.values.firstWhere((e) => e.name == map['syncStatus'], orElse: () => SyncStatus.synced)
+          : SyncStatus.synced,
+      lastSyncedAt: map['lastSyncedAt'] != null ? DateTime.tryParse(map['lastSyncedAt'].toString()) : null,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      '_id': id, // Send back _id for mongoose sync consistency
+      '_id': id,
       'title': title,
       'description': description,
       'category': category,
@@ -231,6 +238,8 @@ class TaskModel {
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'completedAt': effectiveCompleted ? (completedAt ?? DateTime.now()).toIso8601String() : null,
+      'syncStatus': syncStatus.name,
+      'lastSyncedAt': lastSyncedAt?.toIso8601String(),
     };
   }
 
@@ -257,6 +266,8 @@ class TaskModel {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? completedAt,
+    SyncStatus? syncStatus,
+    DateTime? lastSyncedAt,
   }) {
     return TaskModel(
       id: id ?? this.id,
@@ -281,6 +292,8 @@ class TaskModel {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       completedAt: completedAt ?? this.completedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
     );
   }
 }

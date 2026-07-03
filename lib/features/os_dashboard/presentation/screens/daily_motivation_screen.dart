@@ -20,9 +20,14 @@ import '../../../affirmations/presentation/widgets/affirmation_bottom_sheet.dart
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 
 class DailyMotivationScreen extends ConsumerStatefulWidget {
-  final VoidCallback onClose;
+  final VoidCallback? onClose;
+  final bool isTab;
 
-  const DailyMotivationScreen({super.key, required this.onClose});
+  const DailyMotivationScreen({
+    super.key,
+    this.onClose,
+    this.isTab = false,
+  });
 
   @override
   ConsumerState<DailyMotivationScreen> createState() =>
@@ -300,23 +305,25 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
         children: [
           Row(
             children: [
-              GestureDetector(
-                onTap: widget.onClose,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.06),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white12, width: 0.8),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white70,
-                    size: 15,
+              if (!widget.isTab && widget.onClose != null) ...[
+                GestureDetector(
+                  onTap: widget.onClose,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.06),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white12, width: 0.8),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white70,
+                      size: 15,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 14),
+                const SizedBox(width: 14),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

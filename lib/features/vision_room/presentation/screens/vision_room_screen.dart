@@ -32,6 +32,7 @@ import '../widgets/plan_builder_modal.dart';
 import '../widgets/finance_builder_modal.dart';
 import '../widgets/countdown_builder_modal.dart';
 import '../widgets/due_date_progress_selector.dart';
+import '../widgets/image_details_modal.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 import '../../../auth/presentation/providers/preview_mode_provider.dart';
@@ -121,104 +122,52 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
     final size = MediaQuery.of(context).size;
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null && mounted) {
-      DateTime? selectedDueDate;
-      double selectedProgress = 0;
-      bool addToShelf = false;
-      await showDialog(
-        context: context,
-        builder: (ctx) => StatefulBuilder(
-          builder: (context, setDlgState) => AlertDialog(
-            backgroundColor: const Color(0xFF0F172A),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text('Image Vision Goal Details', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-            content: SizedBox(
-              width: 300,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DueDateAndProgressSelector(
-                    selectedDate: selectedDueDate,
-                    currentProgress: selectedProgress,
-                    accentColor: const Color(0xFF10B981),
-                    onDateChanged: (d) => setDlgState(() => selectedDueDate = d),
-                    onProgressChanged: (p) => setDlgState(() => selectedProgress = p),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Add to Wooden Shelf',
-                            style: TextStyle(color: Colors.white70, fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      Switch(
-                        value: addToShelf,
-                        activeColor: const Color(0xFF10B981),
-                        onChanged: (val) => setDlgState(() => addToShelf = val),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Skip', style: TextStyle(color: Colors.white60)),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Save Details'),
-              ),
-            ],
-          ),
-        ),
-      );
+      await ImageDetailsModal.show(
+        context,
+        onSubmit: (metadata) {
+          final random = Random();
+          final newItem = VisionItem(
+            id: const Uuid().v4(),
+            type: VisionItemType.image.name,
+            content: image.path, // Temporary local cache path
+            countdownDate: metadata['dueDate'] != null
+                ? DateTime.tryParse(metadata['dueDate'] as String)
+                : null,
+            x: (size.width / 2) - 125,
+            y: (size.height / 2) - 125,
+            width: 250,
+            height: 250,
+            rotation: (random.nextDouble() - 0.5) * 0.2,
+            metadata: {
+              'progress': metadata['progress'] ?? 0.0,
+              'caption': metadata['caption'] ?? '',
+              'emoji': metadata['emoji'] ?? 'globe',
+              'isOnShelf': false,
+            },
+          );
+          
+          // Optimistically add the item to the canvas using local cache
+          ref.read(canvasStateProvider.notifier).addItem(newItem);
 
-      final random = Random();
-      final newItem = VisionItem(
-        id: const Uuid().v4(),
-        type: VisionItemType.image.name,
-        content: image.path, // Temporary local cache path
-        countdownDate: selectedDueDate,
-        x: (size.width / 2) - 125,
-        y: (size.height / 2) - 125,
-        width: 250,
-        height: 250,
-        rotation: (random.nextDouble() - 0.5) * 0.2,
-        metadata: {
-          'progress': selectedProgress,
-          'isOnShelf': addToShelf,
+          // Upload in the background
+          final dio = ref.read(dioClientProvider).dio;
+          final uploadService = VisionUploadService(dio: dio);
+          
+          uploadService.uploadImage(image.path).then((uploadedUrl) {
+            if (uploadedUrl != null && mounted) {
+              // Replace the local path with the actual Cloudinary URL
+              ref.read(canvasStateProvider.notifier).updateItemDetails(
+                newItem.id,
+                content: uploadedUrl,
+              );
+            } else if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Failed to upload image to Cloudinary. Please try again later.')),
+              );
+            }
+          });
         },
       );
-      
-      // Optimistically add the item to the canvas using local cache
-      ref.read(canvasStateProvider.notifier).addItem(newItem);
-
-      // Upload in the background
-      final dio = ref.read(dioClientProvider).dio;
-      final uploadService = VisionUploadService(dio: dio);
-      
-      uploadService.uploadImage(image.path).then((uploadedUrl) {
-        if (uploadedUrl != null && mounted) {
-          // Replace the local path with the actual Cloudinary URL
-          ref.read(canvasStateProvider.notifier).updateItemDetails(
-            newItem.id,
-            content: uploadedUrl,
-          );
-        } else if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to upload image to Cloudinary. Please try again later.')),
-          );
-        }
-      });
     }
   }
 
@@ -324,6 +273,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
       context,
       onSubmit: (metadata) {
         final size = MediaQuery.of(context).size;
+        final random = Random();
         ref
             .read(canvasStateProvider.notifier)
             .addItem(
@@ -332,10 +282,13 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                 type: VisionItemType.task.name,
                 content: metadata['title'] ?? 'Task',
                 metadata: metadata,
-                x: (size.width / 2) - 125,
-                y: (size.height / 2) - 60,
-                width: 250,
-                height: 120,
+                x: (size.width / 2) - 100,
+                y: (size.height / 2) - 130,
+                width: 200,
+                height: 260,
+                rotation: (random.nextDouble() - 0.5) * 0.08,
+                attachmentType: 'tape',
+                attachmentStyle: 'beige',
               ),
             );
       },
@@ -470,7 +423,6 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
 
   void _addText() {
     final controller = TextEditingController();
-    bool addToShelf = false;
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -500,27 +452,6 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                       borderSide: BorderSide.none,
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Add to Wooden Shelf',
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                    Switch(
-                      value: addToShelf,
-                      activeColor: AppColors.accentBlue,
-                      onChanged: (val) => setDlgState(() => addToShelf = val),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -557,7 +488,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                           height: 120,
                           rotation: (random.nextDouble() - 0.5) * 0.1,
                           attachmentType: 'none',
-                          metadata: {'isOnShelf': addToShelf},
+                          metadata: {'isOnShelf': false},
                         ),
                       );
                 }
@@ -590,6 +521,9 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
       onAddText: () => withEditMode(_addText),
       onEnterEditMode: () {
         ref.read(editModeProvider.notifier).state = true;
+      },
+      onExitRoom: () {
+        Navigator.pop(context);
       },
     );
   }
@@ -808,31 +742,28 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Close button
-              GestureDetector(
-                onTap: () {
-                  if (isEditMode) {
+              // Close button (only shown as checkmark in edit mode, standard navigation handled by 3D Floor Exit button)
+              if (isEditMode)
+                GestureDetector(
+                  onTap: () {
                     _exitEditMode();
-                  } else {
-                    Navigator.pop(context);
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.glass,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.glassBorder, width: 0.5),
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.glass,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.glassBorder, width: 0.5),
+                    ),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      size: 18,
+                      color: Colors.white,
+                    ),
                   ),
-                  child: Icon(
-                    isEditMode
-                        ? Icons.check_rounded
-                        : Icons.arrow_back_ios_new_rounded,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+                )
+              else
+                const SizedBox(width: 40, height: 40),
 
               // Edit Mode indicator
               if (isEditMode)
@@ -1085,6 +1016,82 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
       height: 32,
       margin: const EdgeInsets.symmetric(horizontal: 4),
       color: Colors.white.withValues(alpha: 0.1),
+    );
+  }
+
+  Widget _build3DExitButton() {
+    final isEditMode = ref.watch(editModeProvider);
+    if (isEditMode) return const SizedBox.shrink();
+
+    return Positioned(
+      bottom: 22,
+      left: 20,
+      child: Transform(
+        alignment: Alignment.center,
+        transform: Matrix4.identity()
+          ..setEntry(3, 2, 0.0025)
+          ..rotateX(0.85) // Lay flat on perspective floor
+          ..rotateY(-0.15)
+          ..rotateZ(-0.08),
+        child: GestureDetector(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            Navigator.pop(context);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF321F0F).withValues(alpha: 0.95), // Mahogany Wood plate matching floor
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: const Color(0xFFFFD54F).withValues(alpha: 0.8), // Gilded gold trim
+                width: 1.5,
+              ),
+              boxShadow: [
+                // 3D Shadow depth resting on the floor
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  blurRadius: 4,
+                  offset: const Offset(2, 6),
+                ),
+                // Inner bevel light
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  blurRadius: 0,
+                  offset: const Offset(-1, -1),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.door_back_door_outlined,
+                  color: Color(0xFFFFD54F), // Gold icon
+                  size: 16,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'EXIT',
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFFFFD54F), // Gold lettering
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                    shadows: [
+                      const Shadow(
+                        color: Colors.black,
+                        offset: Offset(1, 1),
+                        blurRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
