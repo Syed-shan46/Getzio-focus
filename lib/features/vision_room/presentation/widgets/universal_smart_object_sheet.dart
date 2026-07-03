@@ -760,6 +760,8 @@ class _UniversalSmartObjectSheetState
     list.add(SmartMilestone(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: text.trim(),
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     ));
     _saveMilestones(item, list);
     _newMilestoneController.clear();

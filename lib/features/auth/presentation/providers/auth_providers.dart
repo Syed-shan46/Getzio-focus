@@ -323,8 +323,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
     await _hiveDb.saveUserPhone(mockUser.mobile);
     await _hiveDb.saveUserName(mockUser.name);
 
-    // Clear guest vision items so the user starts fresh post-login
-    await _hiveDb.saveVisionItems([]);
 
     // Guest -> Account Migration / Reload from Backend
     final hasGuestData = GuestDataMigrationService.checkGuestDataExists(_hiveDb);
@@ -375,8 +373,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
       await _hiveDb.saveUserPhone(user.mobile);
       await _hiveDb.saveUserName(user.name);
 
-      // Clear guest vision items so the user starts fresh post-login
-      await _hiveDb.saveVisionItems([]);
 
       // Guest -> Account Migration / Reload from Backend
       final hasGuestData = GuestDataMigrationService.checkGuestDataExists(_hiveDb);

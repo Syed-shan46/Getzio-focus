@@ -103,6 +103,39 @@ class SyncManager {
               final response = await dio.post('/focus/sync', data: {'affirmations': list});
               if (response.statusCode == 200) success = true;
             }
+          } else if (action.collection == 'goals') {
+            final goalId = action.payload?['goalId'] ?? action.documentId;
+            final milestoneId = action.payload?['milestoneId'];
+            if (action.operation == 'create') {
+              final response = await dio.post('/focus/goals', data: action.payload);
+              if (response.statusCode == 200 || response.statusCode == 201) success = true;
+            } else if (action.operation == 'update') {
+              final response = await dio.patch('/focus/goals/${action.documentId}', data: action.payload);
+              if (response.statusCode == 200) success = true;
+            } else if (action.operation == 'delete') {
+              final response = await dio.delete('/focus/goals/${action.documentId}');
+              if (response.statusCode == 200) success = true;
+            } else if (action.operation == 'create_milestone') {
+              final response = await dio.post('/focus/goals/$goalId/milestones', data: action.payload);
+              if (response.statusCode == 200 || response.statusCode == 201) success = true;
+            } else if (action.operation == 'update_milestone') {
+              final response = await dio.patch('/focus/goals/$goalId/milestones/$milestoneId', data: action.payload);
+              if (response.statusCode == 200) success = true;
+            } else if (action.operation == 'delete_milestone') {
+              final response = await dio.delete('/focus/goals/$goalId/milestones/$milestoneId');
+              if (response.statusCode == 200) success = true;
+            } else if (action.operation == 'create_subtask') {
+              final response = await dio.post('/focus/goals/$goalId/milestones/$milestoneId/subtasks', data: action.payload);
+              if (response.statusCode == 200 || response.statusCode == 201) success = true;
+            } else if (action.operation == 'update_subtask') {
+              final subtaskId = action.documentId;
+              final response = await dio.patch('/focus/goals/$goalId/milestones/$milestoneId/subtasks/$subtaskId', data: action.payload);
+              if (response.statusCode == 200) success = true;
+            } else if (action.operation == 'delete_subtask') {
+              final subtaskId = action.documentId;
+              final response = await dio.delete('/focus/goals/$goalId/milestones/$milestoneId/subtasks/$subtaskId');
+              if (response.statusCode == 200) success = true;
+            }
           } else if (action.collection == 'vision_room') {
             if (action.operation == 'create') {
               final response = await dio.post('/focus/vision-room/item', data: action.payload);

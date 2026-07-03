@@ -7,7 +7,8 @@ import '../../../../core/storage/hive_database.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../os_dashboard/presentation/providers/os_providers.dart';
 import '../../../os_dashboard/presentation/providers/daily_motivation_provider.dart';
-import '../../../vision_room/presentation/providers/canvas_providers.dart';
+import '../../../vision_room/domain/models/vision_item.dart';
+import '../../../vision_room/data/repositories/vision_room_repository.dart';
 
 class GuestDataMigrationService {
   static const String _logTag = '[Migration]';
@@ -72,6 +73,26 @@ class GuestDataMigrationService {
       }
     });
 
+    final repo = ref.read(visionRoomRepositoryProvider);
+    final mappedVisionItems = visionItems.map((v) {
+      final item = VisionItem.fromJson(Map<String, dynamic>.from(v));
+      return repo.mapItemToDbKeys(item);
+    }).toList();
+
+    final mappedAffirmations = selectedAffirmations.map((a) => {
+      'id': a['id'],
+      'localId': a['localId'] ?? a['id'],
+      'title': a['title'] ?? 'Affirmation',
+      'text': a['text'] ?? '',
+      'author': a['author'] ?? 'Anonymous',
+      'category': a['category'] ?? 'General',
+      'emoji': a['emoji'] ?? '',
+      'favorite': a['isFavorite'] ?? a['favorite'] ?? false,
+      'pinned': a['isPinned'] ?? a['pinned'] ?? false,
+      'theme': a['colorTheme'] ?? a['theme'] ?? 'Warm Amber',
+      'createdAt': a['createdAt'],
+    }).toList();
+
     final payload = {
       'profile': {
         'identity': identity,
@@ -111,9 +132,9 @@ class GuestDataMigrationService {
         'sleepGoal': healthPrefs['sleepTarget'] ?? 8,
         'exerciseGoal': healthPrefs['exerciseTarget'] ?? 30,
       },
-      'affirmations': const [],
-      'visionRoom': const {
-        'items': [],
+      'affirmations': mappedAffirmations,
+      'visionRoom': {
+        'items': mappedVisionItems,
       },
       'habitLogs': logsList,
       'workspaceSettings': jsonEncode(workspaceSettings)

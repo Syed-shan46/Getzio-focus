@@ -99,6 +99,8 @@ class VisionItem extends HiveObject {
     String? attachmentStyle,
     String? materialStyle,
     Map<dynamic, dynamic>? metadata,
+    String? secondaryContent,
+    DateTime? countdownDate,
   }) {
     return VisionItem(
       id: id ?? this.id,
@@ -112,8 +114,8 @@ class VisionItem extends HiveObject {
       colorValue: colorValue ?? this.colorValue,
       isPinned: isPinned ?? this.isPinned,
       emoji: emoji,
-      countdownDate: countdownDate,
-      secondaryContent: secondaryContent,
+      countdownDate: countdownDate ?? this.countdownDate,
+      secondaryContent: secondaryContent ?? this.secondaryContent,
       zIndex: zIndex ?? this.zIndex,
       attachmentType: attachmentType ?? this.attachmentType,
       attachmentStyle: attachmentStyle ?? this.attachmentStyle,

@@ -335,7 +335,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     commitState(state.copyWith(items: updatedItems));
   }
 
-  void updateItemDetails(String id, {String? content, int? colorValue, Map<String, dynamic>? metadata}) {
+  void updateItemDetails(String id, {String? content, String? secondaryContent, int? colorValue, Map<String, dynamic>? metadata}) {
     final updatedItems = state.items.map((item) {
       if (item.id == id) {
         final newMetadata = metadata != null
@@ -343,6 +343,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
             : item.metadata;
         final updated = item.copyWith(
           content: content ?? item.content,
+          secondaryContent: secondaryContent ?? item.secondaryContent,
           colorValue: colorValue ?? item.colorValue,
           metadata: newMetadata,
         );
