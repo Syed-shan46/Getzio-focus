@@ -7,7 +7,6 @@ import '../../data/repositories/affirmations_repository.dart';
 import '../../../os_dashboard/presentation/providers/os_providers.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../../core/storage/sync_manager.dart';
-import '../../../../core/storage/hive_database.dart';
 import '../../../../shared/providers/app_providers.dart';
 
 class AffirmationsState {
@@ -18,6 +17,9 @@ class AffirmationsState {
   final bool isOffline;
   final int completedTodayCount;
   final int totalPracticedDays;
+  final Map<String, int> repeatCounts;
+  final String? lastViewedAffirmationId;
+  final DateTime? lastViewedAt;
 
   AffirmationsState({
     this.affirmations = const [],
@@ -27,6 +29,9 @@ class AffirmationsState {
     this.isOffline = false,
     this.completedTodayCount = 0,
     this.totalPracticedDays = 14,
+    this.repeatCounts = const {},
+    this.lastViewedAffirmationId,
+    this.lastViewedAt,
   });
 
   AffirmationsState copyWith({
@@ -37,6 +42,9 @@ class AffirmationsState {
     bool? isOffline,
     int? completedTodayCount,
     int? totalPracticedDays,
+    Map<String, int>? repeatCounts,
+    String? lastViewedAffirmationId,
+    DateTime? lastViewedAt,
   }) {
     return AffirmationsState(
       affirmations: affirmations ?? this.affirmations,
@@ -46,6 +54,10 @@ class AffirmationsState {
       isOffline: isOffline ?? this.isOffline,
       completedTodayCount: completedTodayCount ?? this.completedTodayCount,
       totalPracticedDays: totalPracticedDays ?? this.totalPracticedDays,
+      repeatCounts: repeatCounts ?? this.repeatCounts,
+      lastViewedAffirmationId:
+          lastViewedAffirmationId ?? this.lastViewedAffirmationId,
+      lastViewedAt: lastViewedAt ?? this.lastViewedAt,
     );
   }
 }
@@ -71,7 +83,8 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
         DailyAffirmation(
           id: 'def_1',
           title: 'Growth Mindset',
-          text: 'Challenges are opportunities to grow and expand my capabilities.',
+          text:
+              'Challenges are opportunities to grow and expand my capabilities.',
           category: 'Mindset',
           colorTheme: 'Minimal White',
           isPinned: true,
@@ -80,7 +93,8 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
         DailyAffirmation(
           id: 'def_2',
           title: 'Daily Discipline',
-          text: 'I choose consistency over temporary motivation. I finish what I start.',
+          text:
+              'I choose consistency over temporary motivation. I finish what I start.',
           category: 'Discipline',
           colorTheme: 'Midnight Black',
           syncStatus: SyncStatus.synced,
@@ -88,7 +102,8 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
         DailyAffirmation(
           id: 'def_3',
           title: 'Grateful Heart',
-          text: 'I appreciate the little details today. Peace is within my control.',
+          text:
+              'I appreciate the little details today. Peace is within my control.',
           category: 'Gratitude',
           colorTheme: 'Sunrise Orange',
           syncStatus: SyncStatus.synced,
@@ -103,20 +118,30 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
     final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
     if (!hasToken) return;
 
-    _repo.fetchAffirmationsFromServer().then((remoteList) async {
-      if (remoteList != null) {
-        final localJson = jsonEncode(state.affirmations.map((a) => a.toMap()).toList());
-        final remoteJson = jsonEncode(remoteList.map((a) => a.toMap()).toList());
+    _repo
+        .fetchAffirmationsFromServer()
+        .then((remoteList) async {
+          if (remoteList != null) {
+            final localJson = jsonEncode(
+              state.affirmations.map((a) => a.toMap()).toList(),
+            );
+            final remoteJson = jsonEncode(
+              remoteList.map((a) => a.toMap()).toList(),
+            );
 
-        if (localJson != remoteJson) {
-          await _repo.saveLocalAffirmations(remoteList);
-          state = state.copyWith(affirmations: remoteList, isOffline: false);
-        }
-      }
-      _ref.read(syncManagerProvider).processQueue();
-    }).catchError((e) {
-      print('Error fetching affirmations silently: $e');
-    });
+            if (localJson != remoteJson) {
+              await _repo.saveLocalAffirmations(remoteList);
+              state = state.copyWith(
+                affirmations: remoteList,
+                isOffline: false,
+              );
+            }
+          }
+          _ref.read(syncManagerProvider).processQueue();
+        })
+        .catchError((e) {
+          print('Error fetching affirmations silently: $e');
+        });
   }
 
   List<DailyAffirmation> getFilteredAffirmations() {
@@ -142,7 +167,9 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
   Future<void> addAffirmation(DailyAffirmation aff) async {
     final isGuest = _ref.read(authProvider).value == null;
     if (isGuest) {
-      final createdCount = state.affirmations.where((a) => !a.id.startsWith('def_') && !a.id.startsWith('a_seed_')).length;
+      final createdCount = state.affirmations
+          .where((a) => !a.id.startsWith('def_') && !a.id.startsWith('a_seed_'))
+          .length;
       if (createdCount >= 2) {
         _ref.read(premiumAuthTriggerProvider.notifier).state = 'affirmation';
         return;
@@ -156,39 +183,55 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
 
     final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
     if (hasToken) {
-      _repo.createAffirmationOnServer(pendingAff).then((synced) async {
-        if (synced != null) {
-          final updatedList = state.affirmations.map((a) => a.id == aff.id ? synced : a).toList();
-          state = state.copyWith(affirmations: updatedList);
-          await _repo.saveLocalAffirmations(updatedList);
-        } else {
-          await _repo.queueAffirmationUpsert(pendingAff);
-        }
-      }).catchError((e) async {
-        await _repo.queueAffirmationUpsert(pendingAff);
-      });
+      _repo
+          .createAffirmationOnServer(pendingAff)
+          .then((synced) async {
+            if (synced != null) {
+              final updatedList = state.affirmations
+                  .map((a) => a.id == aff.id ? synced : a)
+                  .toList();
+              state = state.copyWith(affirmations: updatedList);
+              await _repo.saveLocalAffirmations(updatedList);
+            } else {
+              await _repo.queueAffirmationUpsert(pendingAff);
+            }
+          })
+          .catchError((e) async {
+            await _repo.queueAffirmationUpsert(pendingAff);
+          });
     }
   }
 
   Future<void> updateAffirmation(DailyAffirmation updated) async {
     final pendingAff = updated.copyWith(syncStatus: SyncStatus.pending);
-    final list = state.affirmations.map((a) => a.id == updated.id ? pendingAff : a).toList();
+    final list = state.affirmations
+        .map((a) => a.id == updated.id ? pendingAff : a)
+        .toList();
     state = state.copyWith(affirmations: list);
     await _repo.saveLocalAffirmations(list);
 
     final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
     if (hasToken) {
-      _repo.syncWithBackend(list).then((success) async {
-        if (success) {
-          final updatedList = state.affirmations.map((a) => a.id == updated.id ? a.copyWith(syncStatus: SyncStatus.synced) : a).toList();
-          state = state.copyWith(affirmations: updatedList);
-          await _repo.saveLocalAffirmations(updatedList);
-        } else {
-          await _repo.queueAffirmationUpsert(pendingAff);
-        }
-      }).catchError((e) async {
-        await _repo.queueAffirmationUpsert(pendingAff);
-      });
+      _repo
+          .syncWithBackend(list)
+          .then((success) async {
+            if (success) {
+              final updatedList = state.affirmations
+                  .map(
+                    (a) => a.id == updated.id
+                        ? a.copyWith(syncStatus: SyncStatus.synced)
+                        : a,
+                  )
+                  .toList();
+              state = state.copyWith(affirmations: updatedList);
+              await _repo.saveLocalAffirmations(updatedList);
+            } else {
+              await _repo.queueAffirmationUpsert(pendingAff);
+            }
+          })
+          .catchError((e) async {
+            await _repo.queueAffirmationUpsert(pendingAff);
+          });
     }
   }
 
@@ -210,7 +253,10 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
   Future<void> togglePin(String id) async {
     final list = state.affirmations.map((a) {
       if (a.id == id) {
-        return a.copyWith(isPinned: !a.isPinned, syncStatus: SyncStatus.pending);
+        return a.copyWith(
+          isPinned: !a.isPinned,
+          syncStatus: SyncStatus.pending,
+        );
       }
       if (a.isPinned) {
         return a.copyWith(isPinned: false, syncStatus: SyncStatus.pending);
@@ -219,10 +265,16 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
     }).toList();
     state = state.copyWith(affirmations: list);
     await _repo.saveLocalAffirmations(list);
-    
+
     _repo.syncWithBackend(list).then((success) async {
       if (success) {
-        final syncedList = state.affirmations.map((a) => a.syncStatus == SyncStatus.pending ? a.copyWith(syncStatus: SyncStatus.synced) : a).toList();
+        final syncedList = state.affirmations
+            .map(
+              (a) => a.syncStatus == SyncStatus.pending
+                  ? a.copyWith(syncStatus: SyncStatus.synced)
+                  : a,
+            )
+            .toList();
         state = state.copyWith(affirmations: syncedList);
         await _repo.saveLocalAffirmations(syncedList);
       }
@@ -232,16 +284,23 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
   Future<void> toggleFavorite(String id) async {
     final list = state.affirmations.map((a) {
       if (a.id == id) {
-        return a.copyWith(isFavorite: !a.isFavorite, syncStatus: SyncStatus.pending);
+        return a.copyWith(
+          isFavorite: !a.isFavorite,
+          syncStatus: SyncStatus.pending,
+        );
       }
       return a;
     }).toList();
     state = state.copyWith(affirmations: list);
     await _repo.saveLocalAffirmations(list);
-    
+
     _repo.syncWithBackend(list).then((success) async {
       if (success) {
-        final syncedList = state.affirmations.map((a) => a.id == id ? a.copyWith(syncStatus: SyncStatus.synced) : a).toList();
+        final syncedList = state.affirmations
+            .map(
+              (a) => a.id == id ? a.copyWith(syncStatus: SyncStatus.synced) : a,
+            )
+            .toList();
         state = state.copyWith(affirmations: syncedList);
         await _repo.saveLocalAffirmations(syncedList);
       }
@@ -254,13 +313,17 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
     final item = list.removeAt(oldIndex);
     list.insert(newIndex, item.copyWith(syncStatus: SyncStatus.pending));
 
-    final pendingList = list.map((a) => a.copyWith(syncStatus: SyncStatus.pending)).toList();
+    final pendingList = list
+        .map((a) => a.copyWith(syncStatus: SyncStatus.pending))
+        .toList();
     state = state.copyWith(affirmations: pendingList);
     await _repo.saveLocalAffirmations(pendingList);
-    
+
     _repo.syncWithBackend(pendingList).then((success) async {
       if (success) {
-        final syncedList = state.affirmations.map((a) => a.copyWith(syncStatus: SyncStatus.synced)).toList();
+        final syncedList = state.affirmations
+            .map((a) => a.copyWith(syncStatus: SyncStatus.synced))
+            .toList();
         state = state.copyWith(affirmations: syncedList);
         await _repo.saveLocalAffirmations(syncedList);
       }
@@ -270,7 +333,9 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
   Future<void> duplicateAffirmation(String id) async {
     final isGuest = _ref.read(authProvider).value == null;
     if (isGuest) {
-      final createdCount = state.affirmations.where((a) => !a.id.startsWith('def_') && !a.id.startsWith('a_seed_')).length;
+      final createdCount = state.affirmations
+          .where((a) => !a.id.startsWith('def_') && !a.id.startsWith('a_seed_'))
+          .length;
       if (createdCount >= 2) {
         _ref.read(premiumAuthTriggerProvider.notifier).state = 'affirmation';
         return;
@@ -288,10 +353,16 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
     final list = [...state.affirmations, copy];
     state = state.copyWith(affirmations: list);
     await _repo.saveLocalAffirmations(list);
-    
+
     _repo.syncWithBackend(list).then((success) async {
       if (success) {
-        final syncedList = state.affirmations.map((a) => a.id == copy.id ? a.copyWith(syncStatus: SyncStatus.synced) : a).toList();
+        final syncedList = state.affirmations
+            .map(
+              (a) => a.id == copy.id
+                  ? a.copyWith(syncStatus: SyncStatus.synced)
+                  : a,
+            )
+            .toList();
         state = state.copyWith(affirmations: syncedList);
         await _repo.saveLocalAffirmations(syncedList);
       }
@@ -300,9 +371,36 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
 
   void completePractice() {
     state = state.copyWith(completedTodayCount: state.completedTodayCount + 1);
-    _ref.read(osStateProvider.notifier).toggleHabitCompletion(
-      'daily_affirmation_practice_${const Uuid().v4()}',
+    _ref
+        .read(osStateProvider.notifier)
+        .toggleHabitCompletion(
+          'daily_affirmation_practice_${const Uuid().v4()}',
+        );
+  }
+
+  /// Increments the repeat count for an affirmation and persists locally.
+  void incrementRepeatCount(String affirmationId, int count) {
+    final currentCount = state.repeatCounts[affirmationId] ?? 0;
+    final newCounts = Map<String, int>.from(state.repeatCounts);
+    newCounts[affirmationId] = currentCount + count;
+    state = state.copyWith(repeatCounts: newCounts);
+
+    // Persist to Hive for offline storage
+    _repo.saveRepeatCounts(newCounts);
+  }
+
+  /// Tracks the last viewed affirmation (for "recently used" feature).
+  void trackLastViewed(String affirmationId) {
+    state = state.copyWith(
+      lastViewedAffirmationId: affirmationId,
+      lastViewedAt: DateTime.now(),
     );
+  }
+
+  /// Loads repeat counts from Hive into state.
+  Future<void> loadRepeatCounts() async {
+    final counts = _repo.getRepeatCounts();
+    state = state.copyWith(repeatCounts: counts);
   }
 
   Future<void> syncNow() async {

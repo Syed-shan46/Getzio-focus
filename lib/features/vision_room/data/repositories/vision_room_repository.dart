@@ -12,8 +12,21 @@ class VisionRoomRepository {
   VisionRoomRepository(this._hiveDb, this._ref);
 
   List<VisionItem> getLocalVisionItems() {
-    final list = _hiveDb.getVisionItems();
-    return list.map((json) => VisionItem.fromJson(json)).toList();
+    try {
+      final list = _hiveDb.getVisionItems();
+      final items = <VisionItem>[];
+      for (var json in list) {
+        try {
+          items.add(VisionItem.fromJson(json));
+        } catch (e) {
+          dev.log('[VisionRoomRepository] Error parsing individual item: $e');
+        }
+      }
+      return items;
+    } catch (e) {
+      dev.log('[VisionRoomRepository] Error getting local vision items: $e');
+      return [];
+    }
   }
 
   Future<void> saveLocalVisionItems(List<VisionItem> items) async {
@@ -41,19 +54,19 @@ class VisionRoomRepository {
               } catch (_) {}
             }
 
-            final scaleVal = (itemJson['scale'] as num?)?.toDouble() ?? parsedMeta['scale'] ?? 1.0;
-            final opacityVal = (itemJson['opacity'] as num?)?.toDouble() ?? parsedMeta['opacity'] ?? 1.0;
+            final scaleVal = parseDoubleHelper(itemJson['scale'] ?? parsedMeta['scale'], 1.0);
+            final opacityVal = parseDoubleHelper(itemJson['opacity'] ?? parsedMeta['opacity'], 1.0);
 
             final rawId = itemJson['itemId'] ?? itemJson['id'] ?? '';
             final rawType = itemJson['type'] ?? '';
             final rawContent = itemJson['type'] == 'image'
                 ? (itemJson['imageUrl'] ?? itemJson['content'] ?? '')
                 : (itemJson['text'] ?? itemJson['content'] ?? '');
-            final rawX = (itemJson['xPosition'] as num?)?.toDouble() ?? (itemJson['x'] as num?)?.toDouble() ?? 0.0;
-            final rawY = (itemJson['yPosition'] as num?)?.toDouble() ?? (itemJson['y'] as num?)?.toDouble() ?? 0.0;
-            final rawWidth = (itemJson['width'] as num?)?.toDouble() ?? (itemJson['w'] as num?)?.toDouble() ?? 180.0;
-            final rawHeight = (itemJson['height'] as num?)?.toDouble() ?? (itemJson['h'] as num?)?.toDouble() ?? 120.0;
-            final rawRotation = (itemJson['rotation'] as num?)?.toDouble() ?? (itemJson['r'] as num?)?.toDouble() ?? 0.0;
+            final rawX = parseDoubleHelper(itemJson['xPosition'] ?? itemJson['x'], 0.0);
+            final rawY = parseDoubleHelper(itemJson['yPosition'] ?? itemJson['y'], 0.0);
+            final rawWidth = parseDoubleHelper(itemJson['width'] ?? itemJson['w'], 180.0);
+            final rawHeight = parseDoubleHelper(itemJson['height'] ?? itemJson['h'], 120.0);
+            final rawRotation = parseDoubleHelper(itemJson['rotation'] ?? itemJson['r'], 0.0);
 
             final rawColorVal = itemJson['color'] != null && itemJson['color'].toString().isNotEmpty
                 ? (int.tryParse(itemJson['color'], radix: 16) ?? (itemJson['colorValue'] as int?) ?? 0xFF1E1B4B)
@@ -72,7 +85,7 @@ class VisionRoomRepository {
               rotation: rawRotation,
               colorValue: rawColorVal,
               isPinned: rawIsPinned,
-              zIndex: (itemJson['zIndex'] as num?)?.toInt() ?? 0,
+              zIndex: parseIntHelper(itemJson['zIndex'], 0),
               attachmentType: 'tape',
               attachmentStyle: 'beige',
               materialStyle: 'default',

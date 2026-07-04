@@ -243,8 +243,8 @@ class ProgressEngine {
 
     // 1. Finance Goal progress
     if (item.type == VisionItemType.financeGoal.name) {
-      final target = (metadata['targetAmount'] as num?)?.toDouble() ?? 1000.0;
-      final current = (metadata['currentAmount'] as num?)?.toDouble() ?? 0.0;
+      final target = parseDoubleHelper(metadata['targetAmount'], 1000.0);
+      final current = parseDoubleHelper(metadata['currentAmount'], 0.0);
       if (target <= 0) return 0.0;
       return (current / target).clamp(0.0, 1.0);
     }
@@ -256,7 +256,7 @@ class ProgressEngine {
           ? DateTime.tryParse(targetStr) ?? item.countdownDate
           : item.countdownDate;
       if (targetDate == null) return 0.0;
-      final totalDays = (metadata['totalDays'] as num?)?.toDouble() ?? 30.0;
+      final totalDays = parseDoubleHelper(metadata['totalDays'], 30.0);
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final target = DateTime(targetDate.year, targetDate.month, targetDate.day);
@@ -321,7 +321,7 @@ class ProgressEngine {
     }
 
     // Default stored progress override if available (stored as 0-100, normalize to 0.0-1.0)
-    final storedProgress = (metadata['progress'] as num?)?.toDouble() ?? 0.0;
+    final storedProgress = parseDoubleHelper(metadata['progress'], 0.0);
     return (storedProgress / 100.0).clamp(0.0, 1.0);
   }
 
@@ -353,30 +353,33 @@ extension SmartVisionItemExtension on VisionItem {
 
     // Migration: If there are checklist items, automatically convert them to milestones
     if (type == VisionItemType.goal.name && rawChecklist != null && rawChecklist.isNotEmpty) {
-      final checklists = rawChecklist
-          .map((c) => SmartChecklistItem.fromJson(Map<String, dynamic>.from(c)))
-          .toList();
-          
-      final subtasks = checklists.map((c) {
-        return SmartSubtask(
-          id: c.id,
-          title: c.title,
-          isCompleted: c.isCompleted,
-          completionDate: c.completionDate,
-          createdAt: DateTime.now(),
-        );
-      }).toList();
+      final hasGeneralMilestone = list.any((m) => m.id == 'general_tasks_migration');
+      if (!hasGeneralMilestone) {
+        final checklists = rawChecklist
+            .map((c) => SmartChecklistItem.fromJson(Map<String, dynamic>.from(c)))
+            .toList();
+            
+        final subtasks = checklists.map((c) {
+          return SmartSubtask(
+            id: c.id,
+            title: c.title,
+            isCompleted: c.isCompleted,
+            completionDate: c.completionDate,
+            createdAt: DateTime.now(),
+          );
+        }).toList();
 
-      final generalMilestone = SmartMilestone(
-        id: 'general_tasks_migration_${DateTime.now().millisecondsSinceEpoch}',
-        title: 'General Tasks',
-        description: 'Migrated from checklist',
-        isCompleted: subtasks.isNotEmpty && subtasks.every((s) => s.isCompleted),
-        subtasks: subtasks,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      list.insert(0, generalMilestone);
+        final generalMilestone = SmartMilestone(
+          id: 'general_tasks_migration',
+          title: 'General Tasks',
+          description: 'Migrated from checklist',
+          isCompleted: subtasks.isNotEmpty && subtasks.every((s) => s.isCompleted),
+          subtasks: subtasks,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        list.insert(0, generalMilestone);
+      }
     }
     
     // Sort by order

@@ -492,6 +492,7 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
             type: VisionItemType.countdown.name,
             content: metadata['title'] ?? 'Countdown',
             metadata: metadata,
+            countdownDate: metadata['targetDate'] != null ? DateTime.tryParse(metadata['targetDate']) : null,
             x: canvasCenter.dx - 110,
             y: canvasCenter.dy - 110,
             width: 220,

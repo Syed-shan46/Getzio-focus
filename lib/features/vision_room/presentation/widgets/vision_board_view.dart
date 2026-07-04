@@ -243,7 +243,7 @@ class _ViewItemWidget extends StatelessWidget {
             item.content,
             style: TextStyle(
               color: cardCfg.glassMode ? Colors.white : Colors.black87,
-              fontSize: (item.metadata?['fontSize'] as num?)?.toDouble() ?? 15,
+              fontSize: parseDoubleHelper(item.metadata?['fontSize'], 15.0),
               fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,

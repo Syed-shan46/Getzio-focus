@@ -58,7 +58,7 @@ class OSState {
     this.plantType = 'Bonsai',
     this.ambientMode = 'Auto',
     this.rainMode = false,
-    this.homeExperience = 'living',
+    this.homeExperience = 'classic',
     this.selectedLifeAreas = const [],
     this.recoveryTasks = const [],
   });
@@ -163,7 +163,7 @@ class OSStateNotifier extends StateNotifier<OSState> {
     final plant = settings['plantType'] as String? ?? 'Bonsai';
     final ambient = settings['ambientMode'] as String? ?? 'Auto';
     final rain = settings['rainMode'] as bool? ?? false;
-    final homeExp = settings['homeExperience'] as String? ?? 'living';
+    final homeExp = settings['homeExperience'] as String? ?? 'classic';
     
     // Load life areas from onboarding
     final lifeAreas = _hiveDb.getSelectedLifeAreas();

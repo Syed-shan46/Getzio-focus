@@ -5,17 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/os_providers.dart';
 import '../../../affirmations/domain/models/affirmation_model.dart';
 import '../../../affirmations/presentation/providers/affirmations_provider.dart';
-import '../../../affirmations/presentation/screens/guest_preview_screen.dart';
 import '../../../affirmations/presentation/screens/reader_view_screen.dart';
 import '../../../affirmations/presentation/screens/dedicated_editor_screen.dart';
 import '../../../affirmations/presentation/widgets/affirmation_bottom_sheet.dart';
+import '../../../affirmations/presentation/widgets/daily_spark_sheet.dart';
+import '../../../affirmations/presentation/widgets/hanging_daily_spark.dart';
 
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 
@@ -23,11 +22,7 @@ class DailyMotivationScreen extends ConsumerStatefulWidget {
   final VoidCallback? onClose;
   final bool isTab;
 
-  const DailyMotivationScreen({
-    super.key,
-    this.onClose,
-    this.isTab = false,
-  });
+  const DailyMotivationScreen({super.key, this.onClose, this.isTab = false});
 
   @override
   ConsumerState<DailyMotivationScreen> createState() =>
@@ -54,6 +49,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
 
   // Searching / Header actions
   bool _isSearching = false;
+  bool _isDailySparkOpen = false;
   final TextEditingController _searchController = TextEditingController();
 
   // Active Category selector (maps to provider)
@@ -188,26 +184,8 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ─── BACKGROUND ENVIRONMENT & ANIMATED WINDOW ───
-          Positioned.fill(
-            child: RepaintBoundary(
-              child: AnimatedBuilder(
-                animation: _ambientController,
-                builder: (context, _) {
-                  for (var d in _dustMotes) {
-                    d.y = (d.y - 0.002 * d.speed) % 1.0;
-                  }
-                  return CustomPaint(
-                    painter: _ReflectionSpacePainter(
-                      ambientProgress: _ambientController.value,
-                      glowProgress: _glowController.value,
-                      dustMotes: _dustMotes,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
+          // ─── BACKGROUND ENVIRONMENT (Clean Warm Cream Solid Color) ───
+          Positioned.fill(child: Container(color: const Color(0xFFFAF6F0))),
 
           // ─── SCROLLABLE CORE INTERFACE ───
           RepaintBoundary(
@@ -223,13 +201,19 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                         vertical: 8,
                       ),
                       physics: const BouncingScrollPhysics(),
-                      itemCount: 2 + (sortedAffirmations.isEmpty ? 2 : sortedAffirmations.length + 1),
+                      itemCount:
+                          2 +
+                          (sortedAffirmations.isEmpty
+                              ? 2
+                              : sortedAffirmations.length + 1),
                       itemBuilder: (context, index) {
                         if (index == 0) {
                           return Column(
                             children: [
                               _buildHeroCard(
-                                pinnedCards.isNotEmpty ? pinnedCards.first : null,
+                                pinnedCards.isNotEmpty
+                                    ? pinnedCards.first
+                                    : null,
                                 osState,
                               ),
                               const SizedBox(height: 20),
@@ -246,7 +230,10 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                         if (cardIndex < sortedAffirmations.length) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: _buildVertical3DCard(sortedAffirmations[cardIndex], osState),
+                            child: _buildVertical3DCard(
+                              sortedAffirmations[cardIndex],
+                              osState,
+                            ),
                           );
                         }
                         return const SizedBox(height: 80);
@@ -258,14 +245,11 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
             ),
           ),
 
-          // ─── FLOATING ACTION BUTTON FOR CREATING ───
           Positioned(
-            bottom: 24,
+            bottom: 90,
             right: 20,
-            child: FloatingActionButton.extended(
-              heroTag: 'create_aff_fab',
-              backgroundColor: const Color(0xFF6366F1),
-              onPressed: () {
+            child: GestureDetector(
+              onTap: () {
                 final isGuest = ref.read(authProvider).valueOrNull == null;
                 if (isGuest) {
                   PremiumAuthSheet.show(context);
@@ -273,19 +257,38 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                   AffirmationBottomSheet.show(context);
                 }
               },
-              icon: const Icon(
-                Icons.spa_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
-              label: Text(
-                'Anchor Mantra',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: Colors.white,
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF8B5A2B),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF3C2E24).withOpacity(0.25),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.add_rounded,
+                  color: Colors.white.withOpacity(0.85),
+                  size: 28,
                 ),
               ),
+            ),
+          ),
+          Positioned.fill(
+            child: HangingDailySpark(
+              isSheetOpen: _isDailySparkOpen,
+              onTap: () async {
+                setState(() => _isDailySparkOpen = true);
+                await DailySparkSheet.show(context);
+                if (mounted) {
+                  setState(() => _isDailySparkOpen = false);
+                }
+              },
             ),
           ),
         ],
@@ -298,10 +301,16 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildHeader(OSState osState, AffirmationsState affState) {
-    final todayStr = DateFormat('EEEE, MMMM d').format(DateTime.now());
+    final authUser = ref.watch(authProvider).valueOrNull;
+    final greetingName = authUser != null && authUser.name.isNotEmpty
+        ? authUser.name
+        : 'Syed';
+    final greeting = '${_getGreeting()}, $greetingName 👏';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -311,13 +320,16 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.06),
+                      color: const Color(0xFFF3ECE4),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white12, width: 0.8),
+                      border: Border.all(
+                        color: const Color(0xFFE6DFD5),
+                        width: 0.8,
+                      ),
                     ),
                     child: const Icon(
                       Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white70,
+                      color: Color(0xFF6B4E3D),
                       size: 15,
                     ),
                   ),
@@ -327,33 +339,15 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _getGreeting(),
-                      style: GoogleFonts.outfit(
-                        fontSize: 11,
-                        color: Colors.white54,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    Text(
-                      'Affirmations',
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                  ],
+                  children: [const SizedBox(height: 2)],
                 ),
               ),
-              // Search & Menu triggers
+              // Search trigger
               IconButton(
                 icon: Icon(
                   _isSearching ? Icons.close : Icons.search_rounded,
-                  color: Colors.white70,
-                  size: 20,
+                  color: const Color(0xFF6B4E3D),
+                  size: 24,
                 ),
                 onPressed: () {
                   setState(() {
@@ -376,33 +370,34 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
               child: TextField(
                 controller: _searchController,
                 autofocus: true,
-                style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
+                style: GoogleFonts.outfit(
+                  color: const Color(0xFF3C2E24),
+                  fontSize: 13,
+                ),
                 decoration: InputDecoration(
                   hintText: 'Search mental affirmations...',
                   hintStyle: const TextStyle(
-                    color: Colors.white24,
+                    color: Color(0xFF8B7355),
                     fontSize: 13,
                   ),
                   prefixIcon: const Icon(
                     Icons.search_rounded,
-                    color: Colors.white54,
+                    color: Color(0xFF6B4E3D),
                     size: 18,
                   ),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.04),
+                  fillColor: const Color(0xFFFFFDF9),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 14,
                     vertical: 8,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Colors.white.withOpacity(0.08),
-                    ),
+                    borderSide: const BorderSide(color: Color(0xFFE6DFD5)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF6366F1)),
+                    borderSide: const BorderSide(color: Color(0xFF6B4E3D)),
                   ),
                 ),
               ),
@@ -414,22 +409,22 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
 
   Widget _buildSyncBadge(AffirmationsState affState) {
     IconData icon = Icons.cloud_done_rounded;
-    Color col = Colors.greenAccent;
+    Color col = const Color(0xFF2E7D32); // Deep green for light theme
 
     if (affState.isSyncing) {
       icon = Icons.sync_rounded;
-      col = Colors.amberAccent;
+      col = const Color(0xFFF59E0B);
     } else if (affState.isOffline) {
       icon = Icons.cloud_off_rounded;
-      col = Colors.white30;
+      col = const Color(0xFF8B7355);
     }
 
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: const Color(0xFFF3ECE4),
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: const Color(0xFFE6DFD5), width: 0.8),
       ),
       child: Icon(icon, color: col, size: 16),
     );
@@ -440,12 +435,11 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildHeroCard(DailyAffirmation? pinned, OSState osState) {
-    final title = pinned != null ? pinned.title : 'Morning Anchor';
     final text = pinned != null ? pinned.text : osState.dailyQuote;
     final author = pinned != null
         ? (pinned.author ?? 'Anonymous')
         : osState.dailyQuoteAuthor;
-    final theme = pinned?.colorTheme ?? 'Sunrise Orange';
+    final theme = pinned?.colorTheme ?? 'Abundance';
 
     return GestureDetector(
       onTap: () {
@@ -458,104 +452,161 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
           );
         }
       },
-        child: Container(
-          height: 145,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            gradient: LinearGradient(
-              colors: [
-                Colors.white.withOpacity(0.08),
-                Colors.white.withOpacity(0.02),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFFAF6F0), // Matching mockup background
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE6DFD5), width: 1.0),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF3C2E24).withOpacity(0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.12)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top tag row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3ECE4),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
+                      const Icon(
+                        Icons.push_pin,
+                        size: 8,
+                        color: Color(0xFF6B4E3D),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'PINNED FOCUS',
+                        style: GoogleFonts.outfit(
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF6B4E3D),
+                          letterSpacing: 0.5,
                         ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF59E0B).withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: const Color(0xFFF59E0B).withOpacity(0.2),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  'Theme: $theme ☀️',
+                  style: GoogleFonts.outfit(
+                    fontSize: 9,
+                    color: const Color(0xFF8B7355),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // Middle layout: Sun picture on left, text on right
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Rising Sun circular illustration
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const CustomPaint(painter: _SunRisePainter()),
+                ),
+                const SizedBox(width: 12),
+
+                // Text section with quotation marks
+                Expanded(
+                  child: Stack(
+                    children: [
+                      // Left quotation mark
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        child: Text(
+                          '“',
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 22,
+                            color: const Color(0xFFE6DFD5),
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        child: Row(
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
-                              Icons.push_pin,
-                              color: Color(0xFFF59E0B),
-                              size: 10,
-                            ),
-                            const SizedBox(width: 4),
                             Text(
-                              'PINNED FOCUS',
-                              style: GoogleFonts.outfit(
-                                fontSize: 8,
+                              text,
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 13,
+                                color: const Color(0xFF3C2E24),
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFFF59E0B),
-                                letterSpacing: 1.0,
+                                height: 1.35,
+                              ),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '— $author',
+                              style: GoogleFonts.outfit(
+                                fontSize: 10,
+                                color: const Color(0xFF8B7355),
+                                fontStyle: FontStyle.italic,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const Spacer(),
-                      Text(
-                        'Theme: $theme',
-                        style: GoogleFonts.outfit(
-                          fontSize: 9,
-                          color: Colors.white30,
-                          fontWeight: FontWeight.w500,
+                      // Right quotation mark
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Text(
+                          '”',
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 22,
+                            color: const Color(0xFFE6DFD5),
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const Spacer(),
-                  Text(
-                    '"$text"',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      height: 1.45,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const Spacer(),
-                  Text(
-                    '— $author',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                      fontSize: 11,
-                      color: Colors.white54,
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.w300,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-        );
+          ],
+        ),
+      ),
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -564,7 +615,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
 
   Widget _buildCategoryChips(AffirmationsState state) {
     return SizedBox(
-      height: 38,
+      height: 30,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -585,29 +636,54 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
               _startAutoScroll();
             },
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
+              duration: const Duration(milliseconds: 200),
               margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF6366F1)
-                    : Colors.white.withOpacity(0.04),
-                borderRadius: BorderRadius.circular(20),
+                    ? const Color(0xFF6B4E3D) // Dark brown selected chip
+                    : const Color(0xFFFFFDF9), // Unselected chip background
+                borderRadius: BorderRadius.circular(15),
                 border: Border.all(
                   color: isSelected
-                      ? const Color(0xFF6366F1)
-                      : Colors.white.withOpacity(0.08),
-                  width: 0.8,
+                      ? const Color(0xFF6B4E3D)
+                      : const Color(0xFFE6DFD5),
+                  width: 1.0,
                 ),
+                boxShadow: [
+                  if (!isSelected)
+                    BoxShadow(
+                      color: const Color(0xFF3C2E24).withOpacity(0.03),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                ],
               ),
               child: Center(
-                child: Text(
-                  cat,
-                  style: GoogleFonts.outfit(
-                    color: isSelected ? Colors.white : Colors.white70,
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isSelected && cat == 'All') ...[
+                      const Icon(
+                        Icons.auto_awesome,
+                        size: 10,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Text(
+                      cat,
+                      style: GoogleFonts.outfit(
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF8B7355),
+                        fontSize: 10.5,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -891,10 +967,10 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                   final aff = catAffs[index];
                   return RepaintBoundary(
                     child: Container(
-                    width: 240,
-                    margin: const EdgeInsets.only(right: 8, bottom: 4),
-                    child: _buildAnimatedAffirmationCard(aff, osState),
-                  ),
+                      width: 240,
+                      margin: const EdgeInsets.only(right: 8, bottom: 4),
+                      child: _buildAnimatedAffirmationCard(aff, osState),
+                    ),
                   );
                 },
               ),
@@ -963,219 +1039,204 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
   }
 
   Widget _buildVertical3DCard(DailyAffirmation aff, OSState osState) {
-    // Resolve theme colors
-    Color cardBg = Colors.white;
-    Color textCol = Colors.black;
-    Color subCol = Colors.black54;
-
-    switch (aff.colorTheme) {
-      case 'Minimal White':
-        cardBg = Colors.white.withOpacity(0.95);
-        textCol = const Color(0xFF1F2937);
-        subCol = const Color(0xFF6B7280);
-        break;
-      case 'Dark Glass':
-        cardBg = const Color(0xFF1F2937).withOpacity(0.7);
-        textCol = Colors.white;
-        subCol = Colors.white60;
-        break;
-      case 'Midnight Black':
-        cardBg = const Color(0xFF030712);
-        textCol = const Color(0xFFF9FAFB);
-        subCol = const Color(0xFF9CA3AF);
-        break;
-      case 'Sunrise Orange':
-        cardBg = const Color(0xFFFFF7ED);
-        textCol = const Color(0xFF7C2D12);
-        subCol = const Color(0xFFC2410C);
-        break;
-      case 'Ocean Blue':
-        cardBg = const Color(0xFFF0F9FF);
-        textCol = const Color(0xFF0C4A6E);
-        subCol = const Color(0xFF0284C7);
-        break;
-      case 'Forest Green':
-        cardBg = const Color(0xFFF0FDF4);
-        textCol = const Color(0xFF14532D);
-        subCol = const Color(0xFF16A34A);
-        break;
-      case 'Lavender':
-        cardBg = const Color(0xFFFAF5FF);
-        textCol = const Color(0xFF581C87);
-        subCol = const Color(0xFF9333EA);
-        break;
-      case 'Coffee Brown':
-        cardBg = const Color(0xFFFDF8F5);
-        textCol = const Color(0xFF431407);
-        subCol = const Color(0xFFB45309);
-        break;
-    }
+    final cardBg = _getCategoryCardBg(aff.category);
+    final themeCol = _getCategoryColor(aff.category);
+    final iconData = _getCategoryIcon(aff.category);
+    final catName = _getCategoryDisplayName(aff.category).toUpperCase();
 
     return RepaintBoundary(
       child: GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ReaderViewScreen(affirmation: aff)),
-        );
-      },
-      onLongPress: () {
-        HapticFeedback.heavyImpact();
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DedicatedEditorScreen(affirmation: aff),
-          ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: aff.isPinned
-                ? Colors.amberAccent.withOpacity(0.7)
-                : Colors.white.withOpacity(0.12),
-            width: aff.isPinned ? 1.5 : 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.28),
-              blurRadius: 8,
-              offset: const Offset(3, 4),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ReaderViewScreen(affirmation: aff),
             ),
-            BoxShadow(
-              color: Colors.white.withOpacity(0.04),
-              blurRadius: 1,
-              offset: const Offset(-1, -1),
+          );
+        },
+        onLongPress: () {
+          HapticFeedback.heavyImpact();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DedicatedEditorScreen(affirmation: aff),
             ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Top row
-            Row(
-              children: [
-                if (aff.emoji != null && aff.emoji!.isNotEmpty) ...[
-                  Text(aff.emoji!, style: const TextStyle(fontSize: 14)),
-                  const SizedBox(width: 6),
-                ],
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: textCol.withOpacity(0.06),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    _getCategoryDisplayName(aff.category).toUpperCase(),
-                    style: GoogleFonts.outfit(
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                      color: textCol.withOpacity(0.7),
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                if (aff.isPinned)
-                  Icon(
-                    Icons.push_pin,
-                    color: textCol.withOpacity(0.7),
-                    size: 12,
-                  ),
-              ],
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: const Color(0xFFE6DFD5).withOpacity(0.3),
+              width: 0.8,
             ),
-            const SizedBox(height: 12),
-
-            // Text middle
-            Text(
-              '"${aff.text}"',
-              style: GoogleFonts.playfairDisplay(
-                color: textCol,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF3C2E24).withOpacity(0.02),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
               ),
-            ),
-            const SizedBox(height: 12),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Left side: Category-specific circular icon
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      themeCol.withOpacity(0.04),
+                      themeCol.withOpacity(0.14),
+                    ],
+                  ),
+                ),
+                child: Center(child: Icon(iconData, color: themeCol, size: 18)),
+              ),
+              const SizedBox(width: 10),
 
-            // Bottom actions & author
-            Row(
-              children: [
-                Text(
-                  aff.author != null && aff.author!.isNotEmpty
-                      ? '— ${aff.author}'
-                      : '— Anonymous',
-                  style: GoogleFonts.outfit(
-                    fontSize: 10,
-                    color: subCol,
-                    fontStyle: FontStyle.italic,
-                  ),
+              // Middle: Category badge + Affirmation text
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      catName,
+                      style: GoogleFonts.outfit(
+                        fontSize: 7.5,
+                        fontWeight: FontWeight.bold,
+                        color: themeCol,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      aff.text,
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFF3C2E24),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-                const Spacer(),
-                // Favorite Toggle
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    ref
-                        .read(affirmationsProvider.notifier)
-                        .toggleFavorite(aff.id);
-                  },
-                  child: Icon(
-                    aff.isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: aff.isFavorite
-                        ? Colors.redAccent
-                        : textCol.withOpacity(0.4),
-                    size: 16,
-                  ),
+              ),
+              const SizedBox(width: 6),
+
+              // Right: Action button (Chevron Right)
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFF3ECE4).withOpacity(0.5),
                 ),
-                const SizedBox(width: 14),
-                // Duplicate Trigger
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    ref
-                        .read(affirmationsProvider.notifier)
-                        .duplicateAffirmation(aff.id);
-                  },
-                  child: Icon(
-                    Icons.copy_rounded,
-                    color: textCol.withOpacity(0.4),
-                    size: 16,
-                  ),
+                child: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFF6B4E3D),
+                  size: 16,
                 ),
-                const SizedBox(width: 14),
-                // Delete Trigger
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.vibrate();
-                    ref
-                        .read(affirmationsProvider.notifier)
-                        .deleteAffirmation(aff.id);
-                  },
-                  child: Icon(
-                    Icons.delete_outline_rounded,
-                    color: Colors.redAccent.withOpacity(0.85),
-                    size: 16,
-                  ),
-                ),
-              ],
-            ),
-          ],
-            ),
+              ),
+            ],
           ),
         ),
-        );
+      ),
+    );
+  }
+
+  IconData _getCategoryIcon(String cat) {
+    final lower = cat.trim().toLowerCase();
+    if (lower.contains('wealth') ||
+        lower.contains('business') ||
+        lower.contains('success')) {
+      return Icons.eco_rounded;
+    }
+    if (lower.contains('productivity') || lower.contains('discipline')) {
+      return Icons.track_changes_rounded;
+    }
+    if (lower.contains('health') || lower.contains('fitness')) {
+      return Icons.self_improvement_rounded;
+    }
+    if (lower.contains('growth') || lower.contains('learning')) {
+      return Icons.park_rounded;
+    }
+    if (lower.contains('gratitude')) {
+      return Icons.volunteer_activism_rounded;
+    }
+    if (lower.contains('peace') ||
+        lower.contains('faith') ||
+        lower.contains('relationships')) {
+      return Icons.spa_rounded;
+    }
+    return Icons.wb_sunny_rounded; // Default fallback
+  }
+
+  Color _getCategoryColor(String cat) {
+    final lower = cat.trim().toLowerCase();
+    if (lower.contains('wealth') ||
+        lower.contains('business') ||
+        lower.contains('success')) {
+      return const Color(0xFF2E7D32); // Green
+    }
+    if (lower.contains('productivity') || lower.contains('discipline')) {
+      return const Color(0xFFC62828); // Red
+    }
+    if (lower.contains('health') || lower.contains('fitness')) {
+      return const Color(0xFF1565C0); // Blue
+    }
+    if (lower.contains('growth') || lower.contains('learning')) {
+      return const Color(0xFF2E7D32); // Green
+    }
+    if (lower.contains('gratitude')) {
+      return const Color(0xFF8D6E63); // Brown
+    }
+    if (lower.contains('peace') ||
+        lower.contains('faith') ||
+        lower.contains('relationships')) {
+      return const Color(0xFF6A1B9A); // Purple
+    }
+    return const Color(0xFFE65100); // Orange
+  }
+
+  Color _getCategoryCardBg(String cat) {
+    final lower = cat.trim().toLowerCase();
+    if (lower.contains('wealth') ||
+        lower.contains('business') ||
+        lower.contains('success')) {
+      return const Color(0xFFE8F5E9); // Light green
+    }
+    if (lower.contains('productivity') || lower.contains('discipline')) {
+      return const Color(0xFFFFEBEE); // Light red
+    }
+    if (lower.contains('health') || lower.contains('fitness')) {
+      return const Color(0xFFE3F2FD); // Light blue
+    }
+    if (lower.contains('growth') || lower.contains('learning')) {
+      return const Color(0xFFE8F5E9); // Light green
+    }
+    if (lower.contains('gratitude')) {
+      return const Color(0xFFEFEBE9); // Light brown
+    }
+    if (lower.contains('peace') ||
+        lower.contains('faith') ||
+        lower.contains('relationships')) {
+      return const Color(0xFFF3E5F5); // Light purple
+    }
+    return const Color(0xFFFFF3E0); // Light orange
   }
 }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // SUPPORTING PAINTERS
+// ═══════════════════════════════════════════════════════════════════════════
+// SUPPORTING PAINTERS
 // ═══════════════════════════════════════════════════════════════════════════
 
 class _DustMote {
@@ -1194,69 +1255,90 @@ class _DustMote {
   });
 }
 
-class _ReflectionSpacePainter extends CustomPainter {
-  final double ambientProgress;
-  final double glowProgress;
-  final List<_DustMote> dustMotes;
-
-  _ReflectionSpacePainter({
-    required this.ambientProgress,
-    required this.glowProgress,
-    required this.dustMotes,
-  });
+class _SunRisePainter extends CustomPainter {
+  const _SunRisePainter();
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+    final center = Offset(w / 2, h / 2);
+    final radius = w / 2;
 
-    // 1. Draw animated vertical gradient (Sky/Atmospheric sunrise look)
-    final topColor = Color.lerp(
-      const Color(0xFF0F172A),
-      const Color(0xFF1E1B4B),
-      ambientProgress,
-    )!;
-    final bottomColor = Color.lerp(
-      const Color(0xFF1E1B4B),
-      const Color(0xFF311A4D),
-      ambientProgress,
-    )!;
-    final bgGradient = LinearGradient(
-      colors: [topColor, bottomColor],
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, w, h),
-      Paint()..shader = bgGradient.createShader(Rect.fromLTWH(0, 0, w, h)),
-    );
+    // Clip to circle
+    final path = Path()
+      ..addOval(Rect.fromCircle(center: center, radius: radius));
+    canvas.save();
+    canvas.clipPath(path);
 
-    // 2. Large background animated visualizer window (sun/moon glow peaks)
-    final windowCenter = Offset(w * 0.5, h * 0.35);
-    final glowRadius = 140.0 + (glowProgress * 20.0);
-    final glowPaint = Paint()
-      ..shader = RadialGradient(
+    // 1. Sky Background (warm orange gradient)
+    final skyPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFFFFD700).withOpacity(0.08),
-          const Color(0xFF6366F1).withOpacity(0.02),
-          Colors.transparent,
+          Color(0xFFFDE68A), // Light warm yellow
+          Color(0xFFFCD34D), // Soft amber
+          Color(0xFFF59E0B), // Warm orange
         ],
-      ).createShader(Rect.fromCircle(center: windowCenter, radius: glowRadius));
-    canvas.drawCircle(windowCenter, glowRadius, glowPaint);
+      ).createShader(Rect.fromLTWH(0, 0, w, h));
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), skyPaint);
 
-    // 3. Draw ambient floating particles
-    for (var d in dustMotes) {
-      final dx =
-          d.x * w + math.sin(ambientProgress * 2 * math.pi * d.swaySpeed) * 10;
-      final dy = d.y * h;
-      canvas.drawCircle(
-        Offset(dx, dy),
-        d.size,
-        Paint()..color = Colors.white.withOpacity(0.08),
-      );
-    }
+    // 2. Rising Sun
+    final sunCenter = Offset(w * 0.5, h * 0.55);
+    final sunPaint = Paint()
+      ..color = Colors.white
+      ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 4);
+    canvas.drawCircle(sunCenter, radius * 0.35, sunPaint);
+
+    // 3. Sun rays/glow (soft outer circles)
+    final glowPaint = Paint()
+      ..color = Colors.white.withOpacity(0.2)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(sunCenter, radius * 0.5, glowPaint);
+    canvas.drawCircle(
+      sunCenter,
+      radius * 0.65,
+      Paint()..color = Colors.white.withOpacity(0.1),
+    );
+
+    // 4. Mountains / Sand Dunes (from back to front)
+    // Mountain 1 (Back - light orange/brown)
+    final m1Paint = Paint()..color = const Color(0xFFFDBA74); // Orange-300
+    final m1Path = Path()
+      ..moveTo(0, h * 0.7)
+      ..quadraticBezierTo(w * 0.3, h * 0.55, w * 0.6, h * 0.72)
+      ..quadraticBezierTo(w * 0.8, h * 0.78, w, h * 0.68)
+      ..lineTo(w, h)
+      ..lineTo(0, h)
+      ..close();
+    canvas.drawPath(m1Path, m1Paint);
+
+    // Mountain 2 (Middle - amber/brown)
+    final m2Paint = Paint()..color = const Color(0xFFF59E0B); // Amber-500
+    final m2Path = Path()
+      ..moveTo(0, h * 0.8)
+      ..quadraticBezierTo(w * 0.4, h * 0.72, w * 0.7, h * 0.82)
+      ..quadraticBezierTo(w * 0.85, h * 0.85, w, h * 0.75)
+      ..lineTo(w, h)
+      ..lineTo(0, h)
+      ..close();
+    canvas.drawPath(m2Path, m2Paint);
+
+    // Mountain 3 (Front - dark warm brown)
+    final m3Paint = Paint()..color = const Color(0xFFD97706); // Amber-600
+    final m3Path = Path()
+      ..moveTo(0, h * 0.9)
+      ..quadraticBezierTo(w * 0.25, h * 0.85, w * 0.5, h * 0.92)
+      ..quadraticBezierTo(w * 0.75, h * 0.95, w, h * 0.86)
+      ..lineTo(w, h)
+      ..lineTo(0, h)
+      ..close();
+    canvas.drawPath(m3Path, m3Paint);
+
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant _ReflectionSpacePainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

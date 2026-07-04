@@ -1,0 +1,254 @@
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+/// A premium hanging Daily Spark sign that gently swings like a pendulum.
+/// Tapping it opens the Daily Spark Sheet (no navigation).
+class HangingDailySpark extends StatefulWidget {
+  final VoidCallback? onTap;
+  final bool isSheetOpen;
+
+  const HangingDailySpark({super.key, this.onTap, this.isSheetOpen = false});
+
+  @override
+  State<HangingDailySpark> createState() => _HangingDailySparkState();
+}
+
+class _HangingDailySparkState extends State<HangingDailySpark> with TickerProviderStateMixin {
+  late AnimationController _pendulumController;
+  late Animation<double> _pendulumAnimation;
+  late AnimationController _idleController;
+  late Animation<double> _idleSway;
+  late AnimationController _tapController;
+  late Animation<double> _tapScale;
+  late Animation<double> _tapGlow;
+  bool _isAnimating = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final rng = Random();
+    final duration = 4.0 + rng.nextDouble() * 2.0;
+
+    _pendulumController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: (duration * 1000).round()),
+    )..repeat(reverse: true);
+
+    _pendulumAnimation = Tween<double>(begin: -0.035, end: 0.035).animate(
+      CurvedAnimation(parent: _pendulumController, curve: Curves.easeInOut),
+    );
+
+    _idleController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+
+    _idleSway = Tween<double>(begin: -0.002, end: 0.002).animate(
+      CurvedAnimation(parent: _idleController, curve: Curves.easeInOut),
+    );
+
+    _tapController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    _tapScale = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 1.15,
+        ).chain(CurveTween(curve: Curves.easeOutBack)),
+        weight: 40,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 1.15,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 60,
+      ),
+    ]).animate(_tapController);
+
+    _tapGlow = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 0.0,
+          end: 0.6,
+        ).chain(CurveTween(curve: Curves.easeOut)),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 0.6,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.easeIn)),
+        weight: 50,
+      ),
+    ]).animate(_tapController);
+  }
+
+  @override
+  void dispose() {
+    _pendulumController.dispose();
+    _idleController.dispose();
+    _tapController.dispose();
+    super.dispose();
+  }
+
+  void _onTap() {
+    if (_isAnimating) return;
+    HapticFeedback.lightImpact();
+    _isAnimating = true;
+    _tapController.forward(from: 0.0).then((_) {
+      _isAnimating = false;
+    });
+
+    // Open the daily spark sheet after a brief delay for the scale animation
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted && widget.onTap != null) {
+        widget.onTap!();
+      }
+    });
+  }
+
+  Widget _buildSparkImage(double topPadding) {
+    if (widget.isSheetOpen) {
+      return Container(
+        width: 2,
+        height: topPadding + 10, // Just clears the safe area
+        decoration: BoxDecoration(
+          color: Colors.brown.shade700,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 2,
+              offset: const Offset(1, 0),
+            ),
+          ],
+        ),
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Dynamic string length to clear safe area exactly without wasting space
+        Container(
+          width: 2,
+          height: topPadding + 10, // Just clears the safe area
+          decoration: BoxDecoration(
+            color: Colors.brown.shade700,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 2,
+                offset: const Offset(1, 0),
+              ),
+            ],
+          ),
+        ),
+        // Small transparent container with border
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.transparent, // bg transparent
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.brown.shade800, // border needed
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Daily Spark',
+                style: GoogleFonts.kalam(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: Colors.brown.shade900,
+                  letterSpacing: 1.0,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: Colors.brown.shade800,
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          top: -10, // Just enough off-screen to hide the top anchor
+          left: 0,
+          right: 0,
+          child: Center(
+            child: AnimatedBuilder(
+              animation: Listenable.merge([
+                _pendulumController,
+                _idleController,
+                _tapController,
+              ]),
+              builder: (context, _) {
+                final angle = _pendulumAnimation.value + _idleSway.value;
+                final scale = _tapScale.value;
+                final glow = _tapGlow.value;
+
+                return Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    // Soft glow behind sign (on tap)
+                    if (glow > 0.01)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: Transform.scale(
+                            scale: 1.5,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    const Color(0xFFFBBF24).withValues(alpha: glow * 0.4),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Sign
+                    Transform.rotate(
+                      angle: angle,
+                      alignment: Alignment.topCenter,
+                      child: Transform.scale(
+                        scale: scale,
+                        child: GestureDetector(
+                          onTap: _onTap,
+                          behavior: HitTestBehavior.opaque,
+                          child: _buildSparkImage(MediaQuery.paddingOf(context).top),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

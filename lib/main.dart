@@ -5,10 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/storage/hive_database.dart';
 import 'core/storage/sample_data_seeding_service.dart';
 import 'core/theme/app_theme.dart';
-import 'features/os_dashboard/presentation/screens/os_dashboard_screen.dart';
 import 'core/services/firebase_service.dart';
 import 'shared/providers/app_providers.dart';
 import 'features/onboarding/presentation/screens/premium_mvp_onboarding_screen.dart';
+import 'features/onboarding/presentation/screens/video_splash_screen.dart';
+import 'features/daily_motivation/presentation/screens/daily_motivation_screen.dart';
 
 final onboardingCompletedProvider = StateProvider<bool>((ref) {
   throw UnimplementedError();
@@ -84,9 +85,11 @@ class TodoApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
       darkTheme: AppTheme.darkTheme,
-      home: onboardingCompleted
-          ? const OSDashboardScreen()
-          : const PremiumMVPOnboardingScreen(),
+      home: VideoSplashScreen(
+        nextScreen: onboardingCompleted
+            ? const DailyMotivationScreen()
+            : const PremiumMVPOnboardingScreen(),
+      ),
     );
   }
 }

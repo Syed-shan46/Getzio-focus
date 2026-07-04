@@ -40,6 +40,7 @@ class _ClassicDashboardWidgetState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF070A13),
+      extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -55,26 +56,26 @@ class _ClassicDashboardWidgetState
   }
 
   Widget _buildBottomNav() {
+    // Fully transparent for all screens to let individual screen background colors show through
+    final Color navBgColor = Colors.transparent;
+    final Color borderColor = Colors.transparent;
+    final List<BoxShadow> navBoxShadow = [];
+    final double blurSigma = 0.0;
+
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0C1020),
+        color: navBgColor,
         border: Border(
           top: BorderSide(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: borderColor,
             width: 0.5,
           ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        boxShadow: navBoxShadow,
       ),
       child: ClipRect(
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
           child: SafeArea(
             top: false,
             child: Padding(
@@ -99,6 +100,12 @@ class _ClassicDashboardWidgetState
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isActive = _currentIndex == index;
+    final isAffirmations = _currentIndex == 1;
+
+    // Adaptive colors
+    final activeColor = isAffirmations ? const Color(0xFF6B4E3D) : const Color(0xFFF97316);
+    final inactiveColor = isAffirmations ? const Color(0xFF8B7355).withOpacity(0.6) : Colors.white.withValues(alpha: 0.35);
+
     return GestureDetector(
       onTap: () {
         if (_currentIndex != index) {
@@ -107,41 +114,42 @@ class _ClassicDashboardWidgetState
         }
       },
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive
-              ? AppColors.accentBlue.withValues(alpha: 0.12)
-              : Colors.transparent,
+          gradient: isActive
+              ? LinearGradient(
+                  colors: isAffirmations
+                      ? [
+                          const Color(0xFF8B5A2B).withValues(alpha: 0.08),
+                          const Color(0xFF6B4E3D).withValues(alpha: 0.08),
+                        ]
+                      : [
+                          const Color(0xFFF97316).withValues(alpha: 0.18),
+                          const Color(0xFF8B5CF6).withValues(alpha: 0.18),
+                        ],
+                )
+              : null,
+          color: isActive ? null : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              child: Icon(
-                icon,
-                size: isActive ? 24 : 22,
-                color: isActive
-                    ? AppColors.accentBlue
-                    : Colors.white.withValues(alpha: 0.35),
-              ),
+            Icon(
+              icon,
+              size: 21,
+              color: isActive ? activeColor : inactiveColor,
             ),
             const SizedBox(height: 3),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 250),
+            Text(
+              label,
               style: GoogleFonts.outfit(
-                color: isActive
-                    ? AppColors.accentBlue
-                    : Colors.white.withValues(alpha: 0.35),
-                fontSize: isActive ? 10.5 : 9.5,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                color: isActive ? activeColor : inactiveColor,
+                fontSize: 9.5,
+                fontWeight: FontWeight.w500,
                 letterSpacing: 0.3,
               ),
-              child: Text(label),
             ),
           ],
         ),

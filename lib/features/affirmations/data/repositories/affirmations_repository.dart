@@ -29,15 +29,21 @@ class AffirmationsRepository {
     try {
       final dio = _ref.read(dioClientProvider);
       final response = await dio.get('/focus/affirmations');
-      if (response.statusCode == 200 && response.data != null && response.data['success'] == true) {
+      if (response.statusCode == 200 &&
+          response.data != null &&
+          response.data['success'] == true) {
         final List<DailyAffirmation> fetched = [];
         final data = response.data['data'] as List?;
         if (data != null) {
           for (var groupJson in data) {
-            final dynamic rawGroupCat = groupJson['category'] ?? groupJson['name'] ?? groupJson['_id'];
+            final dynamic rawGroupCat =
+                groupJson['category'] ?? groupJson['name'] ?? groupJson['_id'];
             String groupCategory = 'General';
             if (rawGroupCat is Map) {
-              groupCategory = rawGroupCat['name'] as String? ?? rawGroupCat['title'] as String? ?? 'General';
+              groupCategory =
+                  rawGroupCat['name'] as String? ??
+                  rawGroupCat['title'] as String? ??
+                  'General';
             } else if (rawGroupCat != null) {
               groupCategory = rawGroupCat.toString();
             }
@@ -45,12 +51,17 @@ class AffirmationsRepository {
             final affs = groupJson['affirmations'] as List?;
             if (affs != null) {
               for (var affJson in affs) {
-                final Map<String, dynamic> mutable = Map<String, dynamic>.from(affJson);
-                
+                final Map<String, dynamic> mutable = Map<String, dynamic>.from(
+                  affJson,
+                );
+
                 final dynamic rawAffCat = mutable['category'];
                 String? affCategory;
                 if (rawAffCat is Map) {
-                  affCategory = rawAffCat['name'] as String? ?? rawAffCat['title'] as String? ?? 'General';
+                  affCategory =
+                      rawAffCat['name'] as String? ??
+                      rawAffCat['title'] as String? ??
+                      'General';
                 } else if (rawAffCat != null) {
                   affCategory = rawAffCat.toString();
                 }
@@ -60,7 +71,7 @@ class AffirmationsRepository {
                 } else {
                   mutable['category'] = affCategory;
                 }
-                
+
                 mutable['syncStatus'] = SyncStatus.synced.name;
                 mutable['updatedAt'] = DateTime.now().toIso8601String();
                 fetched.add(DailyAffirmation.fromMap(mutable));
@@ -112,19 +123,21 @@ class AffirmationsRepository {
       final dio = _ref.read(dioClientProvider);
       final payload = {
         'affirmations': list
-            .map((a) => {
-                  'id': a.id,
-                  'localId': a.id,
-                  'title': a.title,
-                  'text': a.text,
-                  'author': a.author ?? 'Anonymous',
-                  'category': a.category,
-                  'emoji': a.emoji ?? '',
-                  'isFavorite': a.isFavorite,
-                  'isPinned': a.isPinned,
-                  'colorTheme': a.colorTheme,
-                  'createdAt': a.createdAt?.toIso8601String(),
-                })
+            .map(
+              (a) => {
+                'id': a.id,
+                'localId': a.id,
+                'title': a.title,
+                'text': a.text,
+                'author': a.author ?? 'Anonymous',
+                'category': a.category,
+                'emoji': a.emoji ?? '',
+                'isFavorite': a.isFavorite,
+                'isPinned': a.isPinned,
+                'colorTheme': a.colorTheme,
+                'createdAt': a.createdAt?.toIso8601String(),
+              },
+            )
             .toList(),
       };
 
@@ -148,7 +161,38 @@ class AffirmationsRepository {
     }
   }
 
-  Future<DailyAffirmation?> createAffirmationOnServer(DailyAffirmation affirmation) async {
+  // ─── Repeat Counts (offline storage) ──────────────────────────────────
+
+  Future<void> saveRepeatCounts(Map<String, int> counts) async {
+    final userId = _hiveDb.getUserId() ?? 'guest';
+    await _hiveDb.saveAffirmationMetadata('repeat_counts_$userId', counts);
+  }
+
+  Map<String, int> getRepeatCounts() {
+    final userId = _hiveDb.getUserId() ?? 'guest';
+    final data = _hiveDb.getAffirmationMetadata('repeat_counts_$userId');
+    if (data == null) return {};
+    return Map<String, int>.from(data);
+  }
+
+  // ─── Last Viewed / Recently Used ──────────────────────────────────────
+
+  Future<void> saveLastViewed(String affirmationId) async {
+    final userId = _hiveDb.getUserId() ?? 'guest';
+    await _hiveDb.saveAffirmationMetadata('last_viewed_$userId', {
+      'affirmationId': affirmationId,
+      'viewedAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Map<String, dynamic>? getLastViewed() {
+    final userId = _hiveDb.getUserId() ?? 'guest';
+    return _hiveDb.getAffirmationMetadata('last_viewed_$userId');
+  }
+
+  Future<DailyAffirmation?> createAffirmationOnServer(
+    DailyAffirmation affirmation,
+  ) async {
     final hasToken = _hiveDb.getAuthToken() != null;
     if (!hasToken) return null;
 
@@ -161,7 +205,13 @@ class AffirmationsRepository {
       if (response.statusCode == 201 && response.data != null) {
         final data = response.data['data'];
         if (data != null) {
-          return DailyAffirmation.fromMap(data);
+          final Map<String, dynamic> mutable = Map<String, dynamic>.from(data);
+          if (mutable['category'] == null ||
+              mutable['category'].toString().trim().isEmpty ||
+              mutable['category'].toString().toLowerCase() == 'general') {
+            mutable['category'] = affirmation.category;
+          }
+          return DailyAffirmation.fromMap(mutable);
         }
       }
       return null;

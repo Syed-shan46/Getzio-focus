@@ -769,6 +769,17 @@ class _UniversalSmartObjectSheetState
 
   void _toggleMilestone(VisionItem item, int index, bool isCompleted) {
     final list = item.smartMilestones;
+    final milestone = list[index];
+    if (milestone.id == 'general_tasks_migration') {
+      final checklist = item.smartChecklist.map((c) {
+        return c.copyWith(
+          isCompleted: isCompleted,
+          completionDate: isCompleted ? DateTime.now() : null,
+        );
+      }).toList();
+      _saveChecklist(item, checklist);
+      return;
+    }
     list[index] = list[index].copyWith(
       isCompleted: isCompleted,
       completionDate: isCompleted ? DateTime.now() : null,
@@ -778,12 +789,18 @@ class _UniversalSmartObjectSheetState
 
   void _deleteMilestone(VisionItem item, int index) {
     final list = item.smartMilestones;
+    final milestone = list[index];
+    if (milestone.id == 'general_tasks_migration') {
+      _saveChecklist(item, []);
+      return;
+    }
     list.removeAt(index);
     _saveMilestones(item, list);
   }
 
   void _saveMilestones(VisionItem item, List<SmartMilestone> list) {
-    final serialized = list.map((m) => m.toJson()).toList();
+    final filtered = list.where((m) => m.id != 'general_tasks_migration').toList();
+    final serialized = filtered.map((m) => m.toJson()).toList();
     ref.read(canvasStateProvider.notifier).updateItemDetails(
           item.id,
           metadata: {'milestones': serialized},

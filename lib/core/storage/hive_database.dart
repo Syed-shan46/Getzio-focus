@@ -45,8 +45,10 @@ class HiveDatabase {
       final oldGoals = _settingsBox.get('focus_selected_goals') as List?;
       if (oldGoals != null) {
         for (var item in oldGoals) {
-          final id = item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
-          if (id != null) goalsBox.put(id.toString(), Map<String, dynamic>.from(item as Map));
+          final id =
+              item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
+          if (id != null)
+            goalsBox.put(id.toString(), Map<String, dynamic>.from(item as Map));
         }
       }
     }
@@ -54,8 +56,10 @@ class HiveDatabase {
       final oldTasks = _settingsBox.get('focus_tasks') as List?;
       if (oldTasks != null) {
         for (var item in oldTasks) {
-          final id = item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
-          if (id != null) tasksBox.put(id.toString(), Map<String, dynamic>.from(item as Map));
+          final id =
+              item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
+          if (id != null)
+            tasksBox.put(id.toString(), Map<String, dynamic>.from(item as Map));
         }
       }
     }
@@ -63,21 +67,34 @@ class HiveDatabase {
       final oldVision = _settingsBox.get('focus_vision_items') as List?;
       if (oldVision != null) {
         for (var item in oldVision) {
-          final id = item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
-          if (id != null) visionItemsBox.put(id.toString(), Map<String, dynamic>.from(item as Map));
+          final id =
+              item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
+          if (id != null)
+            visionItemsBox.put(
+              id.toString(),
+              Map<String, dynamic>.from(item as Map),
+            );
         }
       }
     }
     if (affirmationsBox.isEmpty) {
-      final oldAff = _settingsBox.get('focus_selected_affirmations_$userId') as List?;
+      final oldAff =
+          _settingsBox.get('focus_selected_affirmations_$userId') as List?;
       if (oldAff != null) {
         for (var item in oldAff) {
-          final id = item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
-          if (id != null) affirmationsBox.put(id.toString(), Map<String, dynamic>.from(item as Map));
+          final id =
+              item['id'] ?? item['_id'] ?? item['localId'] ?? item['itemId'];
+          if (id != null)
+            affirmationsBox.put(
+              id.toString(),
+              Map<String, dynamic>.from(item as Map),
+            );
         }
       }
     }
-    log('[Hive] Opened user-isolated boxes for user: $userId and migrated legacy data if any');
+    log(
+      '[Hive] Opened user-isolated boxes for user: $userId and migrated legacy data if any',
+    );
   }
 
   Future<Box> _getUserBox(String boxPrefix) async {
@@ -89,14 +106,29 @@ class HiveDatabase {
     return await Hive.openBox(boxName);
   }
 
+  Future<Box> _getUserBoxWithId(String boxPrefix, String userId) async {
+    final boxName = '${boxPrefix}_$userId';
+    if (Hive.isBoxOpen(boxName)) {
+      return Hive.box(boxName);
+    }
+    return await Hive.openBox(boxName);
+  }
+
   // ─── Generic User-Isolated Operations ──────────────────────────────
 
-  Future<void> saveUserItem(String boxPrefix, String id, Map<String, dynamic> data) async {
+  Future<void> saveUserItem(
+    String boxPrefix,
+    String id,
+    Map<String, dynamic> data,
+  ) async {
     final box = await _getUserBox(boxPrefix);
     await box.put(id, data);
   }
 
-  Future<void> saveUserItems(String boxPrefix, List<Map<String, dynamic>> items) async {
+  Future<void> saveUserItems(
+    String boxPrefix,
+    List<Map<String, dynamic>> items,
+  ) async {
     final box = await _getUserBox(boxPrefix);
     await box.clear();
     final Map<String, Map> map = {};
@@ -173,7 +205,9 @@ class HiveDatabase {
     return getUserItems('vision_items');
   }
 
-  Future<void> saveSelectedAffirmations(List<Map<String, dynamic>> affirmations) async {
+  Future<void> saveSelectedAffirmations(
+    List<Map<String, dynamic>> affirmations,
+  ) async {
     await saveUserItems('affirmations', affirmations);
   }
 
@@ -289,7 +323,24 @@ class HiveDatabase {
   }
 
   bool isOnboardingCompleted() {
-    return _settingsBox.get('onboarding_completed', defaultValue: false) as bool;
+    return _settingsBox.get('onboarding_completed', defaultValue: false)
+        as bool;
+  }
+
+  Future<void> saveLastQuoteDate(String date) async {
+    await _settingsBox.put('motivation_last_quote_date', date);
+  }
+
+  String? getLastQuoteDate() {
+    return _settingsBox.get('motivation_last_quote_date') as String?;
+  }
+
+  Future<void> saveQuoteIndex(int index) async {
+    await _settingsBox.put('motivation_quote_index', index);
+  }
+
+  int getQuoteIndex() {
+    return _settingsBox.get('motivation_quote_index', defaultValue: 0) as int;
   }
 
   Future<void> saveSetupCompleted(bool completed) async {
@@ -297,7 +348,8 @@ class HiveDatabase {
   }
 
   bool isSetupCompleted() {
-    return _settingsBox.get('focus_setup_completed', defaultValue: false) as bool;
+    return _settingsBox.get('focus_setup_completed', defaultValue: false)
+        as bool;
   }
 
   Future<void> saveSyncStatus({
@@ -359,32 +411,36 @@ class HiveDatabase {
   }
 
   Future<void> clearAll() async {
+    final userId = getUserId() ?? 'guest';
     await _todosBox.clear();
     await _syncBox.clear();
+    
+    // Clear user boxes using the retrieved userId
+    await (await _getUserBoxWithId('goals', userId)).clear();
+    await (await _getUserBoxWithId('tasks', userId)).clear();
+    await (await _getUserBoxWithId('vision_items', userId)).clear();
+    await (await _getUserBoxWithId('affirmations', userId)).clear();
+    await (await _getUserBoxWithId('pending_sync', userId)).clear();
+
     await _settingsBox.clear();
-    final userId = getUserId() ?? 'guest';
-    await (await _getUserBox('goals')).clear();
-    await (await _getUserBox('tasks')).clear();
-    await (await _getUserBox('vision_items')).clear();
-    await (await _getUserBox('affirmations')).clear();
-    await (await _getUserBox('pending_sync')).clear();
   }
 
   Future<void> clearAllGuestData() async {
     final token = _settingsBox.get('auth_token');
     final userData = _settingsBox.get('user_data');
-    
+
     await _todosBox.clear();
     await _syncBox.clear();
+
+    // Clear user guest boxes explicitly
+    await (await _getUserBoxWithId('goals', 'guest')).clear();
+    await (await _getUserBoxWithId('tasks', 'guest')).clear();
+    await (await _getUserBoxWithId('vision_items', 'guest')).clear();
+    await (await _getUserBoxWithId('affirmations', 'guest')).clear();
+    await (await _getUserBoxWithId('pending_sync', 'guest')).clear();
+
     await _settingsBox.clear();
-    
-    // Clear user guest boxes
-    await (await _getUserBox('goals')).clear();
-    await (await _getUserBox('tasks')).clear();
-    await (await _getUserBox('vision_items')).clear();
-    await (await _getUserBox('affirmations')).clear();
-    await (await _getUserBox('pending_sync')).clear();
-    
+
     // Restore auth info
     if (token != null) await _settingsBox.put('auth_token', token);
     if (userData != null) await _settingsBox.put('user_data', userData);
@@ -439,7 +495,7 @@ class HiveDatabase {
     await _settingsBox.delete('focus_pending_deletions_$userId');
     final boxName = 'affirmations_$userId';
     if (Hive.isBoxOpen(boxName)) {
-      await Hive.box<Map>(boxName).clear();
+      await Hive.box(boxName).clear();
     }
   }
 
@@ -538,7 +594,9 @@ class HiveDatabase {
 
   // ─── Vision Customization ──────────────────────────────────────────────
 
-  Future<void> saveVisionCustomization(Map<String, dynamic> customization) async {
+  Future<void> saveVisionCustomization(
+    Map<String, dynamic> customization,
+  ) async {
     await _settingsBox.put('focus_vision_customization', customization);
   }
 
@@ -549,7 +607,8 @@ class HiveDatabase {
   }
 
   bool hasSeenPreview(String feature) {
-    return _settingsBox.get('focus_seen_preview_$feature', defaultValue: false) as bool;
+    return _settingsBox.get('focus_seen_preview_$feature', defaultValue: false)
+        as bool;
   }
 
   Future<void> setSeenPreview(String feature) async {
@@ -558,7 +617,9 @@ class HiveDatabase {
 
   // ─── Premium Tasks Module ──────────────────────────────────────────────
 
-  Future<void> savePendingTaskActions(List<Map<String, dynamic>> actions) async {
+  Future<void> savePendingTaskActions(
+    List<Map<String, dynamic>> actions,
+  ) async {
     final box = await _getUserBox('pending_sync');
     await box.put('pending_tasks_actions', actions);
   }
@@ -574,7 +635,7 @@ class HiveDatabase {
   }
 
   // ─── Custom Categories ──────────────────────────────────────────────────
-  
+
   Future<void> saveCustomCategories(List<String> categories) async {
     final userId = getUserId() ?? 'guest';
     await _settingsBox.put('custom_categories_$userId', categories);
@@ -585,5 +646,15 @@ class HiveDatabase {
     final list = _settingsBox.get('custom_categories_$userId') as List?;
     if (list == null) return [];
     return List<String>.from(list);
+  }
+
+  // ─── Affirmation Metadata (repeat counts, last viewed, etc.) ──────────
+
+  Future<void> saveAffirmationMetadata(String key, dynamic value) async {
+    await _settingsBox.put('affirmation_meta_$key', value);
+  }
+
+  dynamic getAffirmationMetadata(String key) {
+    return _settingsBox.get('affirmation_meta_$key');
   }
 }

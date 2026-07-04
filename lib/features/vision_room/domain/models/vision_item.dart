@@ -149,20 +149,38 @@ class VisionItem extends HiveObject {
         id: json['id'] ?? '',
         type: json['type'] ?? '',
         content: json['content'] ?? '',
-        x: (json['x'] as num?)?.toDouble() ?? 0.0,
-        y: (json['y'] as num?)?.toDouble() ?? 0.0,
-        width: (json['width'] as num?)?.toDouble() ?? 180.0,
-        height: (json['height'] as num?)?.toDouble() ?? 120.0,
-        rotation: (json['rotation'] as num?)?.toDouble() ?? 0.0,
-        colorValue: json['colorValue'] ?? 0xFF1E1B4B,
+        x: parseDoubleHelper(json['x']),
+        y: parseDoubleHelper(json['y']),
+        width: parseDoubleHelper(json['width'], 180.0),
+        height: parseDoubleHelper(json['height'], 120.0),
+        rotation: parseDoubleHelper(json['rotation']),
+        colorValue: parseIntHelper(json['colorValue'], 0xFF1E1B4B),
         isPinned: json['isPinned'] ?? false,
         emoji: json['emoji'],
         countdownDate: json['countdownDate'] != null ? DateTime.parse(json['countdownDate']) : null,
         secondaryContent: json['secondaryContent'],
-        zIndex: json['zIndex'] ?? 0,
+        zIndex: parseIntHelper(json['zIndex'], 0),
         attachmentType: json['attachmentType'] ?? 'pin',
         attachmentStyle: json['attachmentStyle'] ?? 'redPin',
         materialStyle: json['materialStyle'] ?? 'default',
         metadata: json['metadata'],
       );
+}
+
+double parseDoubleHelper(dynamic val, [double defaultValue = 0.0]) {
+  if (val == null) return defaultValue;
+  if (val is num) return val.toDouble();
+  if (val is String) {
+    return double.tryParse(val) ?? defaultValue;
+  }
+  return defaultValue;
+}
+
+int parseIntHelper(dynamic val, [int defaultValue = 0]) {
+  if (val == null) return defaultValue;
+  if (val is num) return val.toInt();
+  if (val is String) {
+    return int.tryParse(val) ?? defaultValue;
+  }
+  return defaultValue;
 }

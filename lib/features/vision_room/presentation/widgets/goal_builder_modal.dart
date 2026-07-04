@@ -28,6 +28,9 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
   DateTime? _dueDate;
   String _priority = 'Medium';
   Color _selectedColor = Colors.blueAccent;
+  final List<TextEditingController> _milestoneControllers = [
+    TextEditingController(),
+  ];
 
   final List<Color> _themeColors = [
     Colors.blueAccent,
@@ -41,13 +44,19 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    for (final controller in _milestoneControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
-
-
   void _submit() {
     if (_titleController.text.trim().isEmpty) return;
+
+    final milestones = _milestoneControllers
+        .map((c) => c.text.trim())
+        .where((text) => text.isNotEmpty)
+        .toList();
 
     widget.onSubmit({
       'title': _titleController.text.trim(),
@@ -57,6 +66,20 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
       'priority': _priority,
       'color': _selectedColor.toARGB32(),
       'isOnShelf': false,
+      'milestones': milestones.asMap().entries.map((entry) {
+        final i = entry.key;
+        final title = entry.value;
+        return {
+          'id': 'milestone_${DateTime.now().millisecondsSinceEpoch}_$i',
+          'title': title,
+          'description': '',
+          'isCompleted': false,
+          'order': i,
+          'createdAt': DateTime.now().toIso8601String(),
+          'updatedAt': DateTime.now().toIso8601String(),
+          'subtasks': <dynamic>[],
+        };
+      }).toList(),
     });
     Navigator.pop(context);
   }
@@ -147,6 +170,86 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
                 }).toList(),
               ),
               const SizedBox(height: 24),
+
+              // Milestones
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Milestones', style: AppTypography.caption(color: Colors.white54)),
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _milestoneControllers.add(TextEditingController());
+                      });
+                    },
+                    icon: Icon(Icons.add_rounded, size: 16, color: _selectedColor),
+                    label: Text(
+                      'Add',
+                      style: TextStyle(
+                        color: _selectedColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ..._milestoneControllers.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final controller = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: controller,
+                          style: AppTypography.bodyMedium(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Milestone ${idx + 1} (e.g. Design Prototype)',
+                            hintStyle: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.25),
+                            ),
+                            filled: true,
+                            fillColor: Colors.black.withValues(alpha: 0.25),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_milestoneControllers.length > 1) ...[
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.redAccent,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _milestoneControllers.removeAt(idx);
+                              controller.dispose();
+                            });
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 20),
 
               // Color Theme
               Text('Color Theme', style: AppTypography.caption(color: Colors.white54)),

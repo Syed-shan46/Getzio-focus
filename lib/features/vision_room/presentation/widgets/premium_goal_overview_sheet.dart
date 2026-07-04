@@ -2206,6 +2206,10 @@ class _PremiumGoalOverviewSheetState
   }
 
   void _deleteMilestone(VisionItem item, String milestoneId) {
+    if (milestoneId == 'general_tasks_migration') {
+      _saveChecklist(item, []);
+      return;
+    }
     final list = item.smartMilestones;
     list.removeWhere((m) => m.id == milestoneId);
     for (int i = 0; i < list.length; i++) {
@@ -2286,6 +2290,16 @@ class _PremiumGoalOverviewSheetState
     String milestoneId,
     bool isCompleted,
   ) {
+    if (milestoneId == 'general_tasks_migration') {
+      final checklist = item.smartChecklist.map((c) {
+        return c.copyWith(
+          isCompleted: isCompleted,
+          completionDate: isCompleted ? DateTime.now() : null,
+        );
+      }).toList();
+      _saveChecklist(item, checklist);
+      return;
+    }
     final list = item.smartMilestones.map((m) {
       if (m.id == milestoneId) {
         return m.copyWith(isCompleted: isCompleted);
@@ -2301,6 +2315,18 @@ class _PremiumGoalOverviewSheetState
     String subtaskId,
     bool isCompleted,
   ) {
+    if (milestoneId == 'general_tasks_migration') {
+      final list = item.smartChecklist;
+      final idx = list.indexWhere((c) => c.id == subtaskId);
+      if (idx != -1) {
+        list[idx] = list[idx].copyWith(
+          isCompleted: isCompleted,
+          completionDate: isCompleted ? DateTime.now() : null,
+        );
+        _saveChecklist(item, list);
+      }
+      return;
+    }
     final list = item.smartMilestones;
     final mIndex = list.indexWhere((m) => m.id == milestoneId);
     if (mIndex != -1) {
@@ -2326,6 +2352,12 @@ class _PremiumGoalOverviewSheetState
   }
 
   void _deleteSubtask(VisionItem item, String milestoneId, String subtaskId) {
+    if (milestoneId == 'general_tasks_migration') {
+      final list = item.smartChecklist;
+      list.removeWhere((c) => c.id == subtaskId);
+      _saveChecklist(item, list);
+      return;
+    }
     final list = item.smartMilestones;
     final mIndex = list.indexWhere((m) => m.id == milestoneId);
     if (mIndex != -1) {
@@ -2353,6 +2385,16 @@ class _PremiumGoalOverviewSheetState
     int oldIndex,
     int newIndex,
   ) {
+    if (milestoneId == 'general_tasks_migration') {
+      final list = item.smartChecklist;
+      if (oldIndex < newIndex) {
+        newIndex -= 1;
+      }
+      final element = list.removeAt(oldIndex);
+      list.insert(newIndex, element);
+      _saveChecklist(item, list);
+      return;
+    }
     final list = item.smartMilestones;
     final mIndex = list.indexWhere((m) => m.id == milestoneId);
     if (mIndex != -1) {
@@ -2845,11 +2887,21 @@ class _PremiumGoalOverviewSheetState
   }
 
   void _saveMilestones(VisionItem item, List<SmartMilestone> list) {
+    final filtered = list.where((m) => m.id != 'general_tasks_migration').toList();
     ref
         .read(canvasStateProvider.notifier)
         .updateItemDetails(
           item.id,
-          metadata: {'milestones': list.map((m) => m.toJson()).toList()},
+          metadata: {'milestones': filtered.map((m) => m.toJson()).toList()},
+        );
+  }
+
+  void _saveChecklist(VisionItem item, List<SmartChecklistItem> list) {
+    ref
+        .read(canvasStateProvider.notifier)
+        .updateItemDetails(
+          item.id,
+          metadata: {'checklist': list.map((c) => c.toJson()).toList()},
         );
   }
 }

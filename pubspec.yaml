@@ -23,12 +23,14 @@ dependencies:
   firebase_core: ^3.8.1
   firebase_auth: ^5.3.3
   url_launcher: ^6.3.2
+  share_plus: ^10.1.2
   # Vision Room dependencies
   audioplayers: ^6.1.0
   confetti: ^0.7.0
   percent_indicator: ^4.2.3
   fl_chart: ^0.69.0
   image_picker: ^1.1.2
+  video_player: ^2.11.1
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +46,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/cars/
+    - assets/images/splash/
 
 flutter_launcher_icons:
   android: "launcher_icon"
@@ -52,8 +55,8 @@ flutter_launcher_icons:
   remove_alpha_ios: true
 
 flutter_native_splash:
-  color: "#050816"
-  image: "assets/images/app_icon.png"
+  color: "#162254"
+  android: true
+  ios: true
   android_12:
-    color: "#050816"
-    image: "assets/images/app_icon.png"
+    color: "#162254"

@@ -13,7 +13,9 @@ class PlanCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metadata = item.metadata ?? {};
-    final title = item.content.isNotEmpty ? item.content : (metadata['title'] as String? ?? 'Project Roadmap');
+    final title = item.content.isNotEmpty
+        ? item.content
+        : (metadata['title'] as String? ?? 'Project Roadmap');
     final milestones = item.smartMilestones;
 
     return FittedBox(
@@ -33,7 +35,10 @@ class PlanCardWidget extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.account_tree_rounded, color: Colors.blueAccent),
+                  const Icon(
+                    Icons.account_tree_rounded,
+                    color: Colors.blueAccent,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -44,14 +49,21 @@ class PlanCardWidget extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.blueAccent.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       '${item.smartProgressPercent}%',
-                      style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.blueAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -75,8 +87,12 @@ class PlanCardWidget extends StatelessWidget {
                             child: Row(
                               children: [
                                 Icon(
-                                  m.isCompleted ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                                  color: m.isCompleted ? Colors.green : Colors.black26,
+                                  m.isCompleted
+                                      ? Icons.check_circle_rounded
+                                      : Icons.radio_button_unchecked_rounded,
+                                  color: m.isCompleted
+                                      ? Colors.green
+                                      : Colors.black26,
                                   size: 18,
                                 ),
                                 const SizedBox(width: 10),
@@ -85,8 +101,16 @@ class PlanCardWidget extends StatelessWidget {
                                     m.title,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: AppTypography.bodyMedium(color: m.isCompleted ? Colors.black45 : Colors.black87)
-                                        .copyWith(decoration: m.isCompleted ? TextDecoration.lineThrough : null),
+                                    style:
+                                        AppTypography.bodyMedium(
+                                          color: m.isCompleted
+                                              ? Colors.black45
+                                              : Colors.black87,
+                                        ).copyWith(
+                                          decoration: m.isCompleted
+                                              ? TextDecoration.lineThrough
+                                              : null,
+                                        ),
                                   ),
                                 ),
                               ],
@@ -113,10 +137,12 @@ class TaskCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metadata = item.metadata ?? {};
-    final title = item.content.isNotEmpty ? item.content : (metadata['title'] as String? ?? 'Daily Goals');
+    final title = item.content.isNotEmpty
+        ? item.content
+        : (metadata['title'] as String? ?? 'Daily Goals');
     final checklist = item.smartChecklist;
     final isDone = item.smartProgress >= 1.0;
-    
+
     // Warm organic yellow paper background gradient
     const paperGradient = LinearGradient(
       colors: [Color(0xFFE5BC68), Color(0xFFDFB15B)],
@@ -132,32 +158,29 @@ class TaskCardWidget extends StatelessWidget {
         width: 200,
         height: 260,
         child: Container(
-          decoration: BoxDecoration(
-            gradient: paperGradient,
-          ),
+          decoration: BoxDecoration(gradient: paperGradient),
           child: Stack(
             children: [
               // Notebook lines
               Positioned.fill(
-                child: CustomPaint(
-                  painter: _NotebookLinesPainter(),
-                ),
+                child: CustomPaint(painter: _NotebookLinesPainter()),
               ),
-              
+
               // Custom Smiley face in bottom-right corner
               Positioned(
                 bottom: 12,
                 right: 12,
                 width: 22,
                 height: 22,
-                child: CustomPaint(
-                  painter: _SmileyPainter(),
-                ),
+                child: CustomPaint(painter: _SmileyPainter()),
               ),
 
               // Content Padding
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -188,7 +211,7 @@ class TaskCardWidget extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 18),
-                    
+
                     // Checklist Items
                     Expanded(
                       child: checklist.isEmpty
@@ -253,7 +276,10 @@ class TaskCardWidget extends StatelessWidget {
           width: 17,
           height: 17,
           decoration: BoxDecoration(
-            border: Border.all(color: inkColor.withValues(alpha: 0.8), width: 1.5),
+            border: Border.all(
+              color: inkColor.withValues(alpha: 0.8),
+              width: 1.5,
+            ),
             borderRadius: BorderRadius.circular(2),
           ),
           alignment: const Alignment(0.0, -0.4),
@@ -290,7 +316,8 @@ class _NotebookLinesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final linePaint = Paint()
-      ..color = const Color(0xFF78350F).withValues(alpha: 0.08) // soft warm brown line
+      ..color = const Color(0xFF78350F)
+          .withValues(alpha: 0.08) // soft warm brown line
       ..strokeWidth = 1.0;
 
     // Draw horizontal lines starting below header
@@ -314,17 +341,32 @@ class _SmileyPainter extends CustomPainter {
       ..strokeWidth = 1.5;
 
     // Draw outer circle
-    canvas.drawCircle(Offset(size.width / 2, size.height / 2), size.width / 2, paint);
+    canvas.drawCircle(
+      Offset(size.width / 2, size.height / 2),
+      size.width / 2,
+      paint,
+    );
 
     // Draw eyes
     final eyePaint = Paint()
       ..color = const Color(0xFF2C2518).withValues(alpha: 0.6)
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(size.width / 2 - 4, size.height / 2 - 3), 1.2, eyePaint);
-    canvas.drawCircle(Offset(size.width / 2 + 4, size.height / 2 - 3), 1.2, eyePaint);
+    canvas.drawCircle(
+      Offset(size.width / 2 - 4, size.height / 2 - 3),
+      1.2,
+      eyePaint,
+    );
+    canvas.drawCircle(
+      Offset(size.width / 2 + 4, size.height / 2 - 3),
+      1.2,
+      eyePaint,
+    );
 
     // Draw mouth arc
-    final mouthRect = Rect.fromCircle(center: Offset(size.width / 2, size.height / 2), radius: size.width / 3);
+    final mouthRect = Rect.fromCircle(
+      center: Offset(size.width / 2, size.height / 2),
+      radius: size.width / 3,
+    );
     canvas.drawArc(mouthRect, 0.2, 2.8, false, paint);
   }
 
@@ -342,20 +384,35 @@ class FinanceCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metadata = item.metadata ?? {};
-    final title = item.content.isNotEmpty ? item.content : (metadata['title'] as String? ?? 'Finance Goal');
-    final current = (metadata['currentAmount'] as num?)?.toDouble() ?? 0.0;
-    final target = (metadata['targetAmount'] as num?)?.toDouble() ?? 1000.0;
+    final title = item.content.isNotEmpty
+        ? item.content
+        : (metadata['title'] as String? ?? 'Finance Goal');
+    final current = parseDoubleHelper(metadata['currentAmount'], 0.0);
+    final target = parseDoubleHelper(metadata['targetAmount'], 1000.0);
     final progressRatio = item.smartProgress;
     final progressPercent = item.smartProgressPercent;
     final remaining = (target - current).clamp(0.0, double.infinity);
     final targetDateStr = metadata['targetDate'] as String?;
-    
+
     // Formatting Target Date
     String formattedDate = 'No Date';
     if (targetDateStr != null) {
       try {
         final dt = DateTime.parse(targetDateStr);
-        final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        final months = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec',
+        ];
         formattedDate = '${dt.day} ${months[dt.month - 1]} ${dt.year}';
       } catch (_) {}
     }
@@ -371,7 +428,7 @@ class FinanceCardWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFF0A0A0A), // Deep dark background
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            border: Border.all(color: Colors.white60, width: 5),
           ),
           child: Stack(
             children: [
@@ -422,12 +479,15 @@ class FinanceCardWidget extends StatelessWidget {
                   ),
                 ),
               ),
-                
+
               // -------------------------------------------------------------
               // CONTENT OVERLAY
               // -------------------------------------------------------------
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -442,9 +502,15 @@ class FinanceCardWidget extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: goldColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: goldColor.withValues(alpha: 0.3)),
+                            border: Border.all(
+                              color: goldColor.withValues(alpha: 0.3),
+                            ),
                           ),
-                          child: Icon(Icons.show_chart_rounded, color: goldColor, size: 28),
+                          child: Icon(
+                            Icons.show_chart_rounded,
+                            color: goldColor,
+                            size: 28,
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -453,21 +519,25 @@ class FinanceCardWidget extends StatelessWidget {
                             children: [
                               Text(
                                 'FINANCE GOAL',
-                                style: AppTypography.caption(color: goldColor).copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2,
-                                  fontSize: 10,
-                                ),
+                                style: AppTypography.caption(color: goldColor)
+                                    .copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.2,
+                                      fontSize: 10,
+                                    ),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 title,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: AppTypography.titleMedium(color: Colors.white).copyWith(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style:
+                                    AppTypography.titleMedium(
+                                      color: Colors.white,
+                                    ).copyWith(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                               ),
                             ],
                           ),
@@ -476,16 +546,18 @@ class FinanceCardWidget extends StatelessWidget {
                       ],
                     ),
                     const Spacer(),
-                    
+
                     // Amounts
                     Text(
-                      '\$${current.toStringAsFixed(0)} / \$${target.toStringAsFixed(0)}',
+                      '₹${current.toStringAsFixed(0)} / ₹${target.toStringAsFixed(0)}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTypography.displayMedium(color: Colors.white).copyWith(fontSize: 22),
+                      style: AppTypography.displayMedium(
+                        color: Colors.white,
+                      ).copyWith(fontSize: 22),
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Custom Progress Bar
                     Container(
                       height: 8,
@@ -506,37 +578,69 @@ class FinanceCardWidget extends StatelessWidget {
                                 color: goldColor.withValues(alpha: 0.5),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
-                              )
+                              ),
                             ],
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 6),
-                    
+
                     // Progress Subtext
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('$progressPercent% Reached', style: AppTypography.caption(color: goldColor).copyWith(fontSize: 11)),
-                        Text('\$${remaining.toStringAsFixed(0)} to go', style: AppTypography.caption(color: Colors.white54).copyWith(fontSize: 11)),
+                        Text(
+                          '$progressPercent% Reached',
+                          style: AppTypography.caption(
+                            color: goldColor,
+                          ).copyWith(fontSize: 11),
+                        ),
+                        Text(
+                          '₹${remaining.toStringAsFixed(0)} to go',
+                          style: AppTypography.caption(
+                            color: Colors.white54,
+                          ).copyWith(fontSize: 11),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 10),
-                    
+
                     // Divider
-                    Container(height: 1, color: Colors.white.withValues(alpha: 0.05)),
+                    Container(
+                      height: 1,
+                      color: Colors.white.withValues(alpha: 0.05),
+                    ),
                     const SizedBox(height: 10),
-                    
+
                     // Footer Stats Row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(child: _buildStatCol(Icons.calendar_today_outlined, 'Target Date', formattedDate)),
+                        Expanded(
+                          child: _buildStatCol(
+                            Icons.calendar_today_outlined,
+                            'Target Date',
+                            formattedDate,
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Expanded(child: _buildStatCol(Icons.savings_outlined, 'Saved', '\$${current.toStringAsFixed(0)}')),
+                        Expanded(
+                          child: _buildStatCol(
+                            Icons.savings_outlined,
+                            'Saved',
+                            '₹${current.toStringAsFixed(0)}',
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Expanded(child: _buildStatCol(Icons.trending_up, 'Status', 'On Track', iconColor: goldColor)),
+                        Expanded(
+                          child: _buildStatCol(
+                            Icons.trending_up,
+                            'Status',
+                            'On Track',
+                            iconColor: goldColor,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -549,7 +653,12 @@ class FinanceCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCol(IconData icon, String label, String value, {Color? iconColor}) {
+  Widget _buildStatCol(
+    IconData icon,
+    String label,
+    String value, {
+    Color? iconColor,
+  }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -564,14 +673,18 @@ class FinanceCardWidget extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTypography.caption(color: Colors.white30).copyWith(fontSize: 9),
+                style: AppTypography.caption(
+                  color: Colors.white30,
+                ).copyWith(fontSize: 9),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTypography.caption(color: Colors.white).copyWith(fontSize: 11, fontWeight: FontWeight.w600),
+                style: AppTypography.caption(
+                  color: Colors.white,
+                ).copyWith(fontSize: 11, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -591,8 +704,11 @@ class CountdownCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metadata = item.metadata ?? {};
-    final title = item.content.isNotEmpty ? item.content : (metadata['title'] as String? ?? 'Target Countdown');
-    final targetDate = item.countdownDate ?? DateTime.now().add(const Duration(days: 30));
+    final title = item.content.isNotEmpty
+        ? item.content
+        : (metadata['title'] as String? ?? 'Target Countdown');
+    final targetDate =
+        item.countdownDate ?? DateTime.now().add(const Duration(days: 30));
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final target = DateTime(targetDate.year, targetDate.month, targetDate.day);
@@ -604,7 +720,7 @@ class CountdownCardWidget extends StatelessWidget {
         width: 220,
         height: 220,
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFFFF512F), Color(0xFFDD2476)],
@@ -616,23 +732,31 @@ class CountdownCardWidget extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.timer_rounded, color: Colors.white, size: 36),
-              const SizedBox(height: 12),
+              const Icon(Icons.timer_rounded, color: Colors.white, size: 28),
+              const SizedBox(height: 8),
               Text(
                 '$remainingDays',
-                style: AppTypography.displayLarge(color: Colors.white).copyWith(fontSize: 48),
+                style: AppTypography.displayLarge(
+                  color: Colors.white,
+                ).copyWith(fontSize: 44, height: 1.1),
               ),
               Text(
                 'DAYS REMAINING',
-                style: AppTypography.caption(color: Colors.white).copyWith(fontWeight: FontWeight.bold, letterSpacing: 2),
+                style: AppTypography.caption(color: Colors.white).copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                  fontSize: 10,
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
                 title,
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: AppTypography.titleMedium(color: Colors.white),
+                style: AppTypography.titleMedium(
+                  color: Colors.white,
+                ).copyWith(fontSize: 14, height: 1.2),
               ),
             ],
           ),

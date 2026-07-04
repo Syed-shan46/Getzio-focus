@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../../main.dart';
 import '../../../auth/presentation/screens/phone_login_screen.dart';
+import '../../../os_dashboard/presentation/screens/os_dashboard_screen.dart';
 
 class PremiumMVPOnboardingScreen extends ConsumerStatefulWidget {
   const PremiumMVPOnboardingScreen({super.key});
@@ -45,7 +46,18 @@ class _PremiumMVPOnboardingScreenState
     HapticFeedback.mediumImpact();
     final hiveDb = ref.read(hiveDatabaseProvider);
     await hiveDb.saveOnboardingCompleted(true);
-    ref.read(onboardingCompletedProvider.notifier).state = true;
+    
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => const OSDashboardScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 600),
+        ),
+      );
+    }
   }
 
   void _nextPage() {

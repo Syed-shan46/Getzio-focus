@@ -101,26 +101,43 @@ class StickyNote extends HiveObject {
         'deleted': deleted,
       };
 
-  factory StickyNote.fromJson(Map<String, dynamic> json) => StickyNote(
-        id: json['_id'] ?? json['id'] ?? '',
-        userId: json['userId'] ?? '',
-        title: json['title'] ?? '',
-        description: json['description'] ?? '',
-        progress: json['progress'] ?? 0,
-        dueDate: json['dueDate'] != null ? DateTime.parse(json['dueDate']) : null,
-        priority: json['priority'] ?? 'Low',
-        category: json['category'] ?? 'Personal',
-        x: (json['position']?['x'] as num?)?.toDouble() ?? 0.0,
-        y: (json['position']?['y'] as num?)?.toDouble() ?? 0.0,
-        zIndex: json['position']?['zIndex'] ?? 0,
-        rotation: (json['rotation'] as num?)?.toDouble() ?? 0.0,
-        scale: (json['scale'] as num?)?.toDouble() ?? 1.0,
-        pinStyle: json['pinStyle'] ?? 'default',
-        color: json['color'] ?? '#FFFFFF',
-        syncVersion: json['syncVersion'] ?? 1,
-        deleted: json['deleted'] ?? false,
-        pendingSync: false, // from server, so not pending
-      );
+  factory StickyNote.fromJson(Map<String, dynamic> json) {
+    double toDouble(dynamic val, [double defaultVal = 0.0]) {
+      if (val == null) return defaultVal;
+      if (val is num) return val.toDouble();
+      if (val is String) return double.tryParse(val) ?? defaultVal;
+      return defaultVal;
+    }
+    int toInt(dynamic val, [int defaultVal = 0]) {
+      if (val == null) return defaultVal;
+      if (val is num) return val.toInt();
+      if (val is String) return int.tryParse(val) ?? defaultVal;
+      return defaultVal;
+    }
+
+    final pos = json['position'] as Map?;
+
+    return StickyNote(
+      id: json['_id'] ?? json['id'] ?? '',
+      userId: json['userId'] ?? '',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      progress: toInt(json['progress'], 0),
+      dueDate: json['dueDate'] != null ? DateTime.parse(json['dueDate']) : null,
+      priority: json['priority'] ?? 'Low',
+      category: json['category'] ?? 'Personal',
+      x: toDouble(pos?['x'], 0.0),
+      y: toDouble(pos?['y'], 0.0),
+      zIndex: toInt(pos?['zIndex'], 0),
+      rotation: toDouble(json['rotation'], 0.0),
+      scale: toDouble(json['scale'], 1.0),
+      pinStyle: json['pinStyle'] ?? 'default',
+      color: json['color'] ?? '#FFFFFF',
+      syncVersion: toInt(json['syncVersion'], 1),
+      deleted: json['deleted'] ?? false,
+      pendingSync: false,
+    );
+  }
 
   StickyNote copyWith({
     String? id,

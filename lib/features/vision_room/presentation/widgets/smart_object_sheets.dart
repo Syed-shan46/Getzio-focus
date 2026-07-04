@@ -68,7 +68,7 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
     );
 
     final double originalProgress =
-        (item.metadata?['progress'] as num?)?.toDouble() ?? 0.0;
+        parseDoubleHelper(item.metadata?['progress'], 0.0);
     final double currentProgressVal = _draggedProgress ?? originalProgress;
     final int progressPercent = currentProgressVal.round();
     final bool hasChanges =
@@ -708,8 +708,8 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
     final motivation = metadata['motivation'] as String? ?? '';
     final monthlyAmount = metadata['monthlyAmount'] as String? ?? '';
 
-    final current = (metadata['currentAmount'] as num?)?.toDouble() ?? 0.0;
-    final target = (metadata['targetAmount'] as num?)?.toDouble() ?? 1000.0;
+    final current = parseDoubleHelper(metadata['currentAmount'], 0.0);
+    final target = parseDoubleHelper(metadata['targetAmount'], 1000.0);
     final progressRatio = currentItem.smartProgress;
     final progressPercent = currentItem.smartProgressPercent;
     final remaining = (target - current).clamp(0.0, double.infinity);
@@ -1617,7 +1617,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
     );
 
     final double originalProgress =
-        (item.metadata?['progress'] as num?)?.toDouble() ?? 0.0;
+        parseDoubleHelper(item.metadata?['progress'], 0.0);
     final double currentProgressVal = _draggedProgress ?? originalProgress;
     final int progressPercent = currentProgressVal.round();
     final bool hasChanges =

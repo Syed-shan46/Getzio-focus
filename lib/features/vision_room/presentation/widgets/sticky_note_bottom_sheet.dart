@@ -43,6 +43,16 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
   String _priority = 'Low';
   String _category = 'Personal';
   DateTime? _dueDate;
+  String _selectedColor = '#FCD34D';
+
+  final List<String> _noteColors = [
+    '#FCD34D', // Pastel Yellow (default)
+    '#86EFAC', // Pastel Green
+    '#93C5FD', // Pastel Blue
+    '#FBCFE8', // Pastel Pink
+    '#C084FC', // Pastel Purple
+    '#FDBA74', // Pastel Orange
+  ];
 
   @override
   void initState() {
@@ -59,6 +69,7 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
     final rawCategory = widget.existingNote?.category ?? 'Personal';
     _category = rawCategory.split('#').first;
     _dueDate = widget.existingNote?.dueDate;
+    _selectedColor = widget.existingNote?.color ?? '#FCD34D';
   }
 
   @override
@@ -103,6 +114,7 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
           priority: _priority,
           category: savedCategory,
           dueDate: _dueDate,
+          color: _selectedColor,
         ) ??
         StickyNote(
           id: const Uuid().v4(),
@@ -113,6 +125,7 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
           priority: _priority,
           category: savedCategory,
           dueDate: _dueDate,
+          color: _selectedColor,
         );
 
     if (widget.existingNote == null) {
@@ -242,6 +255,63 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(color: activeColor),
                 ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Color Selector Row
+            const Text(
+              'Select Note Color',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 40,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: _noteColors.map((hexColor) {
+                  final parsedColor = Color(int.parse(hexColor.replaceFirst('#', '0xFF')));
+                  final isSelected = _selectedColor == hexColor;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() => _selectedColor = hexColor);
+                    },
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: parsedColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? Colors.white : Colors.transparent,
+                          width: 2.5,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: parsedColor.withValues(alpha: 0.6),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                )
+                              ]
+                            : null,
+                      ),
+                      child: isSelected
+                          ? const Center(
+                              child: Icon(
+                                Icons.check,
+                                color: Colors.black54,
+                                size: 18,
+                              ),
+                            )
+                          : null,
+                    ),
+                  );
+                }).toList(),
               ),
             ),
             const SizedBox(height: 20),

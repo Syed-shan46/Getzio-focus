@@ -18,101 +18,369 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   final List<CanvasState> _redoStack = [];
   final Map<String, Timer> _itemDebouncers = {};
   Timer? _viewportDebouncer;
+  bool _initialized = false;
 
-  CanvasHistoryNotifier(this._hiveDb, this._ref) : super(CanvasState(items: [])) {
-    fetchRoomItems().catchError((e) {
-      debugPrint('[CanvasHistoryNotifier] Initial fetch error: $e');
-    });
+  CanvasHistoryNotifier(this._hiveDb, this._ref)
+    : super(CanvasState(items: [])) {
+    // FIRST: Immediately set defaults for guest users before any async ops.
+    // This runs synchronously and guarantees the vision room is never empty.
+    final token = _hiveDb.getAuthToken();
+    final isGuest = token == null || token.trim().isEmpty;
+    if (isGuest) {
+      state = state.copyWith(
+        items: [
+          // 1. Polaroid Image
+          VisionItem(
+            id: 'guest_image_1',
+            type: VisionItemType.image.name,
+            content: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&auto=format&fit=crop&q=80',
+            x: -280,
+            y: -180,
+            width: 170,
+            height: 190,
+            rotation: -0.05,
+            colorValue: 0xFFFFFFFF,
+            attachmentType: 'tape',
+            attachmentStyle: 'beige',
+            metadata: const {
+              'caption': 'Yosemite Wilderness 🌲',
+              'emoji': 'mountain',
+              'scale': 1.0,
+              'opacity': 1.0,
+              'isOnShelf': true,
+            },
+          ),
+          // 2. Finance Goal Progress
+          VisionItem(
+            id: 'guest_finance_1',
+            type: VisionItemType.financeGoal.name,
+            content: 'Dream House Fund',
+            x: -80,
+            y: -210,
+            width: 210,
+            height: 130,
+            rotation: 0.02,
+            colorValue: 0xFF1E1B4B,
+            attachmentType: 'pin',
+            attachmentStyle: 'redPin',
+            metadata: const {
+              'current': 35000.0,
+              'target': 150000.0,
+              'monthlyAmount': '1200',
+              'description': 'For a modern cozy cabin by the lake.',
+              'scale': 1.0,
+              'opacity': 1.0,
+              'isOnShelf': true,
+            },
+          ),
+          // 3. Goal Tracker Card
+          VisionItem(
+            id: 'guest_goal_1',
+            type: VisionItemType.goal.name,
+            content: 'Fitness Marathon',
+            x: 160,
+            y: -220,
+            width: 190,
+            height: 130,
+            rotation: -0.03,
+            colorValue: 0xFF0D9488,
+            attachmentType: 'pin',
+            attachmentStyle: 'redPin',
+            metadata: const {
+              'current': 18.0,
+              'target': 42.0,
+              'targetDate': '2026-12-31',
+              'category': 'Health',
+              'description': 'Train to finish the full marathon under 4 hours.',
+              'scale': 1.0,
+              'opacity': 1.0,
+              'isOnShelf': true,
+            },
+          ),
+          // 4. Inspirational Quote
+          VisionItem(
+            id: 'guest_quote_1',
+            type: VisionItemType.quote.name,
+            content: '“The secret of getting ahead is getting started.”',
+            x: -290,
+            y: 40,
+            width: 180,
+            height: 120,
+            rotation: 0.04,
+            colorValue: 0xFF6B21A8,
+            attachmentType: 'pin',
+            attachmentStyle: 'redPin',
+            metadata: const {
+              'author': 'Mark Twain',
+              'scale': 1.0,
+              'opacity': 1.0,
+              'isOnShelf': true,
+            },
+          ),
+          // 5. Habits Checklist (Sticky Note)
+          VisionItem(
+            id: 'guest_note_1',
+            type: VisionItemType.stickyNote.name,
+            content: 'Daily Routine:\n• Meditate 10m 🧘\n• Read 15 pages 📚\n• Run 5km 🏃',
+            x: -70,
+            y: -30,
+            width: 180,
+            height: 180,
+            rotation: -0.04,
+            colorValue: 0xFFFEF08A, // Soft yellow
+            attachmentType: 'tape',
+            attachmentStyle: 'beige',
+            metadata: const {
+              'scale': 1.0,
+              'opacity': 1.0,
+              'isOnShelf': true,
+            },
+          ),
+          // 6. Live Countdown Timer
+          VisionItem(
+            id: 'guest_countdown_1',
+            type: VisionItemType.countdown.name,
+            content: 'Product Launch Day 🚀',
+            x: 140,
+            y: 20,
+            width: 190,
+            height: 130,
+            rotation: 0.03,
+            colorValue: 0xFFB91C1C,
+            attachmentType: 'pin',
+            attachmentStyle: 'redPin',
+            countdownDate: DateTime(2026, 12, 31),
+            metadata: const {
+              'description': 'Ship the beta release to the global community.',
+              'scale': 1.0,
+              'opacity': 1.0,
+              'isOnShelf': true,
+            },
+          ),
+        ],
+      );
+    }
 
-    _ref.listen<AsyncValue<AuthUserModel?>>(authProvider, (previous, next) {
-      if (next.hasValue) {
-        debugPrint('[CanvasHistoryNotifier] Auth state changed, reloading initial items...');
-        fetchRoomItems().catchError((e) {
-          debugPrint('[CanvasHistoryNotifier] Auth fetch error: $e');
-        });
-      }
-    });
+    // THEN: schedule async loading (for logged-in users from backend)
+    Future.microtask(() => _initAsync());
   }
 
-  Future<void> fetchRoomItems() async {
-    _loadLocalCached();
+  Future<void> _initAsync() async {
+    if (_initialized) return;
+    _initialized = true;
 
-    final hasToken = _hiveDb.getAuthToken() != null;
-    if (!hasToken) return;
-
-    final repo = _ref.read(visionRoomRepositoryProvider);
     try {
-      final remoteItems = await repo.fetchVisionRoomFromServer();
-      if (remoteItems == null) return;
+      // Load from local Hive first
+      final repo = _ref.read(visionRoomRepositoryProvider);
+      List<VisionItem> items = [];
+      try {
+        items = repo.getLocalVisionItems();
+      } catch (_) {}
 
-      final localJson = jsonEncode(state.items.map((i) => i.toJson()).toList());
-      final remoteJson = jsonEncode(remoteItems.map((i) => i.toJson()).toList());
+      final token = _hiveDb.getAuthToken();
+      final isGuest = token == null || token.trim().isEmpty;
+      debugPrint('[CanvasSync] _initAsync: isGuest = $isGuest, token = "$token", local cached items count = ${items.length}');
 
-      if (localJson != remoteJson) {
-        await repo.saveLocalVisionItems(remoteItems);
-        state = state.copyWith(items: remoteItems);
+      if (!isGuest) {
+        // Double safety: if user is logged in, but cache still has guest items, clear them!
+        final hasGuestItems = items.any((i) => i.id.startsWith('guest_'));
+        if (hasGuestItems) {
+          debugPrint('[CanvasSync] _initAsync: clearing guest items on successful login');
+          await repo.saveLocalVisionItems([]);
+          items = [];
+          state = state.copyWith(items: []);
+        }
       }
-      _ref.read(syncManagerProvider).processQueue();
+
+      if (isGuest) {
+        // For guest users: if Hive has items (from seed or previous session) and has all 6 guest defaults with positive coordinates, use those.
+        // Otherwise, reload/reset to our 6 beautiful default cards.
+        final hasNewDefaults = items.length >= 6 &&
+            items.any((i) => i.id == 'guest_countdown_1') &&
+            items.every((i) => i.x >= 0) &&
+            items.any((i) => i.id == 'guest_goal_1' && i.metadata?['milestones'] != null);
+        debugPrint('[CanvasSync] _initAsync: guest path, hasNewDefaults = $hasNewDefaults');
+        if (items.isNotEmpty && hasNewDefaults) {
+          state = state.copyWith(items: items);
+        } else {
+          debugPrint('[CanvasSync] _initAsync: resetting to defaults list');
+          final defaults = [
+            // 1. Polaroid Image
+            VisionItem(
+              id: 'guest_image_1',
+              type: VisionItemType.image.name,
+              content: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&auto=format&fit=crop&q=80',
+              x: 16,
+              y: 50,
+              width: 150,
+              height: 165,
+              rotation: -0.05,
+              colorValue: 0xFFFFFFFF,
+              attachmentType: 'tape',
+              attachmentStyle: 'beige',
+              metadata: const {
+                'caption': 'Yosemite Wilderness 🌲',
+                'emoji': 'mountain',
+                'scale': 1.0,
+                'opacity': 1.0,
+                'isOnShelf': true,
+              },
+            ),
+            // 2. Finance Goal Progress
+            VisionItem(
+              id: 'guest_finance_1',
+              type: VisionItemType.financeGoal.name,
+              content: 'Dream House Fund',
+              x: 180,
+              y: 40,
+              width: 165,
+              height: 115,
+              rotation: 0.02,
+              colorValue: 0xFF1E1B4B,
+              attachmentType: 'pin',
+              attachmentStyle: 'redPin',
+              metadata: const {
+                'currentAmount': 35000.0,
+                'targetAmount': 150000.0,
+                'monthlyAmount': '1200',
+                'description': 'For a modern cozy cabin by the lake.',
+                'scale': 1.0,
+                'opacity': 1.0,
+                'isOnShelf': true,
+              },
+            ),
+            // 3. Goal Tracker Card
+            VisionItem(
+              id: 'guest_goal_1',
+              type: VisionItemType.goal.name,
+              content: 'Fitness Marathon',
+              x: 16,
+              y: 235,
+              width: 165,
+              height: 128,
+              rotation: -0.03,
+              colorValue: 0xFF0D9488,
+              attachmentType: 'pin',
+              attachmentStyle: 'redPin',
+              metadata: const {
+                'currentAmount': 18.0,
+                'targetAmount': 42.0,
+                'showProgress': true,
+                'priority': 'high',
+                'targetDate': '2026-12-31',
+                'category': 'Health',
+                'description': 'Train to finish the full marathon under 4 hours.',
+                'scale': 1.0,
+                'opacity': 1.0,
+                'isOnShelf': true,
+                'milestones': [
+                  {'id': 'm1', 'title': 'Beta Test Release', 'isCompleted': true},
+                  {'id': 'm2', 'title': 'App Store Launch', 'isCompleted': false},
+                ],
+                'checklist': [
+                  {'id': 's1', 'title': 'Fix UI bugs', 'isCompleted': true},
+                  {'id': 's2', 'title': 'Design cards', 'isCompleted': true},
+                ],
+              },
+            ),
+            // 4. Inspirational Quote
+            VisionItem(
+              id: 'guest_quote_1',
+              type: VisionItemType.quote.name,
+              content: '“The secret of getting ahead is getting started.”',
+              x: 185,
+              y: 170,
+              width: 160,
+              height: 115,
+              rotation: 0.04,
+              colorValue: 0xFF6B21A8,
+              attachmentType: 'pin',
+              attachmentStyle: 'redPin',
+              metadata: const {
+                'author': 'Mark Twain',
+                'scale': 1.0,
+                'opacity': 1.0,
+                'isOnShelf': true,
+              },
+            ),
+            // 5. Habits Checklist (Sticky Note)
+            VisionItem(
+              id: 'guest_note_1',
+              type: VisionItemType.stickyNote.name,
+              content: 'Daily Routine:\n• Meditate 10m 🧘\n• Read 15 pages 📚\n• Run 5km 🏃',
+              x: 16,
+              y: 365,
+              width: 160,
+              height: 110,
+              rotation: -0.04,
+              colorValue: 0xFFFEF08A, // Soft yellow
+              attachmentType: 'tape',
+              attachmentStyle: 'beige',
+              metadata: const {
+                'scale': 1.0,
+                'opacity': 1.0,
+                'isOnShelf': true,
+              },
+            ),
+            // 6. Live Countdown Timer
+            VisionItem(
+              id: 'guest_countdown_1',
+              type: VisionItemType.countdown.name,
+              content: 'Product Launch Day 🚀',
+              x: 185,
+              y: 300,
+              width: 160,
+              height: 115,
+              rotation: 0.03,
+              colorValue: 0xFFB91C1C,
+              attachmentType: 'pin',
+              attachmentStyle: 'redPin',
+              countdownDate: DateTime(2026, 12, 31),
+              metadata: const {
+                'description': 'Ship the beta release to the global community.',
+                'scale': 1.0,
+                'opacity': 1.0,
+                'isOnShelf': true,
+              },
+            ),
+          ];
+          repo.saveLocalVisionItems(defaults);
+          state = state.copyWith(items: defaults);
+        }
+      } else {
+        // For logged-in users: load from Hive and/or fetch from server
+        if (items.isNotEmpty) {
+          state = state.copyWith(items: items);
+        }
+
+        try {
+          final remoteItems = await repo.fetchVisionRoomFromServer();
+          if (remoteItems != null && remoteItems.isNotEmpty) {
+            final localJson = jsonEncode(
+              state.items.map((i) => i.toJson()).toList(),
+            );
+            final remoteJson = jsonEncode(
+              remoteItems.map((i) => i.toJson()).toList(),
+            );
+            if (localJson != remoteJson) {
+              await repo.saveLocalVisionItems(remoteItems);
+              state = state.copyWith(items: remoteItems);
+            }
+          }
+        } catch (_) {}
+
+        _ref.read(syncManagerProvider).processQueue();
+      }
+
+      // Restore viewport if exists
+      final cachedViewport = _hiveDb.getVisionViewport();
+      if (cachedViewport != null) {
+        state = state.copyWith(
+          viewportTransform: Matrix4.fromList(cachedViewport),
+        );
+      }
     } catch (e) {
-      debugPrint('[CanvasSync] Background fetch error: $e');
-      rethrow;
-    }
-  }
-
-  void _loadLocalCached() {
-    final repo = _ref.read(visionRoomRepositoryProvider);
-    final items = repo.getLocalVisionItems();
-    if (items.isEmpty) {
-      final defaults = [
-        VisionItem(
-          id: 'sample_note_1',
-          type: VisionItemType.stickyNote.name,
-          content: 'Focus on daily progress ✨',
-          x: 50,
-          y: 160,
-          width: 170,
-          height: 160,
-          rotation: -0.04,
-          colorValue: 0xFF3B82F6,
-          attachmentType: 'pin',
-          attachmentStyle: 'redPin',
-        ),
-        VisionItem(
-          id: 'sample_quote_1',
-          type: VisionItemType.quote.name,
-          content: '"Small steps every day leads to massive results."',
-          x: 230,
-          y: 190,
-          width: 180,
-          height: 140,
-          rotation: 0.03,
-          attachmentType: 'pin',
-          attachmentStyle: 'redPin',
-          metadata: const {'author': 'Daily Discipline'},
-        ),
-        VisionItem(
-          id: 'sample_goal_1',
-          type: VisionItemType.goal.name,
-          content: 'Master My Habits',
-          x: 100,
-          y: 350,
-          width: 220,
-          height: 150,
-          rotation: -0.02,
-          attachmentType: 'pin',
-          attachmentStyle: 'redPin',
-          metadata: const {'targetDate': '2026-12-31', 'category': 'Growth'},
-        ),
-      ];
-      repo.saveLocalVisionItems(defaults);
-      state = state.copyWith(items: defaults);
-    } else {
-      state = state.copyWith(items: items);
-    }
-
-    final cachedViewport = _hiveDb.getVisionViewport();
-    if (cachedViewport != null) {
-      state = state.copyWith(viewportTransform: Matrix4.fromList(cachedViewport));
+      debugPrint('[CanvasSync] _initAsync error: $e');
     }
   }
 
@@ -134,7 +402,9 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     try {
       final dio = _ref.read(dioClientProvider);
       final repo = _ref.read(visionRoomRepositoryProvider);
-      final serializedItems = state.items.map((i) => repo.mapItemToDbKeys(i)).toList();
+      final serializedItems = state.items
+          .map((i) => repo.mapItemToDbKeys(i))
+          .toList();
       await dio.post(
         '/focus/vision-room',
         data: {
@@ -162,12 +432,17 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
         final repo = _ref.read(visionRoomRepositoryProvider);
         final data = repo.mapItemToDbKeys(item);
         final dio = _ref.read(dioClientProvider);
-        dio.patch('/focus/vision-room/item/$id', data: data).then((_) {
-          debugPrint('[CanvasSync] Patched item $id successfully');
-        }).catchError((e) async {
-          debugPrint('[CanvasSync] Failed to patch item $id, queuing sync: $e');
-          await repo.queueItemUpsert(item, 'update');
-        });
+        dio
+            .patch('/focus/vision-room/item/$id', data: data)
+            .then((_) {
+              debugPrint('[CanvasSync] Patched item $id successfully');
+            })
+            .catchError((e) async {
+              debugPrint(
+                '[CanvasSync] Failed to patch item $id, queuing sync: $e',
+              );
+              await repo.queueItemUpsert(item, 'update');
+            });
       } catch (e) {
         debugPrint('[CanvasSync] Exception patching item $id: $e');
       }
@@ -228,10 +503,10 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
       if (i.zIndex > maxZ) maxZ = i.zIndex;
     }
     final newItem = item.copyWith(zIndex: maxZ + 1);
-    
+
     final newItems = List<VisionItem>.from(state.items)..add(newItem);
     newItems.sort((a, b) => a.zIndex.compareTo(b.zIndex));
-    
+
     commitState(state.copyWith(items: newItems));
 
     final hasToken = _hiveDb.getAuthToken() != null;
@@ -241,17 +516,19 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
         final dio = _ref.read(dioClientProvider);
         final payload = repo.mapItemToDbKeys(newItem);
         final createdAt = DateTime.now().toIso8601String();
-        payload['metadata'] = {
-          ...?(newItem.metadata),
-          'createdAt': createdAt,
-        };
+        payload['metadata'] = {...?(newItem.metadata), 'createdAt': createdAt};
         payload['countdownDate'] = newItem.countdownDate?.toIso8601String();
-        dio.post('/focus/vision-room/item', data: payload).then((_) {
-          debugPrint('[CanvasSync] Created item ${newItem.id} on backend');
-        }).catchError((e) async {
-          debugPrint('[CanvasSync] Failed to create item ${newItem.id}, queuing sync: $e');
-          await repo.queueItemUpsert(newItem, 'create');
-        });
+        dio
+            .post('/focus/vision-room/item', data: payload)
+            .then((_) {
+              debugPrint('[CanvasSync] Created item ${newItem.id} on backend');
+            })
+            .catchError((e) async {
+              debugPrint(
+                '[CanvasSync] Failed to create item ${newItem.id}, queuing sync: $e',
+              );
+              await repo.queueItemUpsert(newItem, 'create');
+            });
       } catch (e) {
         debugPrint('[CanvasSync] Exception creating item: $e');
       }
@@ -263,7 +540,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     for (var i in state.items) {
       if (i.zIndex > maxZ) maxZ = i.zIndex;
     }
-    
+
     final newItems = state.items.map((item) {
       if (item.id == id) {
         final updated = item.copyWith(zIndex: maxZ + 1);
@@ -272,7 +549,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
       }
       return item;
     }).toList();
-    
+
     newItems.sort((a, b) => a.zIndex.compareTo(b.zIndex));
     commitState(state.copyWith(items: newItems));
   }
@@ -282,7 +559,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     for (var i in state.items) {
       if (i.zIndex < minZ) minZ = i.zIndex;
     }
-    
+
     final newItems = state.items.map((item) {
       if (item.id == id) {
         final updated = item.copyWith(zIndex: minZ - 1);
@@ -291,7 +568,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
       }
       return item;
     }).toList();
-    
+
     newItems.sort((a, b) => a.zIndex.compareTo(b.zIndex));
     commitState(state.copyWith(items: newItems));
   }
@@ -307,7 +584,13 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     state = state.copyWith(items: updatedItems);
   }
 
-  void updateSize(String id, double width, double height, {double? dx, double? dy}) {
+  void updateSize(
+    String id,
+    double width,
+    double height, {
+    double? dx,
+    double? dy,
+  }) {
     final updatedItems = state.items.map((item) {
       if (item.id == id) {
         final updated = item.copyWith(
@@ -335,17 +618,31 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     commitState(state.copyWith(items: updatedItems));
   }
 
-  void updateItemDetails(String id, {String? content, String? secondaryContent, int? colorValue, Map<String, dynamic>? metadata}) {
+  void updateItemDetails(
+    String id, {
+    String? content,
+    String? secondaryContent,
+    int? colorValue,
+    Map<String, dynamic>? metadata,
+  }) {
     final updatedItems = state.items.map((item) {
       if (item.id == id) {
         final newMetadata = metadata != null
             ? {...?item.metadata, ...metadata}
             : item.metadata;
+        
+        DateTime? newCountdownDate = item.countdownDate;
+        if (newMetadata != null && newMetadata.containsKey('targetDate')) {
+          final targetStr = newMetadata['targetDate'] as String?;
+          newCountdownDate = targetStr != null ? DateTime.tryParse(targetStr) : null;
+        }
+
         final updated = item.copyWith(
           content: content ?? item.content,
           secondaryContent: secondaryContent ?? item.secondaryContent,
           colorValue: colorValue ?? item.colorValue,
           metadata: newMetadata,
+          countdownDate: newCountdownDate,
         );
         _debouncePatchItem(id);
         return updated;
@@ -371,7 +668,10 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   void updateAttachment(String id, String type, String style) {
     final updatedItems = state.items.map((item) {
       if (item.id == id) {
-        final updated = item.copyWith(attachmentType: type, attachmentStyle: style);
+        final updated = item.copyWith(
+          attachmentType: type,
+          attachmentStyle: style,
+        );
         _debouncePatchItem(id);
         return updated;
       }
@@ -380,7 +680,13 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     commitState(state.copyWith(items: updatedItems));
   }
 
-  void commitTransform(String id, double newWidth, double newHeight, double newRotation, {bool isFinal = false}) {
+  void commitTransform(
+    String id,
+    double newWidth,
+    double newHeight,
+    double newRotation, {
+    bool isFinal = false,
+  }) {
     final newItems = state.items.map((item) {
       if (item.id == id) {
         final updated = item.copyWith(
@@ -399,21 +705,28 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   }
 
   void removeItem(String id) {
-    commitState(state.copyWith(
-      items: state.items.where((item) => item.id != id).toList(),
-    ));
+    commitState(
+      state.copyWith(
+        items: state.items.where((item) => item.id != id).toList(),
+      ),
+    );
 
     final hasToken = _hiveDb.getAuthToken() != null;
     if (hasToken) {
       try {
         final repo = _ref.read(visionRoomRepositoryProvider);
         final dio = _ref.read(dioClientProvider);
-        dio.delete('/focus/vision-room/item/$id').then((_) {
-          debugPrint('[CanvasSync] Deleted item $id on backend');
-        }).catchError((e) async {
-          debugPrint('[CanvasSync] Failed to delete item $id, queuing sync: $e');
-          await repo.queueItemDeletion(id);
-        });
+        dio
+            .delete('/focus/vision-room/item/$id')
+            .then((_) {
+              debugPrint('[CanvasSync] Deleted item $id on backend');
+            })
+            .catchError((e) async {
+              debugPrint(
+                '[CanvasSync] Failed to delete item $id, queuing sync: $e',
+              );
+              await repo.queueItemDeletion(id);
+            });
       } catch (e) {
         debugPrint('[CanvasSync] Exception deleting item: $e');
       }
@@ -433,14 +746,20 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     _viewportDebouncer = Timer(const Duration(milliseconds: 800), () {
       try {
         final dio = _ref.read(dioClientProvider);
-        dio.patch('/focus/vision-room/viewport', data: {
-          'viewport': state.viewportTransform?.storage.toList(),
-        }).then((_) {
-          debugPrint('[CanvasSync] Viewport synced to backend');
-        }).catchError((e) {
-          debugPrint('[CanvasSync] Viewport patch failed ($e), falling back to full save');
-          saveRoomToServer().catchError((_) {});
-        });
+        dio
+            .patch(
+              '/focus/vision-room/viewport',
+              data: {'viewport': state.viewportTransform?.storage.toList()},
+            )
+            .then((_) {
+              debugPrint('[CanvasSync] Viewport synced to backend');
+            })
+            .catchError((e) {
+              debugPrint(
+                '[CanvasSync] Viewport patch failed ($e), falling back to full save',
+              );
+              saveRoomToServer().catchError((_) {});
+            });
       } catch (e) {
         debugPrint('[CanvasSync] Exception syncing viewport: $e');
       }
@@ -465,8 +784,10 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   }
 }
 
-final canvasStateProvider = StateNotifierProvider<CanvasHistoryNotifier, CanvasState>((ref) {
-  final hiveDb = ref.watch(hiveDatabaseProvider);
-  final notifier = CanvasHistoryNotifier(hiveDb, ref);
-  return notifier;
-});
+final canvasStateProvider =
+    StateNotifierProvider<CanvasHistoryNotifier, CanvasState>((ref) {
+      final hiveDb = ref.watch(hiveDatabaseProvider);
+      ref.watch(authProvider); // Force recreation on auth change (login/logout)
+      final notifier = CanvasHistoryNotifier(hiveDb, ref);
+      return notifier;
+    });

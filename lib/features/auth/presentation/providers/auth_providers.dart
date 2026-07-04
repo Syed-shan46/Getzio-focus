@@ -85,6 +85,14 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
     final readingPrefs = _hiveDb.getReadingPreferences() ?? {};
     final healthPrefs = _hiveDb.getHealthPreferences() ?? {};
     final financePrefs = _hiveDb.getFinancePreferences() ?? {};
+    
+    // Clear guest items in vision room upon login
+    final rawVisionItems = _hiveDb.getVisionItems();
+    final hasGuestItems = rawVisionItems.any((v) => (v['id'] as String?)?.startsWith('guest_') == true);
+    if (hasGuestItems) {
+      log('[Sync] Clearing guest items in vision room upon successful login');
+      await _hiveDb.saveVisionItems([]);
+    }
     final visionItems = _hiveDb.getVisionItems();
 
     // Ensure all items have a localId and a default syncStatus
@@ -421,13 +429,15 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
         log('[Auth] Error clearing temp files: $e');
       }
 
-      // Invalidate/reset all core Riverpod providers
-      _ref.invalidate(todosProvider);
-      _ref.invalidate(canvasStateProvider);
-      _ref.invalidate(affirmationsProvider);
-      _ref.invalidate(osStateProvider);
-      _ref.invalidate(previewModeProvider);
-      _ref.invalidate(dailyMotivationProvider);
+      // Invalidate/reset all core Riverpod providers in a microtask to avoid modifies during build cycles
+      Future.microtask(() {
+        _ref.invalidate(todosProvider);
+        _ref.invalidate(canvasStateProvider);
+        _ref.invalidate(affirmationsProvider);
+        _ref.invalidate(osStateProvider);
+        _ref.invalidate(previewModeProvider);
+        _ref.invalidate(dailyMotivationProvider);
+      });
       
       state = const AsyncValue.data(null);
     } catch (e, stack) {
@@ -469,12 +479,14 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
         log('[Auth] Error clearing temp files: $e');
       }
 
-      // Invalidate/reset all core Riverpod providers
-      _ref.invalidate(todosProvider);
-      _ref.invalidate(canvasStateProvider);
-      _ref.invalidate(affirmationsProvider);
-      _ref.invalidate(osStateProvider);
-      _ref.invalidate(dailyMotivationProvider);
+      // Invalidate/reset all core Riverpod providers in a microtask to avoid modifies during build cycles
+      Future.microtask(() {
+        _ref.invalidate(todosProvider);
+        _ref.invalidate(canvasStateProvider);
+        _ref.invalidate(affirmationsProvider);
+        _ref.invalidate(osStateProvider);
+        _ref.invalidate(dailyMotivationProvider);
+      });
 
       state = const AsyncValue.data(null);
     } catch (e, stack) {

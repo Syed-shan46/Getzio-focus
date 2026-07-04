@@ -47,7 +47,7 @@ class SampleDataSeedingService {
       'plantType': 'Bonsai',
       'ambientMode': 'Auto',
       'rainMode': false,
-      'homeExperience': 'living',
+      'homeExperience': 'classic',
     });
 
     // 5. Goals with Milestones and Tasks

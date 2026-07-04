@@ -679,7 +679,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
 
           // Floating Action Buttons
           Positioned(
-            bottom: 24,
+            bottom: 90,
             right: 20,
             child: GestureDetector(
               onTap: () {
@@ -701,13 +701,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                   gradient: const LinearGradient(
                     colors: [Color(0xFFF97316), Color(0xFF8B5CF6)],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

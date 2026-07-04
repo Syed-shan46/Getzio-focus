@@ -145,24 +145,27 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
               'isOnShelf': false,
             },
           );
-          
+
           // Optimistically add the item to the canvas using local cache
           ref.read(canvasStateProvider.notifier).addItem(newItem);
 
           // Upload in the background
           final dio = ref.read(dioClientProvider).dio;
           final uploadService = VisionUploadService(dio: dio);
-          
+
           uploadService.uploadImage(image.path).then((uploadedUrl) {
             if (uploadedUrl != null && mounted) {
               // Replace the local path with the actual Cloudinary URL
-              ref.read(canvasStateProvider.notifier).updateItemDetails(
-                newItem.id,
-                content: uploadedUrl,
-              );
+              ref
+                  .read(canvasStateProvider.notifier)
+                  .updateItemDetails(newItem.id, content: uploadedUrl);
             } else if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Failed to upload image to Cloudinary. Please try again later.')),
+                const SnackBar(
+                  content: Text(
+                    'Failed to upload image to Cloudinary. Please try again later.',
+                  ),
+                ),
               );
             }
           });
@@ -309,6 +312,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                 type: VisionItemType.countdown.name,
                 content: metadata['title'] ?? 'Countdown',
                 metadata: metadata,
+                countdownDate: metadata['targetDate'] != null ? DateTime.tryParse(metadata['targetDate']) : null,
                 x: (size.width / 2) - 110,
                 y: (size.height / 2) - 110,
                 width: 220,
@@ -318,10 +322,6 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
       },
     );
   }
-
-
-
-
 
   void _addFinance() {
     FinanceBuilderModal.show(
@@ -444,7 +444,9 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                   style: const TextStyle(color: Colors.white, fontSize: 16),
                   decoration: InputDecoration(
                     hintText: 'Type your text...',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
                     filled: true,
                     fillColor: Colors.white.withValues(alpha: 0.08),
                     border: OutlineInputBorder(
@@ -584,9 +586,14 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                   AnimatedBuilder(
                     animation: _pageController,
                     builder: (context, _) {
-                      final pageOffset =
+                      final hasClients =
                           _pageController.hasClients &&
-                              _pageController.position.haveDimensions
+                          _pageController.position.haveDimensions;
+                      final pageVal = hasClients ? _pageController.page : 3.0;
+                      debugPrint(
+                        '[VisionRoomScreen] AnimatedBuilder: active page = $pageVal, hasClients = $hasClients',
+                      );
+                      final pageOffset = hasClients
                           ? _pageController.page! - 3
                           : 0.0;
                       return RoomScene(
@@ -706,7 +713,6 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
   }
 
   Widget _buildTopBar() {
-    final isEditMode = ref.watch(editModeProvider);
     final isPreviewMode = ref.watch(previewModeProvider);
 
     return Column(
@@ -719,75 +725,31 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
                 color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
-                border: const Border(bottom: BorderSide(color: Color(0xFFF59E0B), width: 1)),
+                border: const Border(
+                  bottom: BorderSide(color: Color(0xFFF59E0B), width: 1),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.info_outline, color: Color(0xFFF59E0B), size: 16),
+                  const Icon(
+                    Icons.info_outline,
+                    color: Color(0xFFF59E0B),
+                    size: 16,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Preview Mode. Start your permanent workspace to begin saving.',
-                    style: GoogleFonts.outfit(color: const Color(0xFFFCD34D), fontSize: 13, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFFFCD34D),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Close button (only shown as checkmark in edit mode, standard navigation handled by 3D Floor Exit button)
-              if (isEditMode)
-                GestureDetector(
-                  onTap: () {
-                    _exitEditMode();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.glass,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.glassBorder, width: 0.5),
-                    ),
-                    child: const Icon(
-                      Icons.check_rounded,
-                      size: 18,
-                      color: Colors.white,
-                    ),
-                  ),
-                )
-              else
-                const SizedBox(width: 40, height: 40),
-
-              // Edit Mode indicator
-              if (isEditMode)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.accentBlue.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColors.accentBlue.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  child: const Text(
-                    'Edit Mode',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -854,13 +816,16 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                               (i) => i.id == selectedIds.first,
                               orElse: () => items.first,
                             );
-                            if (selectedItem.type == VisionItemType.stickyNote.name) {
+                            if (selectedItem.type ==
+                                VisionItemType.stickyNote.name) {
                               return _toolbarButton(
                                 icon: Icons.edit_note_rounded,
                                 label: 'Edit Note',
                                 color: AppColors.accentBlue,
                                 onTap: () {
-                                  _showStickyNoteDialog(existingItem: selectedItem);
+                                  _showStickyNoteDialog(
+                                    existingItem: selectedItem,
+                                  );
                                 },
                               );
                             }
@@ -1041,10 +1006,14 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF321F0F).withValues(alpha: 0.95), // Mahogany Wood plate matching floor
+              color: const Color(
+                0xFF321F0F,
+              ).withValues(alpha: 0.95), // Mahogany Wood plate matching floor
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: const Color(0xFFFFD54F).withValues(alpha: 0.8), // Gilded gold trim
+                color: const Color(
+                  0xFFFFD54F,
+                ).withValues(alpha: 0.8), // Gilded gold trim
                 width: 1.5,
               ),
               boxShadow: [
