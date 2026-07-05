@@ -431,7 +431,7 @@ class GuestDataMigrationService {
                   'isPinned': isPinned,
                   'isFavorite': isFavorite,
                   'schedule': ['Morning'],
-                  'woodFinish': 'Walnut',
+                  'woodFinish': 'Oak',
                   'frameStyle': 'Classic Wood',
                   'frameColor': 'Natural Walnut',
                   'glassReflection': 'Slight Gloss',

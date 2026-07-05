@@ -36,7 +36,7 @@ class SaveWorkspaceSheet extends ConsumerWidget {
         decoration: BoxDecoration(
           color: backgroundColor ?? Colors.white.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(AppRadius.sm),
-          border: Border.all(color: AppColors.glassBorder, width: 0.8),
+          border: Border.all(color: context.colors.glassBorder, width: 0.8),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
@@ -47,13 +47,13 @@ class SaveWorkspaceSheet extends ConsumerWidget {
               child: Text(
                 text,
                 style: AppTypography.bodyLarge(
-                  color: textColor ?? AppColors.textPrimary,
+                  color: textColor ?? context.colors.textPrimary,
                 ).copyWith(fontWeight: FontWeight.w600, fontSize: 15),
               ),
             ),
             Icon(
               Icons.chevron_right_rounded,
-              color: (textColor ?? AppColors.textPrimary).withValues(alpha: 0.6),
+              color: (textColor ?? context.colors.textPrimary).withValues(alpha: 0.6),
               size: 20,
             ),
           ],
@@ -68,10 +68,10 @@ class SaveWorkspaceSheet extends ConsumerWidget {
       filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.bg1.withValues(alpha: 0.95),
+          color: context.colors.bg1.withValues(alpha: 0.95),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-          border: const Border(
-            top: BorderSide(color: AppColors.glassBorder, width: 1.5),
+          border: Border(
+            top: BorderSide(color: context.colors.glassBorder, width: 1.5),
           ),
           boxShadow: [
             BoxShadow(
@@ -124,7 +124,7 @@ class SaveWorkspaceSheet extends ConsumerWidget {
             // Subtitle explanation
             Text(
               'Create a free account to securely save your progress, sync across all your devices, restore your workspace anytime, and never lose your goals, journals, affirmations or Vision Room.',
-              style: AppTypography.bodyMedium(color: AppColors.textSecondary),
+              style: AppTypography.bodyMedium(color: context.colors.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl),
@@ -143,7 +143,7 @@ class SaveWorkspaceSheet extends ConsumerWidget {
 
             _buildSocialButton(
               context: context,
-              icon: const Text(' G ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.accentBlue)),
+              icon: Text(' G ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.colors.accentBlue)),
               text: 'Continue with Google',
               onTap: () async {
                 Navigator.pop(context, true);
@@ -154,7 +154,7 @@ class SaveWorkspaceSheet extends ConsumerWidget {
 
             _buildSocialButton(
               context: context,
-              icon: const Icon(Icons.phone_android_rounded, color: AppColors.accentBlue, size: 20),
+              icon: Icon(Icons.phone_android_rounded, color: context.colors.accentBlue, size: 20),
               text: 'Continue with Phone Number',
               onTap: () {
                 Navigator.pop(context, true);
@@ -177,7 +177,7 @@ class SaveWorkspaceSheet extends ConsumerWidget {
               ),
               child: Text(
                 'Maybe Later',
-                style: AppTypography.bodyLarge(color: AppColors.textSecondary).copyWith(
+                style: AppTypography.bodyLarge(color: context.colors.textSecondary).copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),

@@ -170,7 +170,7 @@ class _CelebrationBannerState extends State<CelebrationBanner> with SingleTicker
                       const SizedBox(width: 12),
                       _buildRewardPill(
                         label: '+5 Discipline Pts',
-                        color: AppColors.accentEmerald,
+                        color: context.colors.accentEmerald,
                         textColor: Colors.black,
                       ),
                     ],

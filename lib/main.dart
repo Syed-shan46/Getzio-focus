@@ -10,6 +10,7 @@ import 'shared/providers/app_providers.dart';
 import 'features/onboarding/presentation/screens/premium_mvp_onboarding_screen.dart';
 import 'features/onboarding/presentation/screens/video_splash_screen.dart';
 import 'features/daily_motivation/presentation/screens/daily_motivation_screen.dart';
+import 'shared/providers/theme_provider.dart';
 
 final onboardingCompletedProvider = StateProvider<bool>((ref) {
   throw UnimplementedError();
@@ -79,11 +80,13 @@ class TodoApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final onboardingCompleted = ref.watch(onboardingCompletedProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp(
       title: 'Getzio Focus',
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark,
+      themeMode: themeMode,
+      theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       home: VideoSplashScreen(
         nextScreen: onboardingCompleted

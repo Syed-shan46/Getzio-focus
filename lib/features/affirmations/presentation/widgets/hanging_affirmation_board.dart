@@ -10,6 +10,7 @@ import '../painters/wooden_hook_painter.dart';
 import 'affirmation_plank.dart';
 import '../../domain/models/affirmation_model.dart';
 import '../providers/affirmations_provider.dart';
+import '../../../../core/theme/app_theme.dart';
 
 /// Layout constants for the hanging affirmation board.
 class _Layout {
@@ -536,7 +537,7 @@ class _HangingAffirmationBoardState
                                 horizontal: _Layout.boardMarginH,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF5EDD8),
+                                color: context.colors.bg1,
                                 borderRadius: BorderRadius.circular(18),
                                 boxShadow: [
                                   BoxShadow(
@@ -554,7 +555,7 @@ class _HangingAffirmationBoardState
                                       'Your Daily Spark begins here',
                                       style: GoogleFonts.playfairDisplay(
                                         fontSize: 14,
-                                        color: const Color(0xFF5C4E35),
+                                        color: context.colors.textSecondary,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -563,7 +564,7 @@ class _HangingAffirmationBoardState
                                       'Tap + to create your first affirmation',
                                       style: GoogleFonts.outfit(
                                         fontSize: 10,
-                                        color: const Color(0xFF8B7355),
+                                        color: context.colors.textMuted,
                                       ),
                                     ),
                                   ],
@@ -643,9 +644,9 @@ class _RepeatBottomSheet extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1510),
+        color: context.colors.bg2,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: context.colors.glassBorder),
       ),
       child: SafeArea(
         child: Padding(
@@ -660,7 +661,7 @@ class _RepeatBottomSheet extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: context.colors.textMuted.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -669,7 +670,7 @@ class _RepeatBottomSheet extends StatelessWidget {
                 'Repeat Affirmation',
                 style: GoogleFonts.outfit(
                   fontSize: 20,
-                  color: Colors.white,
+                  color: context.colors.textPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -678,7 +679,7 @@ class _RepeatBottomSheet extends StatelessWidget {
                 '"${affirmation.text}"',
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 13,
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: context.colors.textSecondary,
                   fontStyle: FontStyle.italic,
                 ),
                 maxLines: 2,
@@ -689,7 +690,7 @@ class _RepeatBottomSheet extends StatelessWidget {
                 'Choose repetition count',
                 style: GoogleFonts.outfit(
                   fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.4),
+                  color: context.colors.textMuted,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -712,10 +713,10 @@ class _RepeatBottomSheet extends StatelessWidget {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.06),
+                        color: context.colors.glass,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.1),
+                          color: context.colors.glassBorder,
                         ),
                       ),
                       child: Row(
@@ -723,7 +724,7 @@ class _RepeatBottomSheet extends StatelessWidget {
                         children: [
                           Icon(
                             icons[index],
-                            color: const Color(0xFFB5C4B1),
+                            color: context.colors.accentEmerald,
                             size: 28,
                           ),
                           const SizedBox(width: 12),
@@ -731,7 +732,7 @@ class _RepeatBottomSheet extends StatelessWidget {
                             '${counts[index]}x',
                             style: GoogleFonts.outfit(
                               fontSize: 18,
-                              color: Colors.white,
+                              color: context.colors.textPrimary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

@@ -112,7 +112,7 @@ class _PlanBuilderModalState extends State<PlanBuilderModal> {
               DueDateAndProgressSelector(
                 selectedDate: _dueDate,
                 currentProgress: _progress,
-                accentColor: AppColors.accentEmerald,
+                accentColor: context.colors.accentEmerald,
                 onDateChanged: (d) => setState(() => _dueDate = d),
                 onProgressChanged: (p) => setState(() => _progress = p),
               ),
@@ -122,7 +122,7 @@ class _PlanBuilderModalState extends State<PlanBuilderModal> {
               ElevatedButton(
                 onPressed: _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accentEmerald,
+                  backgroundColor: context.colors.accentEmerald,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),

@@ -104,17 +104,17 @@ class _RoadmapBottomSheetState extends ConsumerState<RoadmapBottomSheet> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.accentBlue.withValues(alpha: 0.15),
+                          color: context.colors.accentBlue.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color:
-                                AppColors.accentBlue.withValues(alpha: 0.4),
+                                context.colors.accentBlue.withValues(alpha: 0.4),
                           ),
                         ),
                         child: Text(
                           'ROADMAP',
                           style: TextStyle(
-                            color: AppColors.accentBlue,
+                            color: context.colors.accentBlue,
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.2,
@@ -314,7 +314,7 @@ class _RoadmapBottomSheetState extends ConsumerState<RoadmapBottomSheet> {
                     _buildSectionHeader(
                       Icons.flag_outlined,
                       'Milestones',
-                      AppColors.accentBlue,
+                      context.colors.accentBlue,
                     ),
                     const SizedBox(height: 12),
                     ...milestones.asMap().entries.map((entry) {
@@ -720,7 +720,7 @@ class _RoadmapBottomSheetState extends ConsumerState<RoadmapBottomSheet> {
                         color: t['icon'] == 'target'
                             ? const Color(0xFF2CE38C)
                             : t['icon'] == 'start'
-                                ? AppColors.accentBlue
+                                ? context.colors.accentBlue
                                 : Colors.white.withValues(alpha: 0.2),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.1),

@@ -159,12 +159,12 @@ class _CustomizationSheetContentState
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppColors.accentBlue.withValues(alpha: 0.2)
+                    ? context.colors.accentBlue.withValues(alpha: 0.2)
                     : Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
-                      ? AppColors.accentBlue.withValues(alpha: 0.5)
+                      ? context.colors.accentBlue.withValues(alpha: 0.5)
                       : Colors.white.withValues(alpha: 0.08),
                 ),
               ),
@@ -175,7 +175,7 @@ class _CustomizationSheetContentState
                     section.icon,
                     size: 18,
                     color: isSelected
-                        ? AppColors.accentBlue
+                        ? context.colors.accentBlue
                         : Colors.white54,
                   ),
                   const SizedBox(width: 8),
@@ -260,12 +260,12 @@ class _CustomizationSheetContentState
                         horizontal: 18, vertical: 12),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.accentBlue.withValues(alpha: 0.2)
+                          ? context.colors.accentBlue.withValues(alpha: 0.2)
                           : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isSelected
-                            ? AppColors.accentBlue
+                            ? context.colors.accentBlue
                             : Colors.white.withValues(alpha: 0.1),
                         width: isSelected ? 1.5 : 0.5,
                       ),
@@ -344,14 +344,14 @@ class _CustomizationSheetContentState
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: isSelected
-                            ? AppColors.accentBlue
+                            ? context.colors.accentBlue
                             : Colors.white.withValues(alpha: 0.1),
                         width: isSelected ? 2.5 : 1,
                       ),
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: AppColors.accentBlue
+                                color: context.colors.accentBlue
                                     .withValues(alpha: 0.3),
                                 blurRadius: 12,
                               )
@@ -369,8 +369,8 @@ class _CustomizationSheetContentState
                               right: 8,
                               child: Container(
                                 padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: AppColors.accentBlue,
+                                decoration: BoxDecoration(
+                                  color: context.colors.accentBlue,
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(Icons.check_rounded,
@@ -585,12 +585,12 @@ class _CustomizationSheetContentState
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.accentBlue.withValues(alpha: 0.15)
+                            ? context.colors.accentBlue.withValues(alpha: 0.15)
                             : Colors.white.withValues(alpha: 0.04),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isSelected
-                              ? AppColors.accentBlue.withValues(alpha: 0.5)
+                              ? context.colors.accentBlue.withValues(alpha: 0.5)
                               : Colors.white.withValues(alpha: 0.06),
                         ),
                       ),
@@ -601,14 +601,14 @@ class _CustomizationSheetContentState
                             height: 48,
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? AppColors.accentBlue.withValues(alpha: 0.2)
+                                  ? context.colors.accentBlue.withValues(alpha: 0.2)
                                   : Colors.white.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
                               _boardStyleIcon(style),
                               color: isSelected
-                                  ? AppColors.accentBlue
+                                  ? context.colors.accentBlue
                                   : Colors.white54,
                               size: 24,
                             ),
@@ -642,8 +642,8 @@ class _CustomizationSheetContentState
                           if (isSelected)
                             Container(
                               padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: AppColors.accentBlue,
+                              decoration: BoxDecoration(
+                                color: context.colors.accentBlue,
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.check_rounded,
@@ -794,11 +794,11 @@ class _CustomizationSheetContentState
                 const SizedBox(height: 8),
                 SliderTheme(
                   data: SliderThemeData(
-                    activeTrackColor: AppColors.accentBlue,
+                    activeTrackColor: context.colors.accentBlue,
                     inactiveTrackColor: Colors.white.withValues(alpha: 0.1),
-                    thumbColor: AppColors.accentBlue,
+                    thumbColor: context.colors.accentBlue,
                     overlayColor:
-                        AppColors.accentBlue.withValues(alpha: 0.2),
+                        context.colors.accentBlue.withValues(alpha: 0.2),
                   ),
                   child: Slider(
                     value: cust.ambientBrightness,
@@ -895,12 +895,12 @@ class _CustomizationSheetContentState
                         horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.accentBlue.withValues(alpha: 0.2)
+                          ? context.colors.accentBlue.withValues(alpha: 0.2)
                           : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isSelected
-                            ? AppColors.accentBlue
+                            ? context.colors.accentBlue
                             : Colors.white.withValues(alpha: 0.1),
                         width: isSelected ? 1.5 : 0.5,
                       ),
@@ -1099,11 +1099,11 @@ class _CustomizationSheetContentState
           ),
           SliderTheme(
             data: SliderThemeData(
-              activeTrackColor: AppColors.accentBlue,
+              activeTrackColor: context.colors.accentBlue,
               inactiveTrackColor: Colors.white.withValues(alpha: 0.1),
-              thumbColor: AppColors.accentBlue,
+              thumbColor: context.colors.accentBlue,
               overlayColor:
-                  AppColors.accentBlue.withValues(alpha: 0.2),
+                  context.colors.accentBlue.withValues(alpha: 0.2),
             ),
             child: Slider(
               value: value.clamp(min, max),
@@ -1125,12 +1125,12 @@ class _CustomizationSheetContentState
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isActive
-              ? AppColors.accentBlue.withValues(alpha: 0.2)
+              ? context.colors.accentBlue.withValues(alpha: 0.2)
               : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isActive
-                ? AppColors.accentBlue.withValues(alpha: 0.5)
+                ? context.colors.accentBlue.withValues(alpha: 0.5)
                 : Colors.white.withValues(alpha: 0.1),
           ),
         ),
@@ -1185,12 +1185,12 @@ class _CustomizationSheetContentState
                         horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.accentBlue.withValues(alpha: 0.2)
+                          ? context.colors.accentBlue.withValues(alpha: 0.2)
                           : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isSelected
-                            ? AppColors.accentBlue
+                            ? context.colors.accentBlue
                             : Colors.white.withValues(alpha: 0.1),
                         width: isSelected ? 1.5 : 0.5,
                       ),
@@ -1268,12 +1268,12 @@ class _CustomizationSheetContentState
                         horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.accentBlue.withValues(alpha: 0.2)
+                          ? context.colors.accentBlue.withValues(alpha: 0.2)
                           : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isSelected
-                            ? AppColors.accentBlue
+                            ? context.colors.accentBlue
                             : Colors.white.withValues(alpha: 0.1),
                         width: isSelected ? 1.5 : 0.5,
                       ),
@@ -1353,12 +1353,12 @@ class _CustomizationSheetContentState
                         horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.accentBlue.withValues(alpha: 0.2)
+                          ? context.colors.accentBlue.withValues(alpha: 0.2)
                           : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isSelected
-                            ? AppColors.accentBlue
+                            ? context.colors.accentBlue
                             : Colors.white.withValues(alpha: 0.1),
                         width: isSelected ? 1.5 : 0.5,
                       ),
@@ -1436,12 +1436,12 @@ class _CustomizationSheetContentState
                         horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.accentBlue.withValues(alpha: 0.2)
+                          ? context.colors.accentBlue.withValues(alpha: 0.2)
                           : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isSelected
-                            ? AppColors.accentBlue
+                            ? context.colors.accentBlue
                             : Colors.white.withValues(alpha: 0.1),
                         width: isSelected ? 1.5 : 0.5,
                       ),
@@ -1520,12 +1520,12 @@ class _CustomizationSheetContentState
                           horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
                         color: isActive
-                            ? AppColors.accentBlue.withValues(alpha: 0.12)
+                            ? context.colors.accentBlue.withValues(alpha: 0.12)
                             : Colors.white.withValues(alpha: 0.04),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color: isActive
-                              ? AppColors.accentBlue
+                              ? context.colors.accentBlue
                                   .withValues(alpha: 0.4)
                               : Colors.white.withValues(alpha: 0.06),
                         ),
@@ -1536,7 +1536,7 @@ class _CustomizationSheetContentState
                             _decorationIcon(decoration),
                             size: 20,
                             color: isActive
-                                ? AppColors.accentBlue
+                                ? context.colors.accentBlue
                                 : Colors.white38,
                           ),
                           const SizedBox(width: 14),
@@ -1559,12 +1559,12 @@ class _CustomizationSheetContentState
                             height: 22,
                             decoration: BoxDecoration(
                               color: isActive
-                                  ? AppColors.accentBlue
+                                  ? context.colors.accentBlue
                                   : Colors.transparent,
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: isActive
-                                    ? AppColors.accentBlue
+                                    ? context.colors.accentBlue
                                     : Colors.white24,
                                 width: 2,
                               ),
@@ -1655,12 +1655,12 @@ class _CustomizationSheetContentState
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.accentBlue.withValues(alpha: 0.15)
+                            ? context.colors.accentBlue.withValues(alpha: 0.15)
                             : Colors.white.withValues(alpha: 0.04),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isSelected
-                              ? AppColors.accentBlue.withValues(alpha: 0.5)
+                              ? context.colors.accentBlue.withValues(alpha: 0.5)
                               : Colors.white.withValues(alpha: 0.06),
                         ),
                       ),
@@ -1671,7 +1671,7 @@ class _CustomizationSheetContentState
                             height: 48,
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? AppColors.accentBlue
+                                  ? context.colors.accentBlue
                                       .withValues(alpha: 0.2)
                                   : Colors.white.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(12),
@@ -1679,7 +1679,7 @@ class _CustomizationSheetContentState
                             child: Icon(
                               _layoutIcon(mode),
                               color: isSelected
-                                  ? AppColors.accentBlue
+                                  ? context.colors.accentBlue
                                   : Colors.white54,
                               size: 24,
                             ),
@@ -1714,8 +1714,8 @@ class _CustomizationSheetContentState
                           if (isSelected)
                             Container(
                               padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: AppColors.accentBlue,
+                              decoration: BoxDecoration(
+                                color: context.colors.accentBlue,
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.check_rounded,

@@ -38,7 +38,7 @@ class FinanceWall extends ConsumerWidget {
               border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.accentEmerald.withValues(alpha: 0.1),
+                  color: context.colors.accentEmerald.withValues(alpha: 0.1),
                   blurRadius: 40,
                   spreadRadius: 10,
                 )
@@ -63,7 +63,7 @@ class FinanceWall extends ConsumerWidget {
                   ),
                 ],
               ),
-              progressColor: AppColors.accentEmerald,
+              progressColor: context.colors.accentEmerald,
               backgroundColor: Colors.white.withValues(alpha: 0.1),
               circularStrokeCap: CircularStrokeCap.round,
               animation: true,

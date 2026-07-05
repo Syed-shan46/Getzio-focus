@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../../domain/models/task_model.dart';
 import '../providers/tasks_provider.dart';
 import '../../../../shared/providers/app_providers.dart';
+import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 
 class TaskBottomSheet extends ConsumerStatefulWidget {
   final TaskModel? existingTask;
@@ -28,6 +29,8 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
   bool _pinned = false;
   double _manualProgress = 0;
   List<SubtaskModel> _subtasks = [];
+
+  bool get _isReadOnly => ref.read(hiveDatabaseProvider).getAuthToken() == null;
 
   final List<String> _defaultCategories = [
     'Personal',
@@ -251,7 +254,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                               : Icons.push_pin_outlined,
                           color: _pinned ? Colors.amber : Colors.white54,
                         ),
-                        onPressed: () => setState(() => _pinned = !_pinned),
+                        onPressed: _isReadOnly ? null : () => setState(() => _pinned = !_pinned),
                       ),
                     ],
                   ),
@@ -269,6 +272,11 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        AbsorbPointer(
+                          absorbing: _isReadOnly,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                         // ── Title ──
                         TextField(
                           controller: _titleController,
@@ -636,52 +644,116 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                             ),
                           ),
                         ),
-
-                        // ── Save / Delete ──
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: _saveTask,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF10B981),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: Text(
-                              'Save Task',
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            ],
                           ),
                         ),
 
-                        if (widget.existingTask != null) ...[
-                          const SizedBox(height: 8),
+                        // ── Save / Delete (or Preview Warning for Guest) ──
+                        if (_isReadOnly) ...[
+                          const SizedBox(height: 24),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.info_outline_rounded,
+                                      color: Color(0xFFF59E0B),
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        'This task is in Preview Mode. Sign in to edit or manage your own tasks.',
+                                        style: GoogleFonts.outfit(
+                                          color: Colors.white70,
+                                          fontSize: 13,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 14),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    PremiumAuthSheet.show(context);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFF59E0B),
+                                    foregroundColor: Colors.white,
+                                    fixedSize: const Size.fromHeight(44),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Create My Workspace',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
-                            height: 40,
-                            child: TextButton(
-                              onPressed: () {
-                                ref
-                                    .read(tasksProvider.notifier)
-                                    .deleteTask(widget.existingTask!.id);
-                                Navigator.pop(context);
-                              },
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: _saveTask,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF10B981),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
                               child: Text(
-                                'Delete Task',
+                                'Save Task',
                                 style: GoogleFonts.outfit(
-                                  color: Colors.redAccent,
-                                  fontSize: 14,
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                           ),
+                          if (widget.existingTask != null) ...[
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 40,
+                              child: TextButton(
+                                onPressed: () {
+                                  ref
+                                      .read(tasksProvider.notifier)
+                                      .deleteTask(widget.existingTask!.id);
+                                  Navigator.pop(context);
+                                },
+                                child: Text(
+                                  'Delete Task',
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.redAccent,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ],
                     ),

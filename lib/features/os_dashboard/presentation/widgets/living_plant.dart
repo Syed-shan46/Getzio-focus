@@ -114,7 +114,7 @@ class PlantPainter extends CustomPainter {
       baseLeafColor = Color.lerp(const Color(0xFF6F7464), const Color(0xFF818676), completionRatio * 4)!;
       accentLeafColor = const Color(0xFF505448);
     } else {
-      baseLeafColor = Color.lerp(const Color(0xFF4CAF50), AppColors.accentEmerald, (completionRatio - 0.25) / 0.75)!;
+      baseLeafColor = Color.lerp(Color(0xFF4CAF50), AppColors.accentEmerald, (completionRatio - 0.25) / 0.75)!;
       accentLeafColor = Color.lerp(const Color(0xFF2E7D32), const Color(0xFF1B5E20), (completionRatio - 0.25) / 0.75)!;
     }
 

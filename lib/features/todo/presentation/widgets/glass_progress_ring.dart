@@ -24,8 +24,8 @@ class GlassProgressRing extends StatelessWidget {
           height: 80,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.glass,
-            border: Border.all(color: AppColors.glassBorder, width: 0.5),
+            color: context.colors.glass,
+            border: Border.all(color: context.colors.glassBorder, width: 0.5),
           ),
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: percentage),
@@ -35,8 +35,8 @@ class GlassProgressRing extends StatelessWidget {
               return CustomPaint(
                 painter: _ProgressRingPainter(
                   progress: value,
-                  color: AppColors.accentBlue,
-                  trackColor: AppColors.glassBorder,
+                  color: context.colors.accentBlue,
+                  trackColor: context.colors.glassBorder,
                 ),
                 child: Center(
                   child: Column(
@@ -65,7 +65,7 @@ class GlassProgressRing extends StatelessWidget {
                       Text(
                         '${(value * 100).round()}%',
                         style: AppTypography.captionSmall(
-                          color: AppColors.textMuted,
+                          color: context.colors.textMuted,
                         ),
                       ),
                     ],

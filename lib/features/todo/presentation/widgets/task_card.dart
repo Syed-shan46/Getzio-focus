@@ -68,16 +68,16 @@ class _TaskCardState extends ConsumerState<TaskCard>
             padding: const EdgeInsets.only(right: AppSpacing.lg),
             margin: const EdgeInsets.only(bottom: AppSpacing.sm),
             decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.15),
+              color: context.colors.error.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppRadius.lg),
               border: Border.all(
-                color: AppColors.error.withValues(alpha: 0.3),
+                color: context.colors.error.withValues(alpha: 0.3),
                 width: 0.5,
               ),
             ),
             child: Icon(
               Icons.delete_outline_rounded,
-              color: AppColors.error.withValues(alpha: 0.8),
+              color: context.colors.error.withValues(alpha: 0.8),
               size: 24,
             ),
           ),
@@ -132,13 +132,13 @@ class _TaskCardState extends ConsumerState<TaskCard>
                                           const Duration(milliseconds: 200),
                                       style: AppTypography.titleMedium(
                                         color: todo.isCompleted
-                                            ? AppColors.textMuted
-                                            : AppColors.textPrimary,
+                                            ? context.colors.textMuted
+                                            : context.colors.textPrimary,
                                       ).copyWith(
                                         decoration: todo.isCompleted
                                             ? TextDecoration.lineThrough
                                             : null,
-                                        decorationColor: AppColors.textMuted,
+                                        decorationColor: context.colors.textMuted,
                                       ),
                                       child: Text(todo.title),
                                     ),
@@ -162,8 +162,8 @@ class _TaskCardState extends ConsumerState<TaskCard>
                                 child: Icon(
                                   Icons.keyboard_arrow_down_rounded,
                                   color: totalSubs > 0
-                                      ? AppColors.textMuted
-                                      : AppColors.textMuted.withValues(alpha: 0.3),
+                                      ? context.colors.textMuted
+                                      : context.colors.textMuted.withValues(alpha: 0.3),
                                   size: 22,
                                 ),
                               ),
@@ -195,7 +195,7 @@ class _TaskCardState extends ConsumerState<TaskCard>
       width: double.infinity,
       decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: AppColors.glassBorder, width: 0.5),
+          top: BorderSide(color: context.colors.glassBorder, width: 0.5),
         ),
       ),
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
@@ -235,12 +235,12 @@ class _TaskCardState extends ConsumerState<TaskCard>
               duration: const Duration(milliseconds: 200),
               style: AppTypography.bodyMedium(
                 color: sub.isCompleted
-                    ? AppColors.textMuted
-                    : AppColors.textSecondary,
+                    ? context.colors.textMuted
+                    : context.colors.textSecondary,
               ).copyWith(
                 decoration:
                     sub.isCompleted ? TextDecoration.lineThrough : null,
-                decorationColor: AppColors.textMuted,
+                decorationColor: context.colors.textMuted,
               ),
               child: Text(sub.title),
             ),
@@ -253,7 +253,7 @@ class _TaskCardState extends ConsumerState<TaskCard>
             child: Icon(
               Icons.close_rounded,
               size: 16,
-              color: AppColors.textMuted.withValues(alpha: 0.5),
+              color: context.colors.textMuted.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -292,15 +292,15 @@ class _AddSubtaskInputState extends State<_AddSubtaskInput> {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(Icons.add_rounded, size: 18, color: AppColors.accentBlue),
+        Icon(Icons.add_rounded, size: 18, color: context.colors.accentBlue),
         const SizedBox(width: AppSpacing.xs),
         Expanded(
           child: TextField(
             controller: _controller,
-            style: AppTypography.bodyMedium(color: AppColors.textSecondary),
+            style: AppTypography.bodyMedium(color: context.colors.textSecondary),
             decoration: InputDecoration(
               hintText: 'Add subtask...',
-              hintStyle: AppTypography.bodyMedium(color: AppColors.textMuted),
+              hintStyle: AppTypography.bodyMedium(color: context.colors.textMuted),
               border: InputBorder.none,
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(vertical: 6),

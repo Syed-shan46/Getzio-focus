@@ -1,3 +1,4 @@
+import 'package:getzio_todo_app/core/theme/app_theme.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
@@ -18,7 +19,7 @@ class PremiumGoalOverviewSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.6),
+      barrierColor: context.colors.bg1.withValues(alpha: 0.6),
       builder: (context) => PremiumGoalOverviewSheet(item: item),
     );
   }
@@ -73,11 +74,11 @@ class _PremiumGoalOverviewSheetState
     return Container(
       height: MediaQuery.of(context).size.height * 0.88,
       decoration: BoxDecoration(
-        color: const Color(0xFF0B1120).withValues(alpha: 0.92),
+        color: context.colors.bg2.withValues(alpha: 0.92),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.7),
+            color: context.colors.bg1.withValues(alpha: 0.7),
             blurRadius: 36,
             spreadRadius: 12,
           ),
@@ -93,18 +94,18 @@ class _PremiumGoalOverviewSheetState
             body: Column(
               children: [
                 // 1. Top Drag Handle
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Center(
                   child: Container(
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: context.colors.textMuted.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
 
                 // 2. Mission Control Header Section
                 _buildMissionHeader(
@@ -112,11 +113,11 @@ class _PremiumGoalOverviewSheetState
                   progressRatio,
                   progressPercent,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
 
                 // 3. Apple-Style Animated Pill Tab Bar
                 _buildAnimatedTabBar(),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
 
                 // 4. Tab Views
                 Expanded(
@@ -176,13 +177,13 @@ class _PremiumGoalOverviewSheetState
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.stars_rounded,
-              color: Colors.white,
+              color: context.colors.textPrimary,
               size: 20,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
 
           // Title & Status Pills
           Expanded(
@@ -190,7 +191,7 @@ class _PremiumGoalOverviewSheetState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildStatusPill(status),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -199,8 +200,8 @@ class _PremiumGoalOverviewSheetState
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.colors.textPrimary,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.2,
@@ -209,37 +210,37 @@ class _PremiumGoalOverviewSheetState
                     ),
                     GestureDetector(
                       onTap: () => _showEditDialog(item),
-                      child: const Padding(
+                      child: Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: 6,
                           vertical: 4,
                         ),
                         child: Icon(
                           Icons.edit_rounded,
-                          color: Colors.white30,
+                          color: context.colors.textMuted.withValues(alpha: 0.5),
                           size: 14,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.calendar_today_rounded,
-                      color: Colors.white54,
+                      color: context.colors.textMuted,
                       size: 9,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         item.countdownDate != null
                             ? 'Target ${item.countdownDate!.day}/${item.countdownDate!.month}/${item.countdownDate!.year}'
                             : 'Target 2026',
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white54,
+                        style: TextStyle(
+                          color: context.colors.textMuted,
                           fontSize: 10,
                           fontWeight: FontWeight.w500,
                         ),
@@ -248,13 +249,13 @@ class _PremiumGoalOverviewSheetState
                   ],
                 ),
                 if (description.isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text(
                     description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white60,
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
                       fontSize: 10.5,
                       height: 1.3,
                     ),
@@ -265,7 +266,7 @@ class _PremiumGoalOverviewSheetState
           ),
 
           // Large Animated Progress Ring
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           TweenAnimationBuilder<double>(
             tween: Tween<double>(begin: 0.0, end: progressRatio),
             duration: const Duration(milliseconds: 1000),
@@ -279,7 +280,7 @@ class _PremiumGoalOverviewSheetState
                     height: 44,
                     child: CircularProgressIndicator(
                       value: val,
-                      backgroundColor: Colors.white12,
+                      backgroundColor: context.colors.glassBorder,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         val == 1.0
                             ? Colors.greenAccent
@@ -290,8 +291,8 @@ class _PremiumGoalOverviewSheetState
                   ),
                   Text(
                     '${(val * 100).round()}%',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
@@ -316,7 +317,7 @@ class _PremiumGoalOverviewSheetState
       margin: const EdgeInsets.symmetric(horizontal: 4),
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: context.colors.textPrimary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
@@ -351,14 +352,14 @@ class _PremiumGoalOverviewSheetState
                   children: [
                     Icon(
                       tabs[index]['icon'] as IconData,
-                      color: isSelected ? Colors.black : Colors.white60,
+                      color: isSelected ? context.colors.bg1 : context.colors.textSecondary,
                       size: 12,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       tabs[index]['label'] as String,
                       style: TextStyle(
-                        color: isSelected ? Colors.black : Colors.white60,
+                        color: isSelected ? context.colors.bg1 : context.colors.textSecondary,
                         fontSize: 10,
                         fontWeight: isSelected
                             ? FontWeight.bold
@@ -404,7 +405,7 @@ class _PremiumGoalOverviewSheetState
                   const Color(0xFFF59E0B),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: _buildStatCard(
                   'Target',
@@ -415,7 +416,7 @@ class _PremiumGoalOverviewSheetState
                   const Color(0xFF10B981),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: _buildStatCard(
                   'Milestones',
@@ -424,7 +425,7 @@ class _PremiumGoalOverviewSheetState
                   const Color(0xFF8B5CF6),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: _buildStatCard(
                   'Progress',
@@ -435,20 +436,20 @@ class _PremiumGoalOverviewSheetState
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
 
           // 2. Upcoming Milestone Section
           _buildUpcomingMilestoneCard(item),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
 
           // 3. Milestone Roadmap Container
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.02),
+              color: context.colors.textPrimary.withValues(alpha: 0.02),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: context.colors.textPrimary.withValues(alpha: 0.05),
                 width: 1.0,
               ),
             ),
@@ -456,14 +457,14 @@ class _PremiumGoalOverviewSheetState
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildMilestoneRoadmapHeader(item.smartMilestones),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
                 _buildJourneyTimeline(item),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           _buildJourneySummary(item),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
         ],
       ),
     );
@@ -475,7 +476,7 @@ class _PremiumGoalOverviewSheetState
     final upcomingList = milestones.where((m) => !m.isCompleted).toList();
     final upcoming = upcomingList.isNotEmpty ? upcomingList.first : null;
 
-    if (upcoming == null) return const SizedBox.shrink();
+    if (upcoming == null) return SizedBox.shrink();
 
     // Calculate days left
     int? daysLeft;
@@ -503,7 +504,7 @@ class _PremiumGoalOverviewSheetState
         gradient: LinearGradient(
           colors: [
             themeColor.withValues(alpha: 0.08),
-            Colors.white.withValues(alpha: 0.01),
+            context.colors.textPrimary.withValues(alpha: 0.01),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -517,16 +518,16 @@ class _PremiumGoalOverviewSheetState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'UPCOMING MILESTONE',
             style: TextStyle(
-              color: Colors.white30,
+              color: context.colors.textMuted.withValues(alpha: 0.5),
               fontSize: 7.5,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.8,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Row(
             children: [
               // Left: Calendar Painted Widget
@@ -534,10 +535,10 @@ class _PremiumGoalOverviewSheetState
                 width: 44,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.bg2,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: context.colors.textPrimary.withValues(alpha: 0.08),
                     width: 1.0,
                   ),
                 ),
@@ -554,10 +555,10 @@ class _PremiumGoalOverviewSheetState
                         ),
                       ),
                       alignment: Alignment.center,
-                      child: const Text(
+                      child: Text(
                         'DAYS LEFT',
                         style: TextStyle(
-                          color: Colors.black,
+                          color: context.colors.bg1,
                           fontSize: 6.0,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.2,
@@ -574,7 +575,7 @@ class _PremiumGoalOverviewSheetState
                           style: TextStyle(
                             color: daysLeft != null && daysLeft < 0
                                 ? Colors.redAccent
-                                : Colors.white,
+                                : context.colors.textPrimary,
                             fontSize: daysLeft != null && daysLeft < 0 ? 8 : 13,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'monospace',
@@ -585,7 +586,7 @@ class _PremiumGoalOverviewSheetState
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
 
               // Right: Milestone details
               Expanded(
@@ -612,29 +613,29 @@ class _PremiumGoalOverviewSheetState
                             ),
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         if (upcoming.dueDate != null)
                           Text(
                             'Due: ${upcoming.dueDate!.day} ${_getMonthName(upcoming.dueDate!.month)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white38,
                               fontSize: 8.5,
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       upcoming.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontSize: 11.5,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     // Subtasks summary
                     Text(
                       hasTasks
@@ -642,19 +643,19 @@ class _PremiumGoalOverviewSheetState
                           : (upcoming.isCompleted
                                 ? 'Completed'
                                 : 'No tasks added yet'),
-                      style: const TextStyle(
-                        color: Colors.white54,
+                      style: TextStyle(
+                        color: context.colors.textMuted,
                         fontSize: 8.5,
                       ),
                     ),
                     if (hasTasks) ...[
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       // Progress bar
                       ClipRRect(
                         borderRadius: BorderRadius.circular(1.5),
                         child: LinearProgressIndicator(
                           value: completedSubtasks / totalSubtasks,
-                          backgroundColor: Colors.white.withValues(alpha: 0.05),
+                          backgroundColor: context.colors.textPrimary.withValues(alpha: 0.05),
                           valueColor: AlwaysStoppedAnimation<Color>(themeColor),
                           minHeight: 1.5,
                         ),
@@ -675,10 +676,10 @@ class _PremiumGoalOverviewSheetState
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
+        Text(
           'Milestone Roadmap',
           style: TextStyle(
-            color: Colors.white,
+            color: context.colors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.bold,
             fontFamily: 'Playfair Display',
@@ -702,13 +703,13 @@ class _PremiumGoalOverviewSheetState
             children: [
               Text(
                 allCollapsed ? 'Expand All' : 'Collapse All',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Color(0xFFF59E0B),
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
               Icon(
                 allCollapsed
                     ? Icons.keyboard_arrow_down_rounded
@@ -755,7 +756,7 @@ class _PremiumGoalOverviewSheetState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildTimelineIndicator(status, index),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Expanded(
                       child: Padding(
                         padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
@@ -781,12 +782,12 @@ class _PremiumGoalOverviewSheetState
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: () => _showAddMilestoneSheet(item),
-              icon: const Icon(
+              icon: Icon(
                 Icons.add_rounded,
                 color: Colors.greenAccent,
                 size: 16,
               ),
-              label: const Text(
+              label: Text(
                 'Add Milestone',
                 style: TextStyle(color: Colors.greenAccent, fontSize: 12),
               ),
@@ -810,14 +811,14 @@ class _PremiumGoalOverviewSheetState
         return Container(
           width: 28,
           height: 28,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFF10B981),
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
-          child: const Icon(
+          child: Icon(
             Icons.check_rounded,
-            color: Colors.white,
+            color: context.colors.textPrimary,
             size: 14,
             fontWeight: FontWeight.bold,
           ),
@@ -827,15 +828,15 @@ class _PremiumGoalOverviewSheetState
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A),
+            color: context.colors.bg2,
             shape: BoxShape.circle,
             border: Border.all(color: const Color(0xFFF59E0B), width: 1.5),
           ),
           alignment: Alignment.center,
           child: Text(
             numberStr,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.colors.textPrimary,
               fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
@@ -846,15 +847,15 @@ class _PremiumGoalOverviewSheetState
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A),
+            color: context.colors.bg2,
             shape: BoxShape.circle,
             border: Border.all(color: const Color(0xFFEF4444), width: 1),
           ),
           alignment: Alignment.center,
           child: Text(
             numberStr,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.colors.textPrimary,
               fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
@@ -866,7 +867,7 @@ class _PremiumGoalOverviewSheetState
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A),
+            color: context.colors.bg2,
             shape: BoxShape.circle,
             border: Border.all(
               color: const Color(0xFF8B5CF6).withValues(alpha: 0.5),
@@ -934,7 +935,7 @@ class _PremiumGoalOverviewSheetState
         gradient: LinearGradient(
           colors: [
             themeColor.withValues(alpha: 0.07),
-            Colors.white.withValues(alpha: 0.01),
+            context.colors.textPrimary.withValues(alpha: 0.01),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -967,7 +968,7 @@ class _PremiumGoalOverviewSheetState
               ),
               decoration: BoxDecoration(
                 color: isExpanded
-                    ? Colors.white.withValues(alpha: 0.02)
+                    ? context.colors.textPrimary.withValues(alpha: 0.02)
                     : Colors.transparent,
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(12),
@@ -989,49 +990,49 @@ class _PremiumGoalOverviewSheetState
                                 milestone.title,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: context.colors.textPrimary,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             _buildMilestoneStatusPill(status),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       // Right: Due Date & Chevron
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (milestone.dueDate != null) ...[
-                            const Icon(
+                            Icon(
                               Icons.calendar_today_rounded,
                               color: Colors.white38,
                               size: 10,
                             ),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4),
                             Text(
                               '${milestone.dueDate!.day} ${_getMonthName(milestone.dueDate!.month)} ${milestone.dueDate!.year}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white38,
                                 fontSize: 10,
                               ),
                             ),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4),
                           ],
                           if (isExpanded)
-                            const Icon(
+                            Icon(
                               Icons.keyboard_arrow_right_rounded,
-                              color: Colors.white30,
+                              color: context.colors.textMuted.withValues(alpha: 0.5),
                               size: 14,
                             )
                           else
-                            const Icon(
+                            Icon(
                               Icons.keyboard_arrow_down_rounded,
-                              color: Colors.white30,
+                              color: context.colors.textMuted.withValues(alpha: 0.5),
                               size: 14,
                             ),
                         ],
@@ -1041,7 +1042,7 @@ class _PremiumGoalOverviewSheetState
 
                   // Row 2 (only if expanded)
                   if (isExpanded) ...[
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -1053,14 +1054,14 @@ class _PremiumGoalOverviewSheetState
                                 : 'No description provided.',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white60,
+                            style: TextStyle(
+                              color: context.colors.textSecondary,
                               fontSize: 11,
                               height: 1.3,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        SizedBox(width: 16),
                         // Large Progress percentage
                         Text(
                           '$milestoneProgressPercent%',
@@ -1107,15 +1108,15 @@ class _PremiumGoalOverviewSheetState
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.black.withValues(alpha: 0.20),
-                                        Colors.black.withValues(alpha: 0.05),
+                                        context.colors.bg1.withValues(alpha: 0.20),
+                                        context.colors.bg1.withValues(alpha: 0.05),
                                       ],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     ),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: Colors.white.withValues(
+                                      color: context.colors.textPrimary.withValues(
                                         alpha: 0.03,
                                       ),
                                       width: 1.0,
@@ -1157,7 +1158,7 @@ class _PremiumGoalOverviewSheetState
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                SizedBox(height: 8),
                               ] else ...[
                                 // Milestone itself completion toggle
                                 Container(
@@ -1168,15 +1169,15 @@ class _PremiumGoalOverviewSheetState
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.black.withValues(alpha: 0.20),
-                                        Colors.black.withValues(alpha: 0.05),
+                                        context.colors.bg1.withValues(alpha: 0.20),
+                                        context.colors.bg1.withValues(alpha: 0.05),
                                       ],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     ),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: Colors.white.withValues(
+                                      color: context.colors.textPrimary.withValues(
                                         alpha: 0.03,
                                       ),
                                       width: 1.0,
@@ -1187,7 +1188,7 @@ class _PremiumGoalOverviewSheetState
                                       horizontal: 6,
                                       vertical: 4,
                                     ),
-                                    decoration: const BoxDecoration(
+                                    decoration: BoxDecoration(
                                       color: Colors.transparent,
                                     ),
                                     child: Row(
@@ -1220,16 +1221,16 @@ class _PremiumGoalOverviewSheetState
                                               shape: BoxShape.circle,
                                             ),
                                             child: milestone.isCompleted
-                                                ? const Icon(
+                                                ? Icon(
                                                     Icons.check,
-                                                    color: Colors.white,
+                                                    color: context.colors.textPrimary,
                                                     size: 10,
                                                     fontWeight: FontWeight.bold,
                                                   )
                                                 : null,
                                           ),
                                         ),
-                                        const SizedBox(width: 10),
+                                        SizedBox(width: 10),
                                         Expanded(
                                           child: GestureDetector(
                                             onTap: () {
@@ -1245,8 +1246,8 @@ class _PremiumGoalOverviewSheetState
                                               'Mark Milestone as Completed',
                                               style: TextStyle(
                                                 color: milestone.isCompleted
-                                                    ? Colors.white30
-                                                    : Colors.white,
+                                                    ? context.colors.textMuted.withValues(alpha: 0.5)
+                                                    : context.colors.textPrimary,
                                                 fontSize: 12,
                                               ),
                                             ),
@@ -1256,7 +1257,7 @@ class _PremiumGoalOverviewSheetState
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                SizedBox(height: 8),
                               ],
 
                               // Add task row and actions
@@ -1269,12 +1270,12 @@ class _PremiumGoalOverviewSheetState
                                       item,
                                       milestone.id,
                                     ),
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.add_rounded,
                                       color: Colors.greenAccent,
                                       size: 14,
                                     ),
-                                    label: const Text(
+                                    label: Text(
                                       'Add Task',
                                       style: TextStyle(
                                         color: Colors.greenAccent,
@@ -1289,9 +1290,9 @@ class _PremiumGoalOverviewSheetState
                                     ),
                                   ),
                                   PopupMenuButton<String>(
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.more_horiz_rounded,
-                                      color: Colors.white54,
+                                      color: context.colors.textMuted,
                                       size: 16,
                                     ),
                                     padding: EdgeInsets.zero,
@@ -1319,47 +1320,47 @@ class _PremiumGoalOverviewSheetState
                                       }
                                     },
                                     itemBuilder: (context) => [
-                                      const PopupMenuItem(
+                                      PopupMenuItem(
                                         value: 'duplicate',
                                         child: Row(
                                           children: [
                                             Icon(
                                               Icons.copy_rounded,
-                                              color: Colors.white70,
+                                              color: context.colors.textSecondary,
                                               size: 14,
                                             ),
                                             SizedBox(width: 8),
                                             Text(
                                               'Duplicate',
                                               style: TextStyle(
-                                                color: Colors.white,
+                                                color: context.colors.textPrimary,
                                                 fontSize: 12,
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      const PopupMenuItem(
+                                      PopupMenuItem(
                                         value: 'edit',
                                         child: Row(
                                           children: [
                                             Icon(
                                               Icons.edit_rounded,
-                                              color: Colors.white70,
+                                              color: context.colors.textSecondary,
                                               size: 14,
                                             ),
                                             SizedBox(width: 8),
                                             Text(
                                               'Edit',
                                               style: TextStyle(
-                                                color: Colors.white,
+                                                color: context.colors.textPrimary,
                                                 fontSize: 12,
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      const PopupMenuItem(
+                                      PopupMenuItem(
                                         value: 'delete',
                                         child: Row(
                                           children: [
@@ -1388,7 +1389,7 @@ class _PremiumGoalOverviewSheetState
                         ),
                       ],
                     )
-                  : const SizedBox.shrink(),
+                  : SizedBox.shrink(),
             ),
           ),
         ],
@@ -1413,7 +1414,7 @@ class _PremiumGoalOverviewSheetState
           color: Colors.redAccent.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Icon(
+        child: Icon(
           Icons.delete_outline_rounded,
           color: Colors.redAccent,
           size: 18,
@@ -1426,7 +1427,7 @@ class _PremiumGoalOverviewSheetState
       child: Container(
         key: key,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: const BoxDecoration(color: Colors.transparent),
+        decoration: BoxDecoration(color: Colors.transparent),
         child: Row(
           children: [
             GestureDetector(
@@ -1454,16 +1455,16 @@ class _PremiumGoalOverviewSheetState
                   shape: BoxShape.circle,
                 ),
                 child: subtask.isCompleted
-                    ? const Icon(
+                    ? Icon(
                         Icons.check,
-                        color: Colors.white,
+                        color: context.colors.textPrimary,
                         size: 10,
                         fontWeight: FontWeight.bold,
                       )
                     : null,
               ),
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Expanded(
               child: GestureDetector(
                 onTap: () => _showEditSubtaskSheet(item, milestoneId, subtask),
@@ -1475,17 +1476,17 @@ class _PremiumGoalOverviewSheetState
                       subtask.title,
                       style: TextStyle(
                         color: subtask.isCompleted
-                            ? Colors.white30
-                            : Colors.white,
+                            ? context.colors.textMuted.withValues(alpha: 0.5)
+                            : context.colors.textPrimary,
                         fontSize: 12,
                       ),
                     ),
                     if (subtask.notes != null && subtask.notes!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         subtask.notes!,
-                        style: const TextStyle(
-                          color: Colors.white30,
+                        style: TextStyle(
+                          color: context.colors.textMuted.withValues(alpha: 0.5),
                           fontSize: 9,
                         ),
                       ),
@@ -1497,13 +1498,13 @@ class _PremiumGoalOverviewSheetState
             if (subtask.dueDate != null) ...[
               Text(
                 '${subtask.dueDate!.day}/${subtask.dueDate!.month}',
-                style: const TextStyle(color: Colors.white30, fontSize: 9),
+                style: TextStyle(color: context.colors.textMuted.withValues(alpha: 0.5), fontSize: 9),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
             ],
-            const Icon(
+            Icon(
               Icons.drag_handle_rounded,
-              color: Colors.white24,
+              color: context.colors.textMuted.withValues(alpha: 0.4),
               size: 14,
             ),
           ],
@@ -1543,16 +1544,16 @@ class _PremiumGoalOverviewSheetState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'JOURNEY SUMMARY',
             style: TextStyle(
-              color: Colors.white54,
+              color: context.colors.textMuted,
               fontSize: 9,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.1,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1562,23 +1563,23 @@ class _PremiumGoalOverviewSheetState
               _buildSummaryStat('Remaining', '$remainingTasks'),
             ],
           ),
-          const SizedBox(height: 12),
-          const Divider(color: Colors.white10, height: 1),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
+          Divider(color: context.colors.glassBorder, height: 1),
+          SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Overall Progress',
                     style: TextStyle(color: Colors.white38, fontSize: 9),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     '$progressPercent%',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Color(0xFF10B981),
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -1589,15 +1590,15 @@ class _PremiumGoalOverviewSheetState
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
+                  Text(
                     'Estimated Finish',
                     style: TextStyle(color: Colors.white38, fontSize: 9),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     estFinish,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1617,14 +1618,14 @@ class _PremiumGoalOverviewSheetState
       children: [
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: context.colors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 2),
-        Text(title, style: const TextStyle(color: Colors.white38, fontSize: 9)),
+        SizedBox(height: 2),
+        Text(title, style: TextStyle(color: Colors.white38, fontSize: 9)),
       ],
     );
   }
@@ -1745,47 +1746,47 @@ class _PremiumGoalOverviewSheetState
           return Container(
             padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.98),
+              color: context.colors.bg2.withValues(alpha: 0.98),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(32),
               ),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: context.colors.glassBorder),
             ),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
+                  Text(
                     'Edit Subtask',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.colors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18),
                   TextField(
                     controller: titleCtrl,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
                     decoration: _inputDecoration('Subtask Title'),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   TextField(
                     controller: notesCtrl,
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 12),
                     decoration: _inputDecoration('Notes / Details (optional)'),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Date Picker
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Due Date',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                       ),
                       TextButton.icon(
                         onPressed: () async {
@@ -1803,7 +1804,7 @@ class _PremiumGoalOverviewSheetState
                             setModalState(() => chosenDate = date);
                           }
                         },
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.calendar_month_rounded,
                           size: 16,
                           color: Colors.greenAccent,
@@ -1812,19 +1813,19 @@ class _PremiumGoalOverviewSheetState
                           chosenDate != null
                               ? '${chosenDate!.day}/${chosenDate!.month}/${chosenDate!.year}'
                               : 'Select Date',
-                          style: const TextStyle(color: Colors.greenAccent),
+                          style: TextStyle(color: Colors.greenAccent),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
 
                   // Priority Selector
-                  const Text(
+                  Text(
                     'Priority',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                    style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: ['low', 'medium', 'high'].map((p) {
@@ -1843,7 +1844,7 @@ class _PremiumGoalOverviewSheetState
                             border: Border.all(
                               color: isSelected
                                   ? Colors.greenAccent
-                                  : Colors.white24,
+                                  : context.colors.textMuted.withValues(alpha: 0.4),
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -1852,7 +1853,7 @@ class _PremiumGoalOverviewSheetState
                             style: TextStyle(
                               color: isSelected
                                   ? Colors.greenAccent
-                                  : Colors.white70,
+                                  : context.colors.textSecondary,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -1861,7 +1862,7 @@ class _PremiumGoalOverviewSheetState
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   ElevatedButton(
                     onPressed: () {
@@ -1886,10 +1887,10 @@ class _PremiumGoalOverviewSheetState
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Save Subtask',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: context.colors.bg1,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1934,7 +1935,7 @@ class _PremiumGoalOverviewSheetState
       child: Column(
         children: [
           _buildJourneyTimeline(item),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           _buildJourneySummary(item),
         ],
       ),
@@ -1952,26 +1953,26 @@ class _PremiumGoalOverviewSheetState
               color: const Color(0xFF10B981).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.explore_rounded,
               color: Color(0xFF10B981),
               size: 48,
             ),
           ),
-          const SizedBox(height: 18),
-          const Text(
+          SizedBox(height: 18),
+          Text(
             'Begin Your Journey',
             style: TextStyle(
-              color: Colors.white,
+              color: context.colors.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Break down your goal into premium milestones\nand execute step-by-step subtasks.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white54, fontSize: 12, height: 1.4),
+            style: TextStyle(color: context.colors.textMuted, fontSize: 12, height: 1.4),
           ),
         ],
       ),
@@ -1983,9 +1984,9 @@ class _PremiumGoalOverviewSheetState
     return Container(
       padding: padding ?? const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: context.colors.textPrimary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.08)),
       ),
       child: child,
     );
@@ -2000,31 +2001,31 @@ class _PremiumGoalOverviewSheetState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: context.colors.textPrimary.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.07)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: accentColor, size: 12),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.colors.textPrimary,
               fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 1),
+          SizedBox(height: 1),
           Text(
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white54, fontSize: 8),
+            style: TextStyle(color: context.colors.textMuted, fontSize: 8),
           ),
         ],
       ),
@@ -2055,9 +2056,9 @@ class _PremiumGoalOverviewSheetState
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white30),
+      hintStyle: TextStyle(color: context.colors.textMuted.withValues(alpha: 0.5)),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.06),
+      fillColor: context.colors.textPrimary.withValues(alpha: 0.06),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -2090,10 +2091,10 @@ class _PremiumGoalOverviewSheetState
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        title: const Text(
+        title: Text(
           'Edit Goal Details',
           style: TextStyle(
-            color: Colors.white,
+            color: context.colors.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -2103,35 +2104,35 @@ class _PremiumGoalOverviewSheetState
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
+              Text(
                 'Goal Title',
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: context.colors.textSecondary,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               TextField(
                 controller: titleCtrl,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
+                style: TextStyle(color: context.colors.textPrimary, fontSize: 13),
                 decoration: _inputDecoration('Enter goal title...'),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
 
-              const Text(
+              Text(
                 'Description',
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: context.colors.textSecondary,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               TextField(
                 controller: descCtrl,
                 maxLines: 3,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
+                style: TextStyle(color: context.colors.textPrimary, fontSize: 13),
                 decoration: _inputDecoration('Enter description...'),
               ),
             ],
@@ -2140,9 +2141,9 @@ class _PremiumGoalOverviewSheetState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: Colors.white54),
+              style: TextStyle(color: context.colors.textMuted),
             ),
           ),
           ElevatedButton(
@@ -2160,7 +2161,7 @@ class _PremiumGoalOverviewSheetState
                   );
               Navigator.pop(context);
             },
-            child: const Text('Save', style: TextStyle(color: Colors.black)),
+            child: Text('Save', style: TextStyle(color: context.colors.bg1)),
           ),
         ],
       ),
@@ -2430,50 +2431,50 @@ class _PremiumGoalOverviewSheetState
           return Container(
             padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.98),
+              color: context.colors.bg2.withValues(alpha: 0.98),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(32),
               ),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: context.colors.glassBorder),
             ),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
+                  Text(
                     'Add Milestone',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.colors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18),
                   TextField(
                     controller: titleCtrl,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
                     decoration: _inputDecoration(
                       'Milestone Title (e.g. Build MVP)',
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   TextField(
                     controller: descCtrl,
                     maxLines: 2,
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 12),
                     decoration: _inputDecoration('Description (optional)'),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Date Picker
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Due Date',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                       ),
                       TextButton.icon(
                         onPressed: () async {
@@ -2491,7 +2492,7 @@ class _PremiumGoalOverviewSheetState
                             setModalState(() => chosenDate = date);
                           }
                         },
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.calendar_month_rounded,
                           size: 16,
                           color: Colors.greenAccent,
@@ -2500,19 +2501,19 @@ class _PremiumGoalOverviewSheetState
                           chosenDate != null
                               ? '${chosenDate!.day}/${chosenDate!.month}/${chosenDate!.year}'
                               : 'Select Date',
-                          style: const TextStyle(color: Colors.greenAccent),
+                          style: TextStyle(color: Colors.greenAccent),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
 
                   // Priority Selector
-                  const Text(
+                  Text(
                     'Priority',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                    style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: ['low', 'medium', 'high'].map((p) {
@@ -2531,7 +2532,7 @@ class _PremiumGoalOverviewSheetState
                             border: Border.all(
                               color: isSelected
                                   ? Colors.greenAccent
-                                  : Colors.white24,
+                                  : context.colors.textMuted.withValues(alpha: 0.4),
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -2540,7 +2541,7 @@ class _PremiumGoalOverviewSheetState
                             style: TextStyle(
                               color: isSelected
                                   ? Colors.greenAccent
-                                  : Colors.white70,
+                                  : context.colors.textSecondary,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -2549,7 +2550,7 @@ class _PremiumGoalOverviewSheetState
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   ElevatedButton(
                     onPressed: () {
@@ -2571,10 +2572,10 @@ class _PremiumGoalOverviewSheetState
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Add Milestone',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: context.colors.bg1,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -2604,48 +2605,48 @@ class _PremiumGoalOverviewSheetState
           return Container(
             padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.98),
+              color: context.colors.bg2.withValues(alpha: 0.98),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(32),
               ),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: context.colors.glassBorder),
             ),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
+                  Text(
                     'Edit Milestone',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.colors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18),
                   TextField(
                     controller: titleCtrl,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
                     decoration: _inputDecoration('Milestone Title'),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   TextField(
                     controller: descCtrl,
                     maxLines: 2,
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 12),
                     decoration: _inputDecoration('Description'),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Date Picker
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Due Date',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                       ),
                       TextButton.icon(
                         onPressed: () async {
@@ -2663,7 +2664,7 @@ class _PremiumGoalOverviewSheetState
                             setModalState(() => chosenDate = date);
                           }
                         },
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.calendar_month_rounded,
                           size: 16,
                           color: Colors.greenAccent,
@@ -2672,19 +2673,19 @@ class _PremiumGoalOverviewSheetState
                           chosenDate != null
                               ? '${chosenDate!.day}/${chosenDate!.month}/${chosenDate!.year}'
                               : 'Select Date',
-                          style: const TextStyle(color: Colors.greenAccent),
+                          style: TextStyle(color: Colors.greenAccent),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
 
                   // Priority Selector
-                  const Text(
+                  Text(
                     'Priority',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                    style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: ['low', 'medium', 'high'].map((p) {
@@ -2703,7 +2704,7 @@ class _PremiumGoalOverviewSheetState
                             border: Border.all(
                               color: isSelected
                                   ? Colors.greenAccent
-                                  : Colors.white24,
+                                  : context.colors.textMuted.withValues(alpha: 0.4),
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -2712,7 +2713,7 @@ class _PremiumGoalOverviewSheetState
                             style: TextStyle(
                               color: isSelected
                                   ? Colors.greenAccent
-                                  : Colors.white70,
+                                  : context.colors.textSecondary,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -2721,7 +2722,7 @@ class _PremiumGoalOverviewSheetState
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   ElevatedButton(
                     onPressed: () {
@@ -2742,10 +2743,10 @@ class _PremiumGoalOverviewSheetState
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Save Changes',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: context.colors.bg1,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -2774,49 +2775,49 @@ class _PremiumGoalOverviewSheetState
           return Container(
             padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.98),
+              color: context.colors.bg2.withValues(alpha: 0.98),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(32),
               ),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: context.colors.glassBorder),
             ),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
+                  Text(
                     'Add Subtask',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.colors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18),
                   TextField(
                     controller: titleCtrl,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
                     decoration: _inputDecoration(
                       'Subtask Title (e.g. Write Schema)',
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   TextField(
                     controller: notesCtrl,
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 12),
                     decoration: _inputDecoration('Notes / Details (optional)'),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Date Picker
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Due Date',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                       ),
                       TextButton.icon(
                         onPressed: () async {
@@ -2834,7 +2835,7 @@ class _PremiumGoalOverviewSheetState
                             setModalState(() => chosenDate = date);
                           }
                         },
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.calendar_month_rounded,
                           size: 16,
                           color: Colors.greenAccent,
@@ -2843,12 +2844,12 @@ class _PremiumGoalOverviewSheetState
                           chosenDate != null
                               ? '${chosenDate!.day}/${chosenDate!.month}/${chosenDate!.year}'
                               : 'Select Date',
-                          style: const TextStyle(color: Colors.greenAccent),
+                          style: TextStyle(color: Colors.greenAccent),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   ElevatedButton(
                     onPressed: () {
@@ -2869,10 +2870,10 @@ class _PremiumGoalOverviewSheetState
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Add Subtask',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: context.colors.bg1,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

@@ -85,7 +85,7 @@ class GoalsScreen extends ConsumerWidget {
                       emoji: _goalEmoji(goal.id),
                       title: goal.title,
                       isSelected: isSelected,
-                      activeColor: AppColors.accentEmerald,
+                      activeColor: context.colors.accentEmerald,
                       onTap: () {
                         ref.read(onboardingProvider.notifier).toggleGoal(goal);
                       },
@@ -103,11 +103,11 @@ class GoalsScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: AppColors.accentBlue.withValues(alpha: 0.3),
+                          color: context.colors.accentBlue.withValues(alpha: 0.3),
                           width: 1,
                           strokeAlign: BorderSide.strokeAlignInside,
                         ),
-                        color: AppColors.accentBlue.withValues(alpha: 0.06),
+                        color: context.colors.accentBlue.withValues(alpha: 0.06),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -115,13 +115,13 @@ class GoalsScreen extends ConsumerWidget {
                           Icon(
                             Icons.add_rounded,
                             size: 18,
-                            color: AppColors.accentBlue.withValues(alpha: 0.7),
+                            color: context.colors.accentBlue.withValues(alpha: 0.7),
                           ),
                           const SizedBox(width: 6),
                           Text(
                             'Create Custom Goal',
                             style: AppTypography.bodyMedium(
-                              color: AppColors.accentBlue.withValues(alpha: 0.7),
+                              color: context.colors.accentBlue.withValues(alpha: 0.7),
                             ).copyWith(fontSize: 14, fontWeight: FontWeight.w600),
                           ),
                         ],
@@ -264,12 +264,12 @@ class _CreateGoalSheetState extends State<_CreateGoalSheet> {
                     height: 42,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.accentBlue.withValues(alpha: 0.15)
+                          ? context.colors.accentBlue.withValues(alpha: 0.15)
                           : Colors.white.withValues(alpha: 0.04),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isSelected
-                            ? AppColors.accentBlue.withValues(alpha: 0.4)
+                            ? context.colors.accentBlue.withValues(alpha: 0.4)
                             : Colors.white.withValues(alpha: 0.06),
                       ),
                     ),
@@ -348,7 +348,7 @@ class _CreateGoalSheetState extends State<_CreateGoalSheet> {
                         Navigator.pop(context, goal);
                       },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accentEmerald,
+                  backgroundColor: context.colors.accentEmerald,
                   disabledBackgroundColor: Colors.white.withValues(alpha: 0.06),
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(
@@ -396,7 +396,7 @@ class _CreateGoalSheetState extends State<_CreateGoalSheet> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: AppColors.accentBlue.withValues(alpha: 0.4),
+            color: context.colors.accentBlue.withValues(alpha: 0.4),
           ),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -407,11 +407,11 @@ class _CreateGoalSheetState extends State<_CreateGoalSheet> {
   Color _priorityColor(String p) {
     switch (p) {
       case 'Low':
-        return AppColors.accentEmerald;
+        return context.colors.accentEmerald;
       case 'High':
         return const Color(0xFFEF4444);
       default:
-        return AppColors.accentBlue;
+        return context.colors.accentBlue;
     }
   }
 }

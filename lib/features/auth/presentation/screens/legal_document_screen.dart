@@ -63,7 +63,7 @@ class LegalDocumentScreen extends StatelessWidget {
       padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.sm),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: AppColors.accentBlue,
@@ -94,7 +94,7 @@ class LegalDocumentScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ', style: TextStyle(color: AppColors.accentBlue, fontSize: 16)),
+          Text('• ', style: TextStyle(color: AppColors.accentBlue, fontSize: 16)),
           Expanded(
             child: RichText(
               text: TextSpan(

@@ -1,6 +1,6 @@
+import 'package:getzio_todo_app/core/theme/app_theme.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
 import 'due_date_progress_selector.dart';
 
 class GoalBuilderModal extends StatefulWidget {
@@ -93,9 +93,9 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
       child: Container(
         padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
         decoration: BoxDecoration(
-          color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+          color: context.colors.bg2.withValues(alpha: 0.95),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+          border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.15), width: 1.5),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -104,39 +104,39 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
             children: [
               Text(
                 'Create Goal Card',
-                style: AppTypography.displayMedium(color: Colors.white).copyWith(fontSize: 24),
+                style: AppTypography.displayMedium(color: context.colors.textPrimary).copyWith(fontSize: 24),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: 32),
               
               // Title Field
               TextField(
                 controller: _titleController,
-                style: AppTypography.titleMedium(color: Colors.white),
+                style: AppTypography.titleMedium(color: context.colors.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Goal Title (e.g. Launch Startup)',
-                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                  hintStyle: TextStyle(color: context.colors.textPrimary.withValues(alpha: 0.3)),
                   filled: true,
-                  fillColor: Colors.black.withValues(alpha: 0.3),
+                  fillColor: context.colors.bg1.withValues(alpha: 0.3),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // Description
               TextField(
                 controller: _descriptionController,
                 maxLines: 2,
-                style: AppTypography.bodyMedium(color: Colors.white),
+                style: AppTypography.bodyMedium(color: context.colors.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Description or Motivation',
-                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                  hintStyle: TextStyle(color: context.colors.textPrimary.withValues(alpha: 0.3)),
                   filled: true,
-                  fillColor: Colors.black.withValues(alpha: 0.3),
+                  fillColor: context.colors.bg1.withValues(alpha: 0.3),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
               // Due Date & Progress Selector
               DueDateAndProgressSelector(
@@ -146,11 +146,11 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
                 onDateChanged: (d) => setState(() => _dueDate = d),
                 onProgressChanged: (p) => setState(() => _progress = p),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
 
               // Priority
-              Text('Priority', style: AppTypography.caption(color: Colors.white54)),
-              const SizedBox(height: 8),
+              Text('Priority', style: AppTypography.caption(color: context.colors.textMuted)),
+              SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: ['Low', 'Medium', 'High'].map((p) {
@@ -161,21 +161,21 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
                         color: isSelected ? _selectedColor.withValues(alpha: 0.2) : Colors.transparent,
-                        border: Border.all(color: isSelected ? _selectedColor : Colors.white24),
+                        border: Border.all(color: isSelected ? _selectedColor : context.colors.textMuted.withValues(alpha: 0.4)),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(p, style: AppTypography.bodyMedium(color: isSelected ? _selectedColor : Colors.white70)),
+                      child: Text(p, style: AppTypography.bodyMedium(color: isSelected ? _selectedColor : context.colors.textSecondary)),
                     ),
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
               // Milestones
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Milestones', style: AppTypography.caption(color: Colors.white54)),
+                  Text('Milestones', style: AppTypography.caption(color: context.colors.textMuted)),
                   TextButton.icon(
                     onPressed: () {
                       setState(() {
@@ -199,7 +199,7 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               ..._milestoneControllers.asMap().entries.map((entry) {
                 final idx = entry.key;
                 final controller = entry.value;
@@ -210,14 +210,14 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
                       Expanded(
                         child: TextField(
                           controller: controller,
-                          style: AppTypography.bodyMedium(color: Colors.white),
+                          style: AppTypography.bodyMedium(color: context.colors.textPrimary),
                           decoration: InputDecoration(
                             hintText: 'Milestone ${idx + 1} (e.g. Design Prototype)',
                             hintStyle: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.25),
+                              color: context.colors.textPrimary.withValues(alpha: 0.25),
                             ),
                             filled: true,
-                            fillColor: Colors.black.withValues(alpha: 0.25),
+                            fillColor: context.colors.bg1.withValues(alpha: 0.25),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
@@ -230,9 +230,9 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
                         ),
                       ),
                       if (_milestoneControllers.length > 1) ...[
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.delete_outline_rounded,
                             color: Colors.redAccent,
                             size: 20,
@@ -249,11 +249,11 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
                   ),
                 );
               }),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
 
               // Color Theme
-              Text('Color Theme', style: AppTypography.caption(color: Colors.white54)),
-              const SizedBox(height: 8),
+              Text('Color Theme', style: AppTypography.caption(color: context.colors.textMuted)),
+              SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: _themeColors.map((color) {
@@ -266,13 +266,13 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
                       decoration: BoxDecoration(
                         color: color,
                         shape: BoxShape.circle,
-                        border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
+                        border: isSelected ? Border.all(color: context.colors.textPrimary, width: 3) : null,
                       ),
                     ),
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: 32),
 
 
 
@@ -284,7 +284,7 @@ class _GoalBuilderModalState extends State<GoalBuilderModal> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                child: Text('Add Goal to Board', style: AppTypography.titleMedium(color: Colors.white)),
+                child: Text('Add Goal to Board', style: AppTypography.titleMedium(color: context.colors.textPrimary)),
               ),
             ],
           ),

@@ -90,7 +90,7 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(AppRadius.xl),
               ),
-              border: Border.all(color: AppColors.glassBorder, width: 0.5),
+              border: Border.all(color: context.colors.glassBorder, width: 0.5),
             ),
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
@@ -105,7 +105,7 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 24),
                       decoration: BoxDecoration(
-                        color: AppColors.glassBorder,
+                        color: context.colors.glassBorder,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -128,7 +128,7 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
                   Text(
                     'SUBTASKS',
                     style: AppTypography.captionSmall(
-                      color: AppColors.textMuted,
+                      color: context.colors.textMuted,
                     ).copyWith(letterSpacing: 1.2),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -145,7 +145,7 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: AppColors.glassBorder,
+                                color: context.colors.glassBorder,
                                 width: 1.5,
                               ),
                             ),
@@ -156,7 +156,7 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
                               controller: _subtaskControllers[i],
                               hint: 'Subtask ${i + 1}',
                               style: AppTypography.bodyMedium(
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                               ),
                               onSubmitted: (_) {
                                 if (i == _subtaskControllers.length - 1) {
@@ -173,7 +173,7 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
                                 child: Icon(
                                   Icons.close_rounded,
                                   size: 16,
-                                  color: AppColors.textMuted,
+                                  color: context.colors.textMuted,
                                 ),
                               ),
                             ),
@@ -192,13 +192,13 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
                           Icon(
                             Icons.add_rounded,
                             size: 18,
-                            color: AppColors.accentBlue,
+                            color: context.colors.accentBlue,
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           Text(
                             'Add another subtask',
                             style: AppTypography.bodyMedium(
-                              color: AppColors.accentBlue,
+                              color: context.colors.accentBlue,
                             ),
                           ),
                         ],
@@ -218,10 +218,10 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
                           child: Container(
                             height: 50,
                             decoration: BoxDecoration(
-                              color: AppColors.glass,
+                              color: context.colors.glass,
                               borderRadius: BorderRadius.circular(AppRadius.sm),
                               border: Border.all(
-                                color: AppColors.glassBorder,
+                                color: context.colors.glassBorder,
                                 width: 0.5,
                               ),
                             ),
@@ -229,7 +229,7 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
                               child: Text(
                                 'Cancel',
                                 style: AppTypography.bodyMedium(
-                                  color: AppColors.textSecondary,
+                                  color: context.colors.textSecondary,
                                 ),
                               ),
                             ),
@@ -247,11 +247,11 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
                             duration: const Duration(milliseconds: 200),
                             height: 50,
                             decoration: BoxDecoration(
-                              color: AppColors.accentBlue,
+                              color: context.colors.accentBlue,
                               borderRadius: BorderRadius.circular(AppRadius.sm),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.accentBlue.withValues(alpha: 0.3),
+                                  color: context.colors.accentBlue.withValues(alpha: 0.3),
                                   blurRadius: 16,
                                   offset: const Offset(0, 4),
                                 ),
@@ -298,10 +298,10 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
       controller: controller,
       focusNode: focusNode,
       style: style,
-      cursorColor: AppColors.accentBlue,
+      cursorColor: context.colors.accentBlue,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: style.copyWith(color: AppColors.textMuted),
+        hintStyle: style.copyWith(color: context.colors.textMuted),
         border: InputBorder.none,
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(vertical: 8),

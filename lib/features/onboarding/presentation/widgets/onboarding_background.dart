@@ -85,7 +85,7 @@ class _OnboardingBackgroundState extends State<OnboardingBackground>
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  AppColors.accentBlue.withValues(alpha: 0.04),
+                  context.colors.accentBlue.withValues(alpha: 0.04),
                   Colors.transparent,
                 ],
               ),

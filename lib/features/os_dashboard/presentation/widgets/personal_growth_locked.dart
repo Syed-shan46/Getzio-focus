@@ -31,7 +31,7 @@ class PersonalGrowthLockedCard extends ConsumerWidget {
             color: Colors.white.withValues(alpha: 0.02),
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: isUnlocked ? AppColors.accentBlue.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.05),
+              color: isUnlocked ? context.colors.accentBlue.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.05),
             ),
           ),
           child: Column(
@@ -45,7 +45,7 @@ class PersonalGrowthLockedCard extends ConsumerWidget {
                     children: [
                       Icon(
                         isUnlocked ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-                        color: isUnlocked ? AppColors.accentEmerald : Colors.white30,
+                        color: isUnlocked ? context.colors.accentEmerald : Colors.white30,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
@@ -58,13 +58,13 @@ class PersonalGrowthLockedCard extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: isUnlocked ? AppColors.accentEmerald.withValues(alpha: 0.15) : Colors.white10,
+                      color: isUnlocked ? context.colors.accentEmerald.withValues(alpha: 0.15) : Colors.white10,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       isUnlocked ? 'UNLOCKED' : 'LOCKED',
                       style: AppTypography.captionSmall(
-                        color: isUnlocked ? AppColors.accentEmerald : Colors.white54,
+                        color: isUnlocked ? context.colors.accentEmerald : Colors.white54,
                       ).copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -114,7 +114,7 @@ class PersonalGrowthLockedCard extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'Courier', // Monospace for align
                       fontSize: 16,
-                      color: AppColors.accentBlue.withValues(alpha: 0.7),
+                      color: context.colors.accentBlue.withValues(alpha: 0.7),
                       letterSpacing: 2,
                     ),
                   ),
@@ -132,7 +132,7 @@ class PersonalGrowthLockedCard extends ConsumerWidget {
                   value: progress,
                   backgroundColor: Colors.white.withValues(alpha: 0.05),
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    isUnlocked ? AppColors.accentEmerald : AppColors.accentBlue,
+                    isUnlocked ? context.colors.accentEmerald : context.colors.accentBlue,
                   ),
                   minHeight: 6,
                 ),

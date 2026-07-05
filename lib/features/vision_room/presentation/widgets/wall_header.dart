@@ -46,9 +46,9 @@ class WallHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.glass,
+                color: context.colors.glass,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.glassBorder, width: 0.5),
+                border: Border.all(color: context.colors.glassBorder, width: 0.5),
               ),
               child: Row(
                 children: [

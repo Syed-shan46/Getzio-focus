@@ -57,14 +57,14 @@ class _EmptyStateState extends State<EmptyState>
               Text(
                 'Nothing to do today.',
                 style: AppTypography.titleMedium(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 'Small wins matter.',
                 style: AppTypography.caption(
-                  color: AppColors.textMuted,
+                  color: context.colors.textMuted,
                 ),
               ),
             ],

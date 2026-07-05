@@ -68,7 +68,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.accentBlue.withValues(alpha: 0.15),
+                    color: context.colors.accentBlue.withValues(alpha: 0.15),
                     blurRadius: 150,
                     spreadRadius: 50,
                   ),
@@ -172,7 +172,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             width: isActive ? 18 : 6,
                             decoration: BoxDecoration(
                               color: isActive
-                                  ? AppColors.accentBlue
+                                  ? context.colors.accentBlue
                                   : Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(3),
                             ),
@@ -199,15 +199,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           width: double.infinity,
                           decoration: BoxDecoration(
                             gradient: _currentPage == 2
-                                ? const LinearGradient(
-                                    colors: [AppColors.accentBlue, Color(0xFFA855F7)],
+                                ? LinearGradient(
+                                    colors: [context.colors.accentBlue, Color(0xFFA855F7)],
                                   )
                                 : null,
-                            color: _currentPage == 2 ? null : AppColors.accentBlue,
+                            color: _currentPage == 2 ? null : context.colors.accentBlue,
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                             boxShadow: [
                               BoxShadow(
-                                color: (_currentPage == 2 ? const Color(0xFFA855F7) : AppColors.accentBlue)
+                                color: (_currentPage == 2 ? Color(0xFFA855F7) : context.colors.accentBlue)
                                     .withValues(alpha: 0.3),
                                 blurRadius: 16,
                                 offset: const Offset(0, 4),
@@ -267,7 +267,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               description,
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium(
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
           ),
@@ -303,7 +303,7 @@ class SmartphoneMockup extends StatelessWidget {
             offset: const Offset(0, 15),
           ),
           BoxShadow(
-            color: AppColors.accentBlue.withValues(alpha: 0.05),
+            color: context.colors.accentBlue.withValues(alpha: 0.05),
             blurRadius: 40,
             spreadRadius: 2,
           ),
@@ -519,7 +519,7 @@ class OnboardingMockupTwo extends StatelessWidget {
                       CircularProgressIndicator(
                         value: 0.78,
                         strokeWidth: 4,
-                        color: AppColors.accentBlue,
+                        color: context.colors.accentBlue,
                         backgroundColor: Colors.white.withValues(alpha: 0.08),
                       ),
                       const Center(

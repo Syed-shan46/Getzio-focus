@@ -625,7 +625,7 @@ class PremiumPreviewOverlay extends ConsumerWidget {
                     onContinue();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accentBlue,
+                    backgroundColor: context.colors.accentBlue,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -644,7 +644,7 @@ class PremiumPreviewOverlay extends ConsumerWidget {
                     onContinue();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accentBlue,
+                    backgroundColor: context.colors.accentBlue,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(

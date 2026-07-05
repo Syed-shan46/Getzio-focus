@@ -49,13 +49,13 @@ class TimelineWall extends ConsumerWidget {
                         children: [
                           Text(
                             year.toString(),
-                            style: AppTypography.displayLarge(color: AppColors.accentBlue),
+                            style: AppTypography.displayLarge(color: context.colors.accentBlue),
                           ),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Container(
                               height: 1,
-                              color: AppColors.glassBorder,
+                              color: context.colors.glassBorder,
                             ),
                           ),
                         ],
@@ -87,7 +87,7 @@ class TimelineWall extends ConsumerWidget {
                                 Container(
                                   width: 2,
                                   height: 80, // Approximate height to next item
-                                  color: AppColors.glassBorder,
+                                  color: context.colors.glassBorder,
                                 ),
                               ],
                             ),

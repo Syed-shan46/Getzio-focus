@@ -230,7 +230,7 @@ class _TaskBuilderModalState extends State<TaskBuilderModal> {
                   const SizedBox(width: 8),
                   IconButton.filled(
                     style: IconButton.styleFrom(
-                      backgroundColor: AppColors.accentBlue,
+                      backgroundColor: context.colors.accentBlue,
                       padding: const EdgeInsets.all(12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
@@ -320,11 +320,11 @@ class _TaskBuilderModalState extends State<TaskBuilderModal> {
                         });
                       },
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.accentBlue, width: 1.5),
+                        side: BorderSide(color: context.colors.accentBlue, width: 1.5),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: Text('Add More', style: AppTypography.titleMedium(color: AppColors.accentBlue)),
+                      child: Text('Add More', style: AppTypography.titleMedium(color: context.colors.accentBlue)),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -332,7 +332,7 @@ class _TaskBuilderModalState extends State<TaskBuilderModal> {
                     child: ElevatedButton(
                       onPressed: _submit,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accentBlue,
+                        backgroundColor: context.colors.accentBlue,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),

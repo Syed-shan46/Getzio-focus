@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +25,86 @@ class TaskCard extends ConsumerStatefulWidget {
 
 class _TaskCardState extends ConsumerState<TaskCard> {
   bool _expanded = false;
+
+
+  String _getCountdownText(SubtaskModel subtask) {
+    if (subtask.dueDate == null) return '';
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final targetDate = DateTime(subtask.dueDate!.year, subtask.dueDate!.month, subtask.dueDate!.day);
+    
+    DateTime? targetDateTime;
+    if (subtask.dueTime != null) {
+      try {
+        final timeFormat = DateFormat('h:mm a');
+        final time = timeFormat.parse(subtask.dueTime!);
+        targetDateTime = DateTime(targetDate.year, targetDate.month, targetDate.day, time.hour, time.minute);
+      } catch (e) {
+        targetDateTime = targetDate;
+      }
+    } else {
+      targetDateTime = targetDate;
+    }
+
+    if (subtask.completed) return 'Completed';
+
+    if (targetDate.isBefore(today)) {
+      final diff = today.difference(targetDate).inDays;
+      return diff == 1 ? 'Overdue by 1 Day' : 'Overdue by $diff Days';
+    } else if (targetDate.isAtSameMomentAs(today)) {
+      if (targetDateTime != targetDate) {
+         final diff = targetDateTime.difference(now);
+         if (diff.isNegative) {
+            return 'Overdue by ${diff.inHours.abs()}h ${diff.inMinutes.abs() % 60}m';
+         } else if (diff.inHours > 0) {
+            return '${diff.inHours}h ${diff.inMinutes % 60}m left';
+         } else {
+            return '${diff.inMinutes} mins left';
+         }
+      }
+      return 'Today';
+    } else if (targetDate.isAtSameMomentAs(today.add(const Duration(days: 1)))) {
+      return 'Tomorrow';
+    } else {
+      final diff = targetDate.difference(today).inDays;
+      return '$diff Days Left';
+    }
+  }
+
+  Color _getCountdownColor(SubtaskModel subtask) {
+    if (subtask.completed) return Colors.grey;
+    if (subtask.dueDate == null) return Colors.white54;
+    
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final targetDate = DateTime(subtask.dueDate!.year, subtask.dueDate!.month, subtask.dueDate!.day);
+    
+    DateTime? targetDateTime;
+    if (subtask.dueTime != null) {
+      try {
+        final timeFormat = DateFormat('h:mm a');
+        final time = timeFormat.parse(subtask.dueTime!);
+        targetDateTime = DateTime(targetDate.year, targetDate.month, targetDate.day, time.hour, time.minute);
+      } catch (e) {
+        targetDateTime = targetDate;
+      }
+    } else {
+      targetDateTime = targetDate;
+    }
+
+    if (targetDate.isBefore(today)) return Colors.redAccent;
+    if (targetDate.isAtSameMomentAs(today)) {
+      if (targetDateTime != targetDate) {
+         final diff = targetDateTime.difference(now);
+         if (diff.isNegative) return Colors.redAccent;
+         if (diff.inHours < 3) return Colors.redAccent;
+      }
+      return Colors.amber;
+    }
+    final diff = targetDate.difference(today).inDays;
+    if (diff > 3) return Colors.greenAccent;
+    return Colors.white70;
+  }
 
   Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
@@ -297,6 +376,7 @@ class _TaskCardState extends ConsumerState<TaskCard> {
     );
   }
 
+
   Widget _buildSubtaskPanel(BuildContext context, Color categoryColor) {
     return Container(
       width: double.infinity,
@@ -305,62 +385,99 @@ class _TaskCardState extends ConsumerState<TaskCard> {
         children: widget.task.subtasks.asMap().entries.map((entry) {
           final idx = entry.key;
           final subtask = entry.value;
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.mediumImpact();
-                    final updatedSubtasks = List<SubtaskModel>.from(widget.task.subtasks);
-                    updatedSubtasks[idx] = subtask.copyWith(completed: !subtask.completed);
-                    ref.read(tasksProvider.notifier).updateTask(
-                      widget.task.copyWith(subtasks: updatedSubtasks),
-                    );
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: subtask.completed 
-                          ? Colors.amber.withValues(alpha: 0.1) 
-                          : Colors.transparent,
-                      border: Border.all(
-                        color: subtask.completed ? Colors.amber : Colors.white24,
-                        width: 1.5,
+          final isLast = idx == widget.task.subtasks.length - 1;
+          final countdown = _getCountdownText(subtask);
+          final color = _getCountdownColor(subtask);
+          
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          final updatedSubtasks = List<SubtaskModel>.from(widget.task.subtasks);
+                          updatedSubtasks[idx] = subtask.copyWith(completed: !subtask.completed);
+                          ref.read(tasksProvider.notifier).updateTask(
+                            widget.task.copyWith(subtasks: updatedSubtasks),
+                          );
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: subtask.completed 
+                                ? Colors.amber.withValues(alpha: 0.1) 
+                                : Colors.transparent,
+                            border: Border.all(
+                              color: subtask.completed ? Colors.amber : Colors.white24,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: subtask.completed
+                              ? const Center(
+                                  child: Icon(
+                                    Icons.check,
+                                    size: 10,
+                                    color: Colors.amber,
+                                  ),
+                                )
+                              : null,
+                        ),
                       ),
                     ),
-                    child: subtask.completed
-                        ? const Center(
-                            child: Icon(
-                              Icons.check,
-                              size: 10,
-                              color: Colors.amber,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 200),
+                            style: GoogleFonts.outfit(
+                              color: subtask.completed ? Colors.white30 : Colors.white70,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              decoration: subtask.completed ? TextDecoration.lineThrough : null,
+                              decorationColor: Colors.white24,
                             ),
-                          )
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 200),
-                    style: GoogleFonts.outfit(
-                      color: subtask.completed ? Colors.white30 : Colors.white70,
-                      fontSize: 12,
-                      decoration: subtask.completed ? TextDecoration.lineThrough : null,
-                      decorationColor: Colors.white24,
+                            child: Text('• ${subtask.title}'),
+                          ),
+                          if (countdown.isNotEmpty && !subtask.completed)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                countdown,
+                                style: GoogleFonts.outfit(
+                                  color: color,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                    child: Text(subtask.title),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              if (!isLast)
+                Divider(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  height: 1,
+                  thickness: 1,
+                ),
+            ],
           );
         }).toList(),
       ),
     );
   }
+
 }

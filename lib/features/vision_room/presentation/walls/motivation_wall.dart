@@ -59,7 +59,7 @@ class MotivationWall extends ConsumerWidget {
                       children: [
                         Text(
                           'DAILY AFFIRMATION',
-                          style: AppTypography.captionSmall(color: AppColors.accentBlue)
+                          style: AppTypography.captionSmall(color: context.colors.accentBlue)
                               .copyWith(letterSpacing: 2),
                         ),
                         const SizedBox(height: AppSpacing.md),

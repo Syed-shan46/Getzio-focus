@@ -115,17 +115,17 @@ class _HabitWallState extends ConsumerState<HabitWall> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: h.completedToday 
-                                  ? AppColors.success 
+                                  ? context.colors.success 
                                   : Colors.white.withValues(alpha: 0.1),
                               border: Border.all(
                                 color: h.completedToday 
-                                    ? AppColors.success 
+                                    ? context.colors.success 
                                     : Colors.white.withValues(alpha: 0.3),
                                 width: 2,
                               ),
                               boxShadow: h.completedToday ? [
                                 BoxShadow(
-                                  color: AppColors.success.withValues(alpha: 0.4),
+                                  color: context.colors.success.withValues(alpha: 0.4),
                                   blurRadius: 12,
                                   spreadRadius: 2,
                                 )

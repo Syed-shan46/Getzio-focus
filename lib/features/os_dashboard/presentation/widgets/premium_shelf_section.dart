@@ -9,6 +9,8 @@ import '../../../../shared/providers/app_providers.dart';
 import '../providers/os_providers.dart';
 import '../../../todo/domain/models/todo_model.dart';
 import '../../../todo/presentation/providers/todo_providers.dart';
+import '../../../tasks/presentation/providers/tasks_provider.dart';
+import '../../../tasks/domain/models/task_model.dart';
 import '../../../auth/presentation/widgets/save_workspace_sheet.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 
@@ -141,15 +143,49 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
     ));
 
     // Card 2: Today's Focus
-    cards.add(const ShelfCardData(
+    final taskState = ref.watch(tasksProvider);
+    final pendingTasks = taskState.allTasks.where((t) => !t.completed && t.status != TaskStatus.completed).toList();
+    pendingTasks.sort((a, b) => (a.dueDate ?? DateTime.now().add(const Duration(days: 365))).compareTo(b.dueDate ?? DateTime.now().add(const Duration(days: 365))));
+    
+    String focusTitle = 'Today\'s Focus';
+    String focusAction = 'View Tasks';
+    String focusEmoji = '🎯';
+    String focusProgressText = 'Ready';
+    
+    if (pendingTasks.isNotEmpty) {
+      final task = pendingTasks.first;
+      
+      // Look for first uncompleted subtask
+      if (task.subtasks.isNotEmpty) {
+         final uncompletedSubtasks = task.subtasks.where((s) => !s.completed).toList();
+         if (uncompletedSubtasks.isNotEmpty) {
+           uncompletedSubtasks.sort((a, b) => (a.dueDate ?? DateTime.now().add(const Duration(days: 365))).compareTo(b.dueDate ?? DateTime.now().add(const Duration(days: 365))));
+           final subtask = uncompletedSubtasks.first;
+           focusTitle = subtask.title;
+           focusAction = task.title;
+           focusProgressText = 'Next Step';
+           focusEmoji = '🔥';
+         } else {
+           focusTitle = task.title;
+           focusAction = 'Complete Task';
+           focusProgressText = 'Almost Done';
+         }
+      } else {
+         focusTitle = task.title;
+         focusAction = 'Complete Task';
+         focusProgressText = 'Priority';
+      }
+    }
+
+    cards.add(ShelfCardData(
       id: 'suggested_focus',
       moduleType: 'focus',
-      title: 'Today\'s Focus',
-      emoji: '🎯',
-      progressText: 'Ready',
-      nextAction: 'View Tasks',
-      progressValue: 0.0,
-      metricLabel: 'Daily discipline',
+      title: focusTitle,
+      emoji: focusEmoji,
+      progressText: focusProgressText,
+      nextAction: focusAction,
+      progressValue: pendingTasks.isNotEmpty ? 0.5 : 0.0,
+      metricLabel: pendingTasks.isNotEmpty ? 'Up next' : 'Daily discipline',
       isGold: false,
     ));
 
@@ -816,7 +852,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                                   color: card.isGold
                                       ? const Color(0xFF4A3403)
                                       : (isActive
-                                          ? AppColors.accentBlue
+                                          ? context.colors.accentBlue
                                           : Colors.white60),
                                 ),
                                 textAlign: TextAlign.center,
@@ -900,8 +936,8 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
                                                     const Color(0xFF5D4037),
                                                   ]
                                                 : [
-                                                    AppColors.accentBlue,
-                                                    AppColors.accentBlue.withValues(
+                                                    context.colors.accentBlue,
+                                                    context.colors.accentBlue.withValues(
                                                       alpha: 0.65,
                                                     ),
                                                   ],

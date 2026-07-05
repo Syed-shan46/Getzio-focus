@@ -39,7 +39,7 @@ class DisciplineInsights extends ConsumerWidget {
                     child: _buildInsightItem(
                       label: 'Discipline Score',
                       value: '${state.disciplineScore.toInt()}%',
-                      color: AppColors.accentEmerald,
+                      color: context.colors.accentEmerald,
                       subtext: 'Today\'s Completion',
                     ),
                   ),
@@ -48,7 +48,7 @@ class DisciplineInsights extends ConsumerWidget {
                     child: _buildInsightItem(
                       label: 'Weekly Growth',
                       value: '+15.4%',
-                      color: AppColors.accentBlue,
+                      color: context.colors.accentBlue,
                       subtext: 'vs Last Week',
                     ),
                   ),

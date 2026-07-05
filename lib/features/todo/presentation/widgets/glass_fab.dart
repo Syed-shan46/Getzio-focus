@@ -16,10 +16,10 @@ class GlassFab extends StatelessWidget {
           width: 60,
           height: 60,
           decoration: GlassDecoration.fab(),
-          child: const Center(
+          child: Center(
             child: Icon(
               Icons.add_rounded,
-              color: AppColors.accentBlue,
+              color: context.colors.accentBlue,
               size: 30,
             ),
           ),

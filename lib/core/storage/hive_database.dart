@@ -352,6 +352,14 @@ class HiveDatabase {
         as bool;
   }
 
+  Future<void> saveThemeMode(String mode) async {
+    await _settingsBox.put('app_theme_mode', mode);
+  }
+
+  String getThemeMode() {
+    return _settingsBox.get('app_theme_mode', defaultValue: 'system') as String;
+  }
+
   Future<void> saveSyncStatus({
     required String userId,
     required String lastSyncTime,

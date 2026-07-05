@@ -7,14 +7,14 @@ class AnimatedCheckbox extends StatefulWidget {
   final bool checked;
   final ValueChanged<bool> onChanged;
   final double size;
-  final Color activeColor;
+  final Color? activeColor;
 
   const AnimatedCheckbox({
     super.key,
     required this.checked,
     required this.onChanged,
     this.size = 26,
-    this.activeColor = AppColors.accentEmerald,
+    this.activeColor,
   });
 
   @override
@@ -67,6 +67,8 @@ class _AnimatedCheckboxState extends State<AnimatedCheckbox>
 
   @override
   Widget build(BuildContext context) {
+    final effectiveActiveColor = widget.activeColor ?? AppColors.accentEmerald;
+
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -84,12 +86,12 @@ class _AnimatedCheckboxState extends State<AnimatedCheckbox>
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: widget.checked
-                      ? widget.activeColor
-                      : AppColors.glassBorder,
+                      ? effectiveActiveColor
+                      : context.colors.glassBorder,
                   width: 2,
                 ),
                 color: widget.checked
-                    ? widget.activeColor.withValues(alpha: _fill.value * 0.2)
+                    ? effectiveActiveColor.withValues(alpha: _fill.value * 0.2)
                     : Colors.transparent,
               ),
               child: widget.checked
@@ -97,7 +99,7 @@ class _AnimatedCheckboxState extends State<AnimatedCheckbox>
                       child: Icon(
                         Icons.check_rounded,
                         size: widget.size * 0.55,
-                        color: widget.activeColor.withValues(alpha: _fill.value),
+                        color: effectiveActiveColor.withValues(alpha: _fill.value),
                       ),
                     )
                   : null,

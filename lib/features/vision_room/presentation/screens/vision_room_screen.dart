@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../shared/widgets/preview_mode_banner.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -468,7 +469,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accentBlue,
+                backgroundColor: context.colors.accentBlue,
               ),
               onPressed: () {
                 final text = controller.text.trim();
@@ -684,6 +685,13 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                       right: 0,
                       child: _buildEditToolbar(),
                     ),
+
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: const PreviewModeBanner(),
+                  ),
                 ],
               ),
             ),
@@ -821,7 +829,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                               return _toolbarButton(
                                 icon: Icons.edit_note_rounded,
                                 label: 'Edit Note',
-                                color: AppColors.accentBlue,
+                                color: context.colors.accentBlue,
                                 onTap: () {
                                   _showStickyNoteDialog(
                                     existingItem: selectedItem,

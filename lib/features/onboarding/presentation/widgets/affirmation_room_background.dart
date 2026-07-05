@@ -86,7 +86,7 @@ class _AffirmationRoomBackgroundState extends State<AffirmationRoomBackground>
                 center: Alignment.center,
                 radius: 0.8,
                 colors: [
-                  AppColors.accentBlue.withValues(alpha: 0.05),
+                  context.colors.accentBlue.withValues(alpha: 0.05),
                   Colors.transparent,
                 ],
               ),

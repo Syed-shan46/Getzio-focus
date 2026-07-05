@@ -8,6 +8,7 @@ import '../../domain/models/vision_item.dart';
 import '../providers/canvas_providers.dart';
 import 'premium_goal_overview_sheet.dart';
 import 'universal_smart_object_sheet.dart';
+import 'package:getzio_todo_app/core/theme/app_theme.dart';
 
 /// Central Dispatcher: Launches the exact logical sheet based on object type.
 class SmartObjectSheetRouter {
@@ -80,7 +81,7 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A).withValues(alpha: 0.92),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border.all(color: Colors.white12, width: 1.5),
+        border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.12), width: 1.5),
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -100,7 +101,7 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
                       width: 44,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: Colors.white30,
+                        color: context.colors.textPrimary.withValues(alpha: 0.30),
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
@@ -116,9 +117,9 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
                           color: Color(item.colorValue).withValues(alpha: 0.3),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.sticky_note_2_rounded,
-                          color: Colors.white,
+                          color: context.colors.textPrimary,
                           size: 26,
                         ),
                       ),
@@ -127,10 +128,10 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'STICKY NOTE DETAILS',
                               style: TextStyle(
-                                color: Colors.white54,
+                                color: context.colors.textSecondary.withValues(alpha: 0.7),
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.1,
@@ -143,8 +144,8 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
                                   : 'Sticky Note Tasks',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: context.colors.textPrimary,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -168,9 +169,9 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: context.colors.textPrimary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white10),
+                      border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.10)),
                     ),
                     child: Column(
                       children: [
@@ -181,9 +182,9 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.calendar_today_rounded,
-                                    color: Colors.white54,
+                                    color: context.colors.textSecondary.withValues(alpha: 0.7),
                                     size: 14,
                                   ),
                                   const SizedBox(width: 6),
@@ -193,8 +194,8 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
                                           ? 'Due: ${item.countdownDate!.day}/${item.countdownDate!.month}/${item.countdownDate!.year}'
                                           : 'No due date set',
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Colors.white70,
+                                      style: TextStyle(
+                                        color: context.colors.textSecondary,
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -251,10 +252,10 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
                         SliderTheme(
                           data: SliderThemeData(
                             activeTrackColor: const Color(0xFF38BDF8),
-                            inactiveTrackColor: Colors.white.withValues(
+                            inactiveTrackColor: context.colors.textPrimary.withValues(
                               alpha: 0.08,
                             ),
-                            thumbColor: Colors.white,
+                            thumbColor: context.colors.textPrimary,
                             overlayColor: const Color(
                               0xFF38BDF8,
                             ).withValues(alpha: 0.3),
@@ -370,7 +371,7 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A).withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 1.5),
+        border: Border.all(color: context.colors.glassBorder, width: 1.5),
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -390,7 +391,7 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                       width: 44,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: Colors.white30,
+                        color: context.colors.textPrimary.withValues(alpha: 0.30),
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
@@ -405,9 +406,9 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                           color: accentColor,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.check_circle_outline_rounded,
-                          color: Colors.white,
+                          color: context.colors.textPrimary,
                           size: 26,
                         ),
                       ),
@@ -416,10 +417,10 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'DYNAMIC TASK',
                               style: TextStyle(
-                                color: Colors.white54,
+                                color: context.colors.textSecondary.withValues(alpha: 0.7),
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.1,
@@ -430,8 +431,8 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                               title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: context.colors.textPrimary,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -465,9 +466,9 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.03),
+                      color: context.colors.textPrimary.withValues(alpha: 0.03),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                      border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.05)),
                     ),
                     child: Column(
                       children: [
@@ -478,9 +479,9 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.calendar_today_rounded,
-                                    color: Colors.white54,
+                                    color: context.colors.textSecondary.withValues(alpha: 0.7),
                                     size: 14,
                                   ),
                                   const SizedBox(width: 6),
@@ -490,8 +491,8 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                                           ? 'Due: ${currentItem.countdownDate!.day}/${currentItem.countdownDate!.month}/${currentItem.countdownDate!.year}'
                                           : 'No due date set',
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Colors.white70,
+                                      style: TextStyle(
+                                        color: context.colors.textSecondary,
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -516,7 +517,7 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                           child: LinearProgressIndicator(
                             value: currentItem.smartProgress,
                             minHeight: 6,
-                            backgroundColor: Colors.white10,
+                            backgroundColor: context.colors.textPrimary.withValues(alpha: 0.10),
                             valueColor: AlwaysStoppedAnimation<Color>(accentColor),
                           ),
                         ),
@@ -525,10 +526,10 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                   ),
                   const SizedBox(height: 20),
 
-                  const Text(
+                  Text(
                     'SUBTASKS',
                     style: TextStyle(
-                      color: Colors.white54,
+                      color: context.colors.textSecondary.withValues(alpha: 0.7),
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.1,
@@ -542,26 +543,26 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                       Expanded(
                         child: TextField(
                           controller: _subtaskCtrl,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: context.colors.textPrimary,
                             fontSize: 14,
                           ),
                           decoration: InputDecoration(
                             hintText: 'Add subtask (e.g. Design Header)...',
-                            hintStyle: const TextStyle(color: Colors.white30),
+                            hintStyle: TextStyle(color: context.colors.textPrimary.withValues(alpha: 0.30)),
                             filled: true,
-                            fillColor: Colors.white.withValues(alpha: 0.05),
+                            fillColor: context.colors.textPrimary.withValues(alpha: 0.05),
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 12,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+                              borderSide: BorderSide(color: context.colors.textPrimary.withValues(alpha: 0.05)),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+                              borderSide: BorderSide(color: context.colors.textPrimary.withValues(alpha: 0.05)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -578,9 +579,9 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                           padding: const EdgeInsets.all(12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.add_rounded,
-                          color: Colors.white,
+                          color: context.colors.textPrimary,
                         ),
                         onPressed: () => _addSubtask(currentItem),
                       ),
@@ -590,11 +591,11 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
 
                   Expanded(
                     child: subtasks.isEmpty
-                        ? const Center(
+                        ? Center(
                             child: Text(
                               'No subtasks yet',
                               style: TextStyle(
-                                color: Colors.white38,
+                                color: context.colors.textMuted,
                                 fontSize: 13,
                               ),
                             ),
@@ -606,9 +607,9 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.02),
+                                  color: context.colors.textPrimary.withValues(alpha: 0.02),
                                   borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+                                  border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.04)),
                                 ),
                                 child: ListTile(
                                   dense: true,
@@ -632,7 +633,7 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                                   title: Text(
                                     st.title,
                                     style: TextStyle(
-                                      color: st.isCompleted ? Colors.white38 : Colors.white,
+                                      color: st.isCompleted ? context.colors.textMuted : context.colors.textPrimary,
                                       fontSize: 14,
                                       decoration: st.isCompleted ? TextDecoration.lineThrough : null,
                                     ),
@@ -744,7 +745,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
       decoration: BoxDecoration(
         color: const Color(0xFF0A0A0A),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.05)),
       ),
       child: Stack(
         children: [
@@ -782,7 +783,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: context.colors.textPrimary.withValues(alpha: 0.24),
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
@@ -837,7 +838,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                                     overflow: TextOverflow.ellipsis,
                                     style:
                                         AppTypography.titleMedium(
-                                          color: Colors.white,
+                                          color: context.colors.textPrimary,
                                         ).copyWith(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
@@ -847,9 +848,9 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.close,
-                                color: Colors.white54,
+                                color: context.colors.textSecondary.withValues(alpha: 0.7),
                                 size: 18,
                               ),
                               padding: EdgeInsets.zero,
@@ -865,7 +866,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                             '"$description"',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: AppTypography.caption(color: Colors.white54)
+                            style: AppTypography.caption(color: context.colors.textSecondary.withValues(alpha: 0.7))
                                 .copyWith(
                                   fontStyle: FontStyle.italic,
                                   fontSize: 13,
@@ -881,10 +882,10 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                             vertical: 14,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.03),
+                            color: context.colors.textPrimary.withValues(alpha: 0.03),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.05),
+                              color: context.colors.textPrimary.withValues(alpha: 0.05),
                             ),
                           ),
                           child: Column(
@@ -898,7 +899,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                                   Text(
                                     '\$${current.toStringAsFixed(0)} / \$${target.toStringAsFixed(0)}',
                                     style: AppTypography.displayMedium(
-                                      color: Colors.white,
+                                      color: context.colors.textPrimary,
                                     ).copyWith(fontSize: 20),
                                   ),
                                   Text(
@@ -918,7 +919,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                                 height: 7,
                                 width: double.infinity,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.05),
+                                  color: context.colors.textPrimary.withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 alignment: Alignment.centerLeft,
@@ -946,7 +947,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                                 child: Text(
                                   '\$${remaining.toStringAsFixed(0)} to go',
                                   style: AppTypography.caption(
-                                    color: Colors.white38,
+                                    color: context.colors.textMuted,
                                   ).copyWith(fontSize: 11),
                                 ),
                               ),
@@ -997,10 +998,10 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.03),
+                            color: context.colors.textPrimary.withValues(alpha: 0.03),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.05),
+                              color: context.colors.textPrimary.withValues(alpha: 0.05),
                             ),
                           ),
                           child: Row(
@@ -1009,15 +1010,15 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                                 child: TextField(
                                   controller: _addMoneyController,
                                   keyboardType: TextInputType.number,
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: context.colors.textPrimary,
                                     fontSize: 15,
                                   ),
                                   decoration: InputDecoration(
                                     isDense: true,
                                     hintText: 'Enter amount to add (e.g. 50)',
                                     hintStyle: TextStyle(
-                                      color: Colors.white.withValues(
+                                      color: context.colors.textPrimary.withValues(
                                         alpha: 0.3,
                                       ),
                                       fontSize: 14,
@@ -1075,7 +1076,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                                       content: Text(
                                         'Added \$${value.toStringAsFixed(0)} to your goal!',
                                       ),
-                                      backgroundColor: const Color(0xFF1E293B),
+                                      backgroundColor: context.colors.bg2,
                                     ),
                                   );
                                 },
@@ -1092,10 +1093,10 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.02),
+                            color: context.colors.textPrimary.withValues(alpha: 0.02),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.05),
+                              color: context.colors.textPrimary.withValues(alpha: 0.05),
                             ),
                           ),
                           child: Row(
@@ -1152,7 +1153,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                                             overflow: TextOverflow.ellipsis,
                                             style:
                                                 AppTypography.caption(
-                                                  color: Colors.white70,
+                                                  color: context.colors.textSecondary,
                                                 ).copyWith(
                                                   fontSize: 9,
                                                   height: 1.3,
@@ -1172,7 +1173,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: Colors.white.withValues(
+                                      color: context.colors.textPrimary.withValues(
                                         alpha: 0.05,
                                       ),
                                     ),
@@ -1232,7 +1233,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                                                 'Visualize Success',
                                                 style:
                                                     AppTypography.caption(
-                                                      color: Colors.white,
+                                                      color: context.colors.textPrimary,
                                                     ).copyWith(
                                                       fontSize: 8.5,
                                                       fontWeight: FontWeight.bold,
@@ -1242,7 +1243,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                                               Text(
                                                 'Stay focused on your why.',
                                                 style: AppTypography.caption(
-                                                  color: Colors.white70,
+                                                  color: context.colors.textSecondary,
                                                 ).copyWith(fontSize: 7),
                                               ),
                                             ],
@@ -1273,9 +1274,9 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: context.colors.textPrimary.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1288,7 +1289,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                 child: Text(
                   title,
                   style: AppTypography.caption(
-                    color: Colors.white38,
+                    color: context.colors.textMuted,
                   ).copyWith(fontSize: 9),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1300,7 +1301,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
           Text(
             value,
             style: AppTypography.caption(
-              color: Colors.white,
+              color: context.colors.textPrimary,
             ).copyWith(fontSize: 12, fontWeight: FontWeight.bold),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1373,30 +1374,30 @@ class CountdownSmartSheet extends ConsumerWidget {
                     width: 44,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: Colors.white30,
+                      color: context.colors.textPrimary.withValues(alpha: 0.30),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  const Icon(
+                  Icon(
                     Icons.timer_rounded,
-                    color: Colors.white,
+                    color: context.colors.textPrimary,
                     size: 48,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     '$remainingDays',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
                       fontSize: 56,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Text(
+                  Text(
                     'DAYS REMAINING UNTIL EVENT',
                     style: TextStyle(
-                      color: Colors.white70,
+                      color: context.colors.textSecondary,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.5,
@@ -1406,8 +1407,8 @@ class CountdownSmartSheet extends ConsumerWidget {
                   Text(
                     title,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1471,7 +1472,7 @@ class QuoteSmartSheet extends ConsumerWidget {
                     width: 44,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: Colors.white30,
+                      color: context.colors.textPrimary.withValues(alpha: 0.30),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -1486,8 +1487,8 @@ class QuoteSmartSheet extends ConsumerWidget {
                   Text(
                     '"${currentItem.content}"',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
                       fontSize: 20,
                       fontStyle: FontStyle.italic,
                       height: 1.4,
@@ -1547,25 +1548,25 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
           backgroundColor: const Color(0xFF0F172A).withValues(alpha: 0.95),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+            side: BorderSide(color: context.colors.glassBorder, width: 1.5),
           ),
-          title: const Text(
+          title: Text(
             'Edit Polaroid Caption',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+            style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
           ),
           content: TextField(
             controller: controller,
             maxLength: 32,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: context.colors.textPrimary),
             decoration: InputDecoration(
               hintText: 'Enter caption...',
-              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+              hintStyle: TextStyle(color: context.colors.textPrimary.withValues(alpha: 0.3)),
               filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.05),
-              counterStyle: const TextStyle(color: Colors.white30),
+              fillColor: context.colors.textPrimary.withValues(alpha: 0.05),
+              counterStyle: TextStyle(color: context.colors.textPrimary.withValues(alpha: 0.30)),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                borderSide: BorderSide(color: context.colors.glassBorder),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -1576,7 +1577,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+              child: Text('Cancel', style: TextStyle(color: context.colors.textSecondary.withValues(alpha: 0.7))),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1589,9 +1590,9 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                 );
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content: Text('Caption updated successfully!'),
-                    backgroundColor: Color(0xFF1E293B),
+                    backgroundColor: context.colors.bg2,
                   ),
                 );
               },
@@ -1631,7 +1632,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A).withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+        border: Border.all(color: context.colors.glassBorder, width: 1.5),
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -1651,7 +1652,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                       width: 44,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: Colors.white30,
+                        color: context.colors.textPrimary.withValues(alpha: 0.30),
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
@@ -1719,7 +1720,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                                     caption.isNotEmpty ? caption : 'Smart Image Goal',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: AppTypography.titleMedium(color: Colors.white).copyWith(
+                                    style: AppTypography.titleMedium(color: context.colors.textPrimary).copyWith(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -1743,7 +1744,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                             const SizedBox(height: 2),
                             Text(
                               'Turning vision into reality, every day.',
-                              style: AppTypography.caption(color: Colors.white54).copyWith(fontSize: 11),
+                              style: AppTypography.caption(color: context.colors.textSecondary.withValues(alpha: 0.7)).copyWith(fontSize: 11),
                             ),
                           ],
                         ),
@@ -1759,7 +1760,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                             child: CircularProgressIndicator(
                               value: currentProgressVal / 100.0,
                               strokeWidth: 4.5,
-                              backgroundColor: Colors.white.withValues(alpha: 0.05),
+                              backgroundColor: context.colors.textPrimary.withValues(alpha: 0.05),
                               color: const Color(0xFF10B981),
                             ),
                           ),
@@ -1781,9 +1782,9 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.03),
+                      color: context.colors.textPrimary.withValues(alpha: 0.03),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                      border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.05)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1793,9 +1794,9 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                           children: [
                             Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.calendar_today_rounded,
-                                  color: Colors.white54,
+                                  color: context.colors.textSecondary.withValues(alpha: 0.7),
                                   size: 14,
                                 ),
                                 const SizedBox(width: 6),
@@ -1803,7 +1804,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                                   item.countdownDate != null
                                       ? 'Due: ${item.countdownDate!.day}/${item.countdownDate!.month}/${item.countdownDate!.year}'
                                       : 'No due date set',
-                                  style: AppTypography.caption(color: Colors.white70).copyWith(fontSize: 11),
+                                  style: AppTypography.caption(color: context.colors.textSecondary).copyWith(fontSize: 11),
                                 ),
                               ],
                             ),
@@ -1824,8 +1825,8 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                               child: SliderTheme(
                                 data: SliderThemeData(
                                   activeTrackColor: const Color(0xFF10B981),
-                                  inactiveTrackColor: Colors.white.withValues(alpha: 0.06),
-                                  thumbColor: Colors.white,
+                                  inactiveTrackColor: context.colors.textPrimary.withValues(alpha: 0.06),
+                                  thumbColor: context.colors.textPrimary,
                                   overlayColor: const Color(0xFF10B981).withValues(alpha: 0.2),
                                   trackHeight: 4.0,
                                   thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7.0),
@@ -1871,9 +1872,9 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                                   _draggedProgress = null;
                                 });
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                     content: Text('Progress updated successfully!'),
-                                    backgroundColor: Color(0xFF1E293B),
+                                    backgroundColor: context.colors.bg2,
                                   ),
                                 );
                               },
@@ -1890,10 +1891,10 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                   const SizedBox(height: 24),
 
                   // Milestones Header
-                  const Text(
+                  Text(
                     'MILESTONES',
                     style: TextStyle(
-                      color: Colors.white24,
+                      color: context.colors.textPrimary.withValues(alpha: 0.24),
                       fontSize: 8,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
@@ -1906,11 +1907,11 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildMilestoneNode(Icons.flag_outlined, '25%', 'Getting Started', progressPercent >= 25),
-                      const Icon(Icons.chevron_right_rounded, color: Colors.white10, size: 16),
+                      Icon(Icons.chevron_right_rounded, color: context.colors.textPrimary.withValues(alpha: 0.10), size: 16),
                       _buildMilestoneNode(Icons.trending_up_rounded, '50%', 'On Track', progressPercent >= 50),
-                      const Icon(Icons.chevron_right_rounded, color: Colors.white10, size: 16),
+                      Icon(Icons.chevron_right_rounded, color: context.colors.textPrimary.withValues(alpha: 0.10), size: 16),
                       _buildMilestoneNode(Icons.emoji_events_outlined, '75%', 'Almost There', progressPercent >= 75),
-                      const Icon(Icons.chevron_right_rounded, color: Colors.white10, size: 16),
+                      Icon(Icons.chevron_right_rounded, color: context.colors.textPrimary.withValues(alpha: 0.10), size: 16),
                       _buildMilestoneNode(Icons.rocket_launch_outlined, '100%', 'Goal Achieved', progressPercent >= 100),
                     ],
                   ),
@@ -1920,9 +1921,9 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                   Container(
                     height: 95,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.02),
+                      color: context.colors.textPrimary.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                      border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.05)),
                     ),
                     child: Stack(
                       children: [
@@ -1966,7 +1967,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                             alignment: Alignment.centerLeft,
                             child: Text(
                               'Discipline today shapes\nthe freedom of tomorrow.',
-                              style: AppTypography.caption(color: Colors.white70).copyWith(
+                              style: AppTypography.caption(color: context.colors.textSecondary).copyWith(
                                 fontSize: 10,
                                 height: 1.3,
                                 fontStyle: FontStyle.italic,
@@ -2000,10 +2001,10 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
           width: 62,
           height: 52,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.02),
+            color: context.colors.textPrimary.withValues(alpha: 0.02),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isReached ? activeColor.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.05),
+              color: isReached ? activeColor.withValues(alpha: 0.4) : context.colors.textPrimary.withValues(alpha: 0.05),
               width: 1.2,
             ),
           ),
@@ -2012,14 +2013,14 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
             children: [
               Icon(
                 icon,
-                color: isReached ? activeColor : Colors.white24,
+                color: isReached ? activeColor : context.colors.textPrimary.withValues(alpha: 0.24),
                 size: 14,
               ),
               const SizedBox(height: 2),
               Text(
                 percentage,
                 style: TextStyle(
-                  color: isReached ? Colors.white : Colors.white30,
+                  color: isReached ? context.colors.textPrimary : context.colors.textPrimary.withValues(alpha: 0.30),
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
                 ),
@@ -2028,7 +2029,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
                 label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isReached ? Colors.white54 : Colors.white30,
+                  color: isReached ? context.colors.textSecondary.withValues(alpha: 0.7) : context.colors.textPrimary.withValues(alpha: 0.30),
                   fontSize: 7,
                 ),
               ),
@@ -2044,13 +2045,13 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
               color: isReached ? activeColor : const Color(0xFF0F172A),
               shape: BoxShape.circle,
               border: Border.all(
-                color: isReached ? Colors.transparent : Colors.white12,
+                color: isReached ? Colors.transparent : context.colors.textPrimary.withValues(alpha: 0.12),
                 width: 0.8,
               ),
             ),
             child: Icon(
               isReached ? Icons.check : Icons.lock_outline,
-              color: isReached ? Colors.black : Colors.white30,
+              color: isReached ? Colors.black : context.colors.textPrimary.withValues(alpha: 0.30),
               size: 8,
             ),
           ),

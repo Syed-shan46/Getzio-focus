@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../onboarding/domain/models/onboarding_models.dart';
 import '../providers/os_providers.dart';
+import 'package:getzio_todo_app/core/theme/app_theme.dart';
 
 class _CategoryTab {
   final String label;
@@ -32,8 +33,8 @@ class TodaysChecklist extends ConsumerStatefulWidget {
 class _TodaysChecklistState extends ConsumerState<TodaysChecklist> {
   int _selectedTabIndex = 0;
 
-  static const _tabs = [
-    _CategoryTab(label: 'All', icon: Icons.explore_rounded, color: Colors.white),
+  List<_CategoryTab> get _tabs => [
+    _CategoryTab(label: 'All', icon: Icons.explore_rounded, color: context.colors.textPrimary),
     _CategoryTab(label: 'Morning', category: 'Morning', icon: Icons.wb_sunny_rounded, color: Color(0xFFFFA726)),
     _CategoryTab(label: 'Health', category: 'Health', icon: Icons.favorite_rounded, color: Color(0xFFEF5350)),
     _CategoryTab(label: 'Growth', category: 'Personal Development', icon: Icons.auto_stories_rounded, color: AppColors.accentBlue),
@@ -73,7 +74,7 @@ class _TodaysChecklistState extends ConsumerState<TodaysChecklist> {
                 Expanded(
                   child: Text(
                     "Today's Checklist",
-                    style: AppTypography.titleMedium(color: Colors.white).copyWith(fontSize: 20),
+                    style: AppTypography.titleMedium(color: context.colors.textPrimary).copyWith(fontSize: 20),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -163,26 +164,26 @@ class _TodaysChecklistState extends ConsumerState<TodaysChecklist> {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? tab.color.withValues(alpha: 0.15)
-                        : Colors.white.withValues(alpha: 0.03),
+                        : context.colors.textPrimary.withValues(alpha: 0.03),
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
                       color: isSelected
                           ? tab.color.withValues(alpha: 0.4)
-                          : Colors.white.withValues(alpha: 0.06),
+                          : context.colors.textPrimary.withValues(alpha: 0.06),
                       width: isSelected ? 1.2 : 1,
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(tab.icon, size: 15, color: isSelected ? tab.color : Colors.white38),
+                      Icon(tab.icon, size: 15, color: isSelected ? tab.color : context.colors.textMuted),
                       const SizedBox(width: 6),
                       Text(
                         tab.label,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color: isSelected ? tab.color : Colors.white54,
+                          color: isSelected ? tab.color : context.colors.textSecondary.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -202,20 +203,20 @@ class _TodaysChecklistState extends ConsumerState<TodaysChecklist> {
               children: [
                 Icon(
                   _tabs[_selectedTabIndex].icon,
-                  color: Colors.white30,
+                  color: context.colors.textPrimary.withValues(alpha: 0.30),
                   size: 36,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   activeCategory == null ? 'No habits selected' : 'No $activeCategory habits',
-                  style: AppTypography.titleMedium(color: Colors.white70).copyWith(fontSize: 15),
+                  style: AppTypography.titleMedium(color: context.colors.textSecondary).copyWith(fontSize: 15),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   activeCategory == null
                       ? 'Tap "Edit" above to configure your schedule.'
                       : 'Select some $activeCategory habits to see them here.',
-                  style: AppTypography.caption(color: Colors.white30),
+                  style: AppTypography.caption(color: context.colors.textPrimary.withValues(alpha: 0.30)),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -367,12 +368,12 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> with TickerPr
               decoration: BoxDecoration(
                 color: isCompleted
                     ? catColor.withValues(alpha: 0.06)
-                    : Colors.white.withValues(alpha: 0.03),
+                    : context.colors.textPrimary.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isCompleted
                       ? catColor.withValues(alpha: 0.25)
-                      : Colors.white.withValues(alpha: 0.06),
+                      : context.colors.textPrimary.withValues(alpha: 0.06),
                   width: isCompleted ? 1.2 : 1,
                 ),
               ),
@@ -386,12 +387,12 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> with TickerPr
                     decoration: BoxDecoration(
                       color: isCompleted
                           ? catColor.withValues(alpha: 0.15)
-                          : Colors.white.withValues(alpha: 0.04),
+                          : context.colors.textPrimary.withValues(alpha: 0.04),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       _categoryIcon(),
-                      color: isCompleted ? catColor : Colors.white38,
+                      color: isCompleted ? catColor : context.colors.textMuted,
                       size: 20,
                     ),
                   ),
@@ -408,7 +409,7 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> with TickerPr
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodyMedium(
-                            color: isCompleted ? Colors.white54 : Colors.white,
+                            color: isCompleted ? context.colors.textSecondary.withValues(alpha: 0.7) : context.colors.textPrimary,
                           ).copyWith(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -435,7 +436,7 @@ class _ChecklistItemWidgetState extends State<ChecklistItemWidget> with TickerPr
                       shape: BoxShape.circle,
                       color: isCompleted ? catColor : Colors.transparent,
                       border: Border.all(
-                        color: isCompleted ? catColor : Colors.white24,
+                        color: isCompleted ? catColor : context.colors.textPrimary.withValues(alpha: 0.24),
                         width: 2,
                       ),
                     ),
@@ -640,7 +641,7 @@ class _EditHabitsBottomSheetState extends ConsumerState<EditHabitsBottomSheet> {
         decoration: BoxDecoration(
           color: const Color(0xFF0F172A).withValues(alpha: 0.95),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+          border: Border.all(color: context.colors.glassBorder, width: 1.5),
         ),
         child: Column(
           children: [
@@ -651,7 +652,7 @@ class _EditHabitsBottomSheetState extends ConsumerState<EditHabitsBottomSheet> {
                 width: 48,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: context.colors.textPrimary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -669,12 +670,12 @@ class _EditHabitsBottomSheetState extends ConsumerState<EditHabitsBottomSheet> {
                       children: [
                         Text(
                           'Edit Habits',
-                          style: AppTypography.displayMedium(color: Colors.white).copyWith(fontSize: 24, fontWeight: FontWeight.bold),
+                          style: AppTypography.displayMedium(color: context.colors.textPrimary).copyWith(fontSize: 24, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           'Select/deselect the habits you want to track.',
-                          style: AppTypography.caption(color: Colors.white54),
+                          style: AppTypography.caption(color: context.colors.textSecondary.withValues(alpha: 0.7)),
                         ),
                       ],
                     ),
@@ -684,7 +685,7 @@ class _EditHabitsBottomSheetState extends ConsumerState<EditHabitsBottomSheet> {
                     height: 40,
                     child: IconButton(
                       padding: EdgeInsets.zero,
-                      icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 24),
+                      icon: Icon(Icons.close_rounded, color: context.colors.textSecondary.withValues(alpha: 0.7), size: 24),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
@@ -692,7 +693,7 @@ class _EditHabitsBottomSheetState extends ConsumerState<EditHabitsBottomSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            const Divider(color: Colors.white12, height: 1),
+            Divider(color: context.colors.textPrimary.withValues(alpha: 0.12), height: 1),
 
             // Predefined Categories List
             Expanded(
@@ -725,17 +726,17 @@ class _EditHabitsBottomSheetState extends ConsumerState<EditHabitsBottomSheet> {
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                             decoration: BoxDecoration(
-                              color: isSelected ? AppColors.accentBlue.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.02),
+                              color: isSelected ? AppColors.accentBlue.withValues(alpha: 0.1) : context.colors.textPrimary.withValues(alpha: 0.02),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: isSelected ? AppColors.accentBlue.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.05),
+                                color: isSelected ? AppColors.accentBlue.withValues(alpha: 0.5) : context.colors.textPrimary.withValues(alpha: 0.05),
                               ),
                             ),
                             child: Row(
                               children: [
                                 Icon(
                                   isSelected ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
-                                  color: isSelected ? AppColors.accentBlue : Colors.white30,
+                                  color: isSelected ? AppColors.accentBlue : context.colors.textPrimary.withValues(alpha: 0.30),
                                   size: 22,
                                 ),
                                 const SizedBox(width: 16),
@@ -743,7 +744,7 @@ class _EditHabitsBottomSheetState extends ConsumerState<EditHabitsBottomSheet> {
                                   child: Text(
                                     habit.title,
                                     style: AppTypography.bodyLarge(
-                                      color: isSelected ? Colors.white : Colors.white70,
+                                      color: isSelected ? context.colors.textPrimary : context.colors.textSecondary,
                                     ),
                                   ),
                                 ),
@@ -768,8 +769,8 @@ class _EditHabitsBottomSheetState extends ConsumerState<EditHabitsBottomSheet> {
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white70,
-                        side: const BorderSide(color: Colors.white24),
+                        foregroundColor: context.colors.textSecondary,
+                        side: BorderSide(color: context.colors.textPrimary.withValues(alpha: 0.24)),
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),

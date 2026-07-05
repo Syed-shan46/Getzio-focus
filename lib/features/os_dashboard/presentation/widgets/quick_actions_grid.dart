@@ -31,7 +31,7 @@ class QuickActionsGrid extends ConsumerWidget {
                 context,
                 icon: Icons.auto_awesome_rounded,
                 label: 'Vision Room',
-                color: AppColors.accentBlue,
+                color: context.colors.accentBlue,
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const VisionRoomScreen()));
                 },
@@ -47,7 +47,7 @@ class QuickActionsGrid extends ConsumerWidget {
                 context,
                 icon: Icons.check_circle_outline_rounded,
                 label: 'Add Habit',
-                color: AppColors.accentEmerald,
+                color: context.colors.accentEmerald,
                 onTap: () {},
               ),
               _buildActionCard(

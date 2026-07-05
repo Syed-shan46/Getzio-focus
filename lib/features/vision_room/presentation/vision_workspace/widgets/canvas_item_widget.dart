@@ -219,7 +219,7 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
         : Offset(0, 8 * cardCfg.shadowIntensity);
 
     final Border? selectionBorder = widget.isSelected
-        ? Border.all(color: AppColors.accentBlue, width: 3)
+        ? Border.all(color: context.colors.accentBlue, width: 3)
         : null;
 
     final double cr = cardCfg.cornerRadius;

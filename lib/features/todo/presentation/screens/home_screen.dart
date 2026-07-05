@@ -13,6 +13,8 @@ import '../widgets/floor_glass_panel.dart';
 import '../widgets/empty_state.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/domain/models/auth_user_model.dart';
+import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
+import '../../../../shared/providers/app_providers.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -57,25 +59,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF071423),
+          backgroundColor: context.colors.bg2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.sm),
-            side: const BorderSide(color: AppColors.glassBorder, width: 0.5),
+            side: BorderSide(color: context.colors.glassBorder, width: 0.5),
           ),
           title: Text(
             'Delete Account',
-            style: AppTypography.titleLarge(color: AppColors.error),
+            style: AppTypography.titleLarge(color: context.colors.error),
           ),
           content: Text(
             'Are you sure you want to permanently delete your account and all associated tasks? This action is immediate and cannot be undone.',
-            style: AppTypography.bodyMedium(color: AppColors.textPrimary),
+            style: AppTypography.bodyMedium(color: context.colors.textPrimary),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'Cancel',
-                style: AppTypography.bodyMedium(color: AppColors.textSecondary),
+                style: AppTypography.bodyMedium(color: context.colors.textSecondary),
               ),
             ),
             TextButton(
@@ -92,7 +94,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           'Your account has been deleted.',
                           style: AppTypography.bodyMedium(color: Colors.white),
                         ),
-                        backgroundColor: AppColors.error,
+                        backgroundColor: context.colors.error,
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
@@ -105,7 +107,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           'Failed to delete account: ${e.toString().replaceFirst('Exception: ', '')}',
                           style: AppTypography.bodyMedium(color: Colors.white),
                         ),
-                        backgroundColor: AppColors.error,
+                        backgroundColor: context.colors.error,
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
@@ -114,7 +116,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               },
               child: Text(
                 'Delete',
-                style: AppTypography.bodyMedium(color: AppColors.error).copyWith(fontWeight: FontWeight.w600),
+                style: AppTypography.bodyMedium(color: context.colors.error).copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -125,6 +127,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _showAddTask() {
     HapticFeedback.mediumImpact();
+    
+    final hasToken = ref.read(hiveDatabaseProvider).getAuthToken() != null;
+    if (!hasToken) {
+      PremiumAuthSheet.show(
+        context,
+        customTitle: 'Create & Manage Tasks',
+        customDescription: 'Sign in to create tasks, set reminders, and sync your progress across all your devices.',
+      );
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -159,11 +172,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Container(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
-                  color: const Color.fromRGBO(15, 20, 35, 0.98),
+                  color: context.colors.bg2,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(AppRadius.xl),
                   ),
-                  border: Border.all(color: AppColors.glassBorder, width: 0.5),
+                  border: Border.all(color: context.colors.glassBorder, width: 0.5),
                 ),
                 child: SafeArea(
                   child: Column(
@@ -177,19 +190,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           height: 4,
                           margin: const EdgeInsets.only(bottom: 24),
                           decoration: BoxDecoration(
-                            color: AppColors.glassBorder,
+                            color: context.colors.glassBorder,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
                       ),
-                      Text('Profile Settings', style: AppTypography.titleLarge()),
+                      Text('Profile Settings', style: AppTypography.titleLarge(color: context.colors.textPrimary)),
                       const SizedBox(height: AppSpacing.md),
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: const Color.fromRGBO(255, 255, 255, 0.04),
+                          color: context.colors.glass,
                           borderRadius: BorderRadius.circular(AppRadius.sm),
-                          border: Border.all(color: AppColors.glassBorder, width: 0.5),
+                          border: Border.all(color: context.colors.glassBorder, width: 0.5),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -197,32 +210,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Mobile', style: AppTypography.bodyMedium(color: AppColors.textSecondary)),
-                                Text(user.mobile, style: AppTypography.bodyLarge()),
+                                Text('Mobile', style: AppTypography.bodyMedium(color: context.colors.textSecondary)),
+                                Text(user.mobile, style: AppTypography.bodyLarge(color: context.colors.textPrimary)),
                               ],
                             ),
                             const SizedBox(height: AppSpacing.lg),
                             Text(
                               'NAME',
                               style: AppTypography.captionSmall(
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                               ).copyWith(letterSpacing: 1.2),
                             ),
                             const SizedBox(height: AppSpacing.xs),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color.fromRGBO(0, 0, 0, 0.2),
+                                color: context.colors.glassBorder,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: AppColors.glassBorder, width: 0.5),
+                                border: Border.all(color: context.colors.glassBorder, width: 0.5),
                               ),
                               child: TextField(
                                 controller: nameController,
                                 style: AppTypography.bodyLarge(),
-                                cursorColor: AppColors.accentBlue,
-                                decoration: const InputDecoration(
+                                cursorColor: context.colors.accentBlue,
+                                decoration: InputDecoration(
                                   hintText: 'Enter your name',
-                                  hintStyle: TextStyle(color: AppColors.textMuted),
+                                  hintStyle: TextStyle(color: context.colors.textMuted),
                                   border: InputBorder.none,
                                   isDense: true,
                                   contentPadding: EdgeInsets.symmetric(vertical: 8),
@@ -238,7 +251,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Text(
                           error!,
                           textAlign: TextAlign.center,
-                          style: AppTypography.caption(color: AppColors.error),
+                          style: AppTypography.caption(color: context.colors.error),
                         ),
                       ],
                       const SizedBox(height: AppSpacing.xl),
@@ -259,10 +272,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: Container(
                                 height: 50,
                                 decoration: BoxDecoration(
-                                  color: AppColors.glass,
+                                  color: context.colors.glass,
                                   borderRadius: BorderRadius.circular(AppRadius.sm),
                                   border: Border.all(
-                                    color: AppColors.glassBorder,
+                                    color: context.colors.glassBorder,
                                     width: 0.5,
                                   ),
                                 ),
@@ -270,7 +283,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   child: Text(
                                     'Log Out',
                                     style: AppTypography.bodyMedium(
-                                      color: AppColors.error,
+                                      color: context.colors.error,
                                     ).copyWith(fontWeight: FontWeight.w600),
                                   ),
                                 ),
@@ -311,7 +324,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                                 'Profile updated successfully!',
                                                 style: AppTypography.bodyMedium(color: Colors.white),
                                               ),
-                                              backgroundColor: AppColors.accentEmerald,
+                                              backgroundColor: context.colors.accentEmerald,
                                               behavior: SnackBarBehavior.floating,
                                             ),
                                           );
@@ -327,11 +340,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 duration: const Duration(milliseconds: 200),
                                 height: 50,
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentBlue,
+                                  color: context.colors.accentBlue,
                                   borderRadius: BorderRadius.circular(AppRadius.sm),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.accentBlue.withValues(alpha: 0.3),
+                                      color: context.colors.accentBlue.withValues(alpha: 0.3),
                                       blurRadius: 16,
                                       offset: const Offset(0, 4),
                                     ),
@@ -371,7 +384,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: Text(
                             'Delete Account',
                             style: AppTypography.caption(
-                              color: AppColors.error.withValues(alpha: 0.8),
+                              color: context.colors.error.withValues(alpha: 0.8),
                             ).copyWith(
                               decoration: TextDecoration.underline,
                               fontWeight: FontWeight.w600,
@@ -403,9 +416,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: WallpaperBackground(
         child: SafeArea(
           child: todosAsync.when(
-            loading: () => const Center(
+            loading: () => Center(
               child: CircularProgressIndicator(
-                color: AppColors.accentBlue,
+                color: context.colors.accentBlue,
                 strokeWidth: 2,
               ),
             ),
@@ -426,7 +439,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildContent(List<TodoModel> todos, TodoStats stats, DateTime now, AuthUserModel? user) {
     return RefreshIndicator(
       onRefresh: () => ref.read(todosProvider.notifier).refresh(),
-      color: AppColors.accentBlue,
+      color: context.colors.accentBlue,
       backgroundColor: const Color.fromRGBO(15, 20, 35, 0.9),
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(
@@ -467,7 +480,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 AppSpacing.lg,
                 AppSpacing.md,
               ),
-              child: Text("Today's Tasks", style: AppTypography.titleLarge()),
+              child: Text("Today's Targets", style: AppTypography.titleLarge()),
             ),
           ),
 
@@ -532,8 +545,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       onTap: () => _showProfileBottomSheet(user),
                       child: Container(
                         padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: AppColors.glass,
+                        decoration: BoxDecoration(
+                          color: context.colors.glass,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(

@@ -8,6 +8,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../providers/os_providers.dart';
 import '../../../onboarding/domain/models/onboarding_models.dart';
+import 'package:getzio_todo_app/core/theme/app_theme.dart';
 
 class SetupAssistantSheet extends ConsumerStatefulWidget {
   const SetupAssistantSheet({super.key});
@@ -156,9 +157,9 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
       child: Container(
         height: MediaQuery.of(context).size.height * 0.82,
         decoration: BoxDecoration(
-          color: const Color(0xFF070A13).withValues(alpha: 0.95),
+          color: context.colors.bg1.withValues(alpha: 0.95),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 1.5),
+          border: Border.all(color: context.colors.glassBorder, width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -170,7 +171,7 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
                 width: 42,
                 height: 4.5,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: context.colors.textPrimary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -188,7 +189,7 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
                       Text(
                         'Personalize Your Growth',
                         style: GoogleFonts.outfit(
-                          color: Colors.white,
+                          color: context.colors.textPrimary,
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.5,
@@ -197,7 +198,7 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
                       const SizedBox(height: 2),
                       Text(
                         'Step ${_currentStep + 1} of $_totalSteps',
-                        style: const TextStyle(color: AppColors.accentBlue, fontSize: 13, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: AppColors.accentBlue, fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -209,7 +210,7 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
                     child: Text(
                       'Skip',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: context.colors.textPrimary.withValues(alpha: 0.4),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -218,7 +219,7 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            const Divider(color: Colors.white10, height: 1),
+            Divider(color: context.colors.textPrimary.withValues(alpha: 0.10), height: 1),
 
             // Body
             Expanded(
@@ -246,10 +247,10 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
-                            side: const BorderSide(color: Colors.white10),
+                            side: BorderSide(color: context.colors.textPrimary.withValues(alpha: 0.10)),
                           ),
                         ),
-                        child: const Text('Back', style: TextStyle(color: Colors.white70)),
+                        child: Text('Back', style: TextStyle(color: context.colors.textSecondary)),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -288,17 +289,17 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
       children: [
         Text(
           'Select your daily habits'.toUpperCase(),
-          style: const TextStyle(
-            color: Colors.white30,
+          style: TextStyle(
+            color: context.colors.textPrimary.withValues(alpha: 0.30),
             fontSize: 11,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
+        Text(
           'Choose which habits you want to track daily. These populate your checklist.',
-          style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.4),
+          style: TextStyle(color: context.colors.textSecondary, fontSize: 13, height: 1.4),
         ),
         const SizedBox(height: 20),
         Wrap(
@@ -322,10 +323,10 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
                 decoration: BoxDecoration(
                   color: isSelected 
                       ? AppColors.accentBlue.withValues(alpha: 0.1)
-                      : Colors.white.withValues(alpha: 0.02),
+                      : context.colors.textPrimary.withValues(alpha: 0.02),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isSelected ? AppColors.accentBlue : Colors.white12,
+                    color: isSelected ? AppColors.accentBlue : context.colors.textPrimary.withValues(alpha: 0.12),
                     width: 1.2,
                   ),
                 ),
@@ -335,7 +336,7 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
                     Text(
                       isSelected ? '✓' : '+',
                       style: TextStyle(
-                        color: isSelected ? AppColors.accentBlue : Colors.white60,
+                        color: isSelected ? AppColors.accentBlue : context.colors.textSecondary,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -344,7 +345,7 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
                     Text(
                       habit.title,
                       style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.white70,
+                        color: isSelected ? context.colors.textPrimary : context.colors.textSecondary,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         fontSize: 13,
                       ),
@@ -367,17 +368,17 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
       children: [
         Text(
           'What are your main goals?'.toUpperCase(),
-          style: const TextStyle(
-            color: Colors.white30,
+          style: TextStyle(
+            color: context.colors.textPrimary.withValues(alpha: 0.30),
             fontSize: 11,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
+        Text(
           'Type a primary goal you want to achieve over the next month.',
-          style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.4),
+          style: TextStyle(color: context.colors.textSecondary, fontSize: 13, height: 1.4),
         ),
         const SizedBox(height: 20),
         Row(
@@ -385,19 +386,19 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
             Expanded(
               child: TextField(
                 controller: _goalController,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: context.colors.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'e.g., Build my portfolio website',
-                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                  hintStyle: TextStyle(color: context.colors.textPrimary.withValues(alpha: 0.3)),
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.04),
+                  fillColor: context.colors.textPrimary.withValues(alpha: 0.04),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Colors.white12),
+                    borderSide: BorderSide(color: context.colors.textPrimary.withValues(alpha: 0.12)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: AppColors.accentBlue),
+                    borderSide: BorderSide(color: AppColors.accentBlue),
                   ),
                 ),
                 onSubmitted: (_) => _addGoal(),
@@ -418,7 +419,7 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
             child: Text(
               'No goals added yet.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 13),
+              style: TextStyle(color: context.colors.textPrimary.withValues(alpha: 0.3), fontSize: 13),
             ),
           )
         else
@@ -427,9 +428,9 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.02),
+                color: context.colors.textPrimary.withValues(alpha: 0.02),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.05)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -437,7 +438,7 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
                   Expanded(
                     child: Text(
                       goal,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13.5),
+                      style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13.5),
                     ),
                   ),
                   GestureDetector(
@@ -476,8 +477,8 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
       children: [
         Text(
           'Lifestyle & Habits Targets'.toUpperCase(),
-          style: const TextStyle(
-            color: Colors.white30,
+          style: TextStyle(
+            color: context.colors.textPrimary.withValues(alpha: 0.30),
             fontSize: 11,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
@@ -555,15 +556,15 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
       children: [
         Text(
           title,
-          style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
+          style: TextStyle(color: context.colors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: context.colors.textPrimary.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.12)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
@@ -572,7 +573,7 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
               items: items.map((val) {
                 return DropdownMenuItem<String>(
                   value: val,
-                  child: Text(val, style: const TextStyle(color: Colors.white)),
+                  child: Text(val, style: TextStyle(color: context.colors.textPrimary)),
                 );
               }).toList(),
               onChanged: onChanged,
@@ -602,11 +603,11 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
           children: [
             Text(
               title,
-              style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold),
             ),
             Text(
               valueStr,
-              style: const TextStyle(color: AppColors.accentBlue, fontSize: 13, fontWeight: FontWeight.bold),
+              style: TextStyle(color: AppColors.accentBlue, fontSize: 13, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -616,7 +617,7 @@ class _SetupAssistantSheetState extends ConsumerState<SetupAssistantSheet> {
           max: max,
           divisions: divisions,
           activeColor: AppColors.accentBlue,
-          inactiveColor: Colors.white10,
+          inactiveColor: context.colors.textPrimary.withValues(alpha: 0.10),
           onChanged: (val) {
             HapticFeedback.selectionClick();
             onChanged(val);

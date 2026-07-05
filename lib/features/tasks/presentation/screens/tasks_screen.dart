@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../shared/widgets/preview_mode_banner.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../providers/tasks_provider.dart';
 import '../widgets/task_bottom_sheet.dart';
 import '../widgets/task_card.dart';
 import '../../domain/models/task_model.dart';
+import 'package:getzio_todo_app/core/theme/app_theme.dart';
+import '../../../../shared/providers/app_providers.dart';
+import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
   const TasksScreen({super.key});
@@ -120,9 +124,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: context.colors.textPrimary.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(
+          color: context.colors.textPrimary.withValues(alpha: 0.05),
+        ),
       ),
       child: Row(
         children: [
@@ -143,14 +149,17 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                 Text(
                   value,
                   style: GoogleFonts.outfit(
-                    color: Colors.white,
+                    color: context.colors.textPrimary,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   label,
-                  style: GoogleFonts.outfit(color: Colors.white54, fontSize: 8),
+                  style: GoogleFonts.outfit(
+                    color: context.colors.textSecondary.withValues(alpha: 0.7),
+                    fontSize: 8,
+                  ),
                 ),
               ],
             ),
@@ -164,9 +173,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: context.colors.textPrimary.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(
+          color: context.colors.textPrimary.withValues(alpha: 0.05),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +208,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                         height: 32,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(
+                            color: context.colors.textPrimary,
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
@@ -205,7 +219,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                       child: Text(
                         '$percent%',
                         style: GoogleFonts.outfit(
-                          color: Colors.white,
+                          color: context.colors.textPrimary,
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),
@@ -222,7 +236,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                     Text(
                       "Today's Progress",
                       style: GoogleFonts.outfit(
-                        color: Colors.white70,
+                        color: context.colors.textSecondary,
                         fontSize: 9,
                       ),
                     ),
@@ -230,7 +244,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                     Text(
                       '$completed / ${total == 0 ? 1 : total}',
                       style: GoogleFonts.outfit(
-                        color: Colors.white,
+                        color: context.colors.textPrimary,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),
@@ -245,7 +259,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             height: 4,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(2),
-              color: Colors.white.withValues(alpha: 0.05),
+              color: context.colors.textPrimary.withValues(alpha: 0.05),
             ),
             child: FractionallySizedBox(
               alignment: Alignment.centerLeft,
@@ -346,7 +360,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                   Text(
                     "TODAY'S FOCUS",
                     style: GoogleFonts.outfit(
-                      color: Colors.white,
+                      color: context.colors.textPrimary,
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
@@ -361,7 +375,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.outfit(
-                color: Colors.white,
+                color: context.colors.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -371,7 +385,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               description,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11),
+              style: GoogleFonts.outfit(
+                color: context.colors.textSecondary,
+                fontSize: 11,
+              ),
             ),
             const SizedBox(height: 10),
             Row(
@@ -388,14 +405,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                     Text(
                       'Remaining',
                       style: GoogleFonts.outfit(
-                        color: Colors.white54,
+                        color: context.colors.textSecondary.withValues(
+                          alpha: 0.7,
+                        ),
                         fontSize: 9,
                       ),
                     ),
                     Text(
                       remaining,
                       style: GoogleFonts.outfit(
-                        color: Colors.white,
+                        color: context.colors.textPrimary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -415,14 +434,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                     Text(
                       'Priority',
                       style: GoogleFonts.outfit(
-                        color: Colors.white54,
+                        color: context.colors.textSecondary.withValues(
+                          alpha: 0.7,
+                        ),
                         fontSize: 9,
                       ),
                     ),
                     Text(
                       priority,
                       style: GoogleFonts.outfit(
-                        color: Colors.white,
+                        color: context.colors.textPrimary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -519,12 +540,12 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? Colors.amber.withValues(alpha: 0.1)
-              : Colors.white.withValues(alpha: 0.03),
+              : context.colors.textPrimary.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
                 ? Colors.amber
-                : Colors.white.withValues(alpha: 0.15),
+                : context.colors.textPrimary.withValues(alpha: 0.15),
             width: 0.5,
           ),
         ),
@@ -532,14 +553,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.amber : Colors.white54,
+              color: isSelected
+                  ? Colors.amber
+                  : context.colors.textSecondary.withValues(alpha: 0.7),
               size: 12,
             ),
             const SizedBox(width: 4),
             Text(
               label,
               style: GoogleFonts.outfit(
-                color: isSelected ? Colors.amber : Colors.white70,
+                color: isSelected ? Colors.amber : context.colors.textSecondary,
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
@@ -550,13 +573,15 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? Colors.amber.withValues(alpha: 0.2)
-                    : Colors.white.withValues(alpha: 0.1),
+                    : context.colors.glassBorder,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 count.toString(),
                 style: GoogleFonts.outfit(
-                  color: isSelected ? Colors.amber : Colors.white70,
+                  color: isSelected
+                      ? Colors.amber
+                      : context.colors.textSecondary,
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
                 ),
@@ -585,15 +610,18 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.assignment_turned_in_outlined,
                 size: 64,
-                color: Colors.white24,
+                color: context.colors.textPrimary.withValues(alpha: 0.24),
               ),
               const SizedBox(height: 16),
               Text(
                 'No tasks here yet',
-                style: GoogleFonts.outfit(color: Colors.white54, fontSize: 18),
+                style: GoogleFonts.outfit(
+                  color: context.colors.textSecondary.withValues(alpha: 0.7),
+                  fontSize: 18,
+                ),
               ),
             ],
           ),
@@ -617,6 +645,17 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               );
             },
             onToggleComplete: (val) {
+              final hasToken =
+                  ref.read(hiveDatabaseProvider).getAuthToken() != null;
+              if (!hasToken) {
+                PremiumAuthSheet.show(
+                  context,
+                  customTitle: 'Manage Your Tasks',
+                  customDescription:
+                      'Sign in to check off tasks, track your progress, and stay focused.',
+                );
+                return;
+              }
               ref
                   .read(tasksProvider.notifier)
                   .updateTask(
@@ -635,7 +674,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF070A13),
+      backgroundColor: context.colors.bg1,
       body: Stack(
         children: [
           RefreshIndicator(
@@ -684,6 +723,17 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             child: GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
+                final hasToken =
+                    ref.read(hiveDatabaseProvider).getAuthToken() != null;
+                if (!hasToken) {
+                  PremiumAuthSheet.show(
+                    context,
+                    customTitle: 'Create & Manage Tasks',
+                    customDescription:
+                        'Sign in to create tasks, set reminders, and sync your progress across all your devices.',
+                  );
+                  return;
+                }
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
@@ -705,12 +755,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.add, color: Colors.white, size: 16),
+                    Icon(
+                      Icons.add,
+                      color: context.colors.textPrimary,
+                      size: 16,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Add Task',
                       style: GoogleFonts.outfit(
-                        color: Colors.white,
+                        color: context.colors.textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
@@ -719,6 +773,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                 ),
               ),
             ),
+          ),
+
+          // PreviewModeBanner at the bottom
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: const PreviewModeBanner(),
           ),
         ],
       ),

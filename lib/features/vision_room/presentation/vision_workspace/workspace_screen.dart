@@ -280,7 +280,7 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accentBlue,
+                    backgroundColor: context.colors.accentBlue,
                   ),
                   onPressed: () {
                     final text = textController.text.trim();
@@ -538,7 +538,7 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accentBlue,
+              backgroundColor: context.colors.accentBlue,
             ),
             onPressed: () {
               final text = controller.text.trim();
@@ -1070,12 +1070,12 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppColors.accentBlue.withValues(alpha: 0.6),
+                color: context.colors.accentBlue.withValues(alpha: 0.6),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.accentBlue.withValues(alpha: 0.25),
+                  color: context.colors.accentBlue.withValues(alpha: 0.25),
                   blurRadius: 12,
                   spreadRadius: 2,
                 ),

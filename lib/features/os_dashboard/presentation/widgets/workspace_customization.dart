@@ -28,8 +28,6 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
 
     // Lists of options
     final woodStyles = ['Walnut', 'Oak', 'Mahogany'];
-    final wallColors = ['Deep Indigo', 'Classic Navy', 'Charcoal', 'Emerald', 'Warm Terracotta'];
-    final plantTypes = ['Bonsai', 'Snake Plant', 'Monstera', 'Peace Lily'];
     final ambientModes = ['Auto', 'Morning', 'Afternoon', 'Evening', 'Night'];
 
     return BackdropFilter(
@@ -107,48 +105,6 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.all(24),
                 children: [
-                  // 1. Wall Theme Color
-                  _buildSectionHeader('Backdrop Wall Color'),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 40,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: wallColors.length,
-                      itemBuilder: (context, idx) {
-                        final val = wallColors[idx];
-                        final isSelected = state.wallColor == val;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 10),
-                          child: ChoiceChip(
-                            label: Text(val),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              if (selected) {
-                                HapticFeedback.selectionClick();
-                                notifier.updateWorkspaceSettings(wallColor: val);
-                              }
-                            },
-                            selectedColor: AppColors.accentBlue.withValues(alpha: 0.25),
-                            backgroundColor: Colors.white.withValues(alpha: 0.03),
-                            labelStyle: TextStyle(
-                              color: isSelected ? AppColors.accentBlue : Colors.white70,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              fontSize: 12.5,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: isSelected ? AppColors.accentBlue : Colors.white12,
-                              ),
-                            ),
-                            showCheckmark: false,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 24),
 
                   // 2. Shelf Wood Type
                   _buildSectionHeader('Wood Plank Craftsmanship'),
@@ -206,65 +162,6 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // 3. Living Plant Type
-                  _buildSectionHeader('Discipline Plant Bonsai'),
-                  const SizedBox(height: 10),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 2.8,
-                    ),
-                    itemCount: plantTypes.length,
-                    itemBuilder: (context, idx) {
-                      final val = plantTypes[idx];
-                      final isSelected = state.plantType == val;
-                      return InkWell(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          notifier.updateWorkspaceSettings(plantType: val);
-                        },
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Colors.white.withValues(alpha: 0.05)
-                                : Colors.white.withValues(alpha: 0.01),
-                            border: Border.all(
-                              color: isSelected ? AppColors.accentEmerald : Colors.white.withValues(alpha: 0.05),
-                              width: 1.2,
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.eco_rounded,
-                                color: isSelected ? AppColors.accentEmerald : Colors.white30,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  val,
-                                  style: TextStyle(
-                                    color: isSelected ? Colors.white : Colors.white70,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
 
                   // 4. Ambient Time Mode
                   _buildSectionHeader('Room Lighting (Ambient)'),
@@ -378,8 +275,8 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                             },
                             child: Text(
                               'Log Out',
-                              style: const TextStyle(
-                                color: AppColors.error,
+                              style: TextStyle(
+                                color: context.colors.error,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

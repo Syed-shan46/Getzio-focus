@@ -198,7 +198,7 @@ class _UniversalSmartObjectSheetState
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 progressRatio == 1.0
                                     ? Colors.greenAccent
-                                    : AppColors.accentBlue,
+                                    : context.colors.accentBlue,
                               ),
                               strokeWidth: 4.5,
                             ),
@@ -229,7 +229,7 @@ class _UniversalSmartObjectSheetState
                     controller: _tabController,
                     isScrollable: true,
                     indicator: BoxDecoration(
-                      color: AppColors.accentBlue,
+                      color: context.colors.accentBlue,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     labelColor: Colors.white,
@@ -309,7 +309,7 @@ class _UniversalSmartObjectSheetState
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.pie_chart_rounded, color: AppColors.accentBlue, size: 16),
+                    Icon(Icons.pie_chart_rounded, color: context.colors.accentBlue, size: 16),
                     const SizedBox(width: 8),
                     const Text(
                       'Show Progress on Card',
@@ -327,7 +327,7 @@ class _UniversalSmartObjectSheetState
                     scale: 0.7,
                     child: Switch(
                       value: meta['showProgress'] as bool? ?? false,
-                      activeTrackColor: AppColors.accentBlue,
+                      activeTrackColor: context.colors.accentBlue,
                       onChanged: (val) {
                         _saveItemDetails(extraMeta: {'showProgress': val});
                         HapticFeedback.lightImpact();
@@ -443,7 +443,7 @@ class _UniversalSmartObjectSheetState
               const SizedBox(width: 10),
               IconButton.filled(
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.accentBlue,
+                  backgroundColor: context.colors.accentBlue,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
@@ -478,7 +478,7 @@ class _UniversalSmartObjectSheetState
                       child: ListTile(
                         leading: Checkbox(
                           value: cItem.isCompleted,
-                          activeColor: AppColors.accentBlue,
+                          activeColor: context.colors.accentBlue,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(4)),
                           onChanged: (val) {
@@ -531,7 +531,7 @@ class _UniversalSmartObjectSheetState
               const SizedBox(width: 10),
               IconButton.filled(
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.accentBlue,
+                  backgroundColor: context.colors.accentBlue,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
@@ -833,7 +833,7 @@ class _UniversalSmartObjectSheetState
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.accentBlue, size: 20),
+            Icon(icon, color: context.colors.accentBlue, size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Column(

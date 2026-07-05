@@ -229,7 +229,7 @@ class _VisionRoomLockedCardState extends ConsumerState<VisionRoomLockedCard> wit
                       value: maxProgress,
                       backgroundColor: Colors.white.withValues(alpha: 0.05),
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        isUnlocked ? const Color(0xFFD4AF37) : AppColors.accentBlue,
+                        isUnlocked ? Color(0xFFD4AF37) : context.colors.accentBlue,
                       ),
                       minHeight: 6,
                     ),
@@ -259,7 +259,7 @@ class _VisionRoomLockedCardState extends ConsumerState<VisionRoomLockedCard> wit
           children: [
             Icon(
               isCompleted ? Icons.check_circle_rounded : Icons.radio_button_off_rounded,
-              color: isCompleted ? AppColors.accentEmerald : Colors.white24,
+              color: isCompleted ? context.colors.accentEmerald : Colors.white24,
               size: 14,
             ),
             const SizedBox(width: 8),
@@ -271,7 +271,7 @@ class _VisionRoomLockedCardState extends ConsumerState<VisionRoomLockedCard> wit
         ),
         Text(
           '$current / $target',
-          style: AppTypography.captionSmall(color: isCompleted ? AppColors.accentEmerald : Colors.white30).copyWith(
+          style: AppTypography.captionSmall(color: isCompleted ? context.colors.accentEmerald : Colors.white30).copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),

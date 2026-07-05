@@ -128,9 +128,9 @@ class _QuoteBuilderModalState extends State<QuoteBuilderModal> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.accentBlue : Colors.white.withValues(alpha: 0.05),
+                          color: isSelected ? context.colors.accentBlue : Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isSelected ? AppColors.accentBlue : Colors.white.withValues(alpha: 0.1)),
+                          border: Border.all(color: isSelected ? context.colors.accentBlue : Colors.white.withValues(alpha: 0.1)),
                         ),
                         child: Text(
                           style,
@@ -147,7 +147,7 @@ class _QuoteBuilderModalState extends State<QuoteBuilderModal> {
               ElevatedButton(
                 onPressed: _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accentBlue,
+                  backgroundColor: context.colors.accentBlue,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),

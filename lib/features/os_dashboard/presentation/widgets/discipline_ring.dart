@@ -58,7 +58,7 @@ class _DisciplineRingState extends ConsumerState<DisciplineRing> with SingleTick
             border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.accentEmerald.withValues(alpha: 0.02),
+                color: context.colors.accentEmerald.withValues(alpha: 0.02),
                 blurRadius: 60,
               )
             ],
@@ -95,7 +95,7 @@ class _DisciplineRingState extends ConsumerState<DisciplineRing> with SingleTick
                             strokeWidth: 14,
                             strokeCap: StrokeCap.round,
                             backgroundColor: Colors.transparent,
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentEmerald),
+                            valueColor: AlwaysStoppedAnimation<Color>(context.colors.accentEmerald),
                           );
                         },
                       ),
@@ -127,7 +127,7 @@ class _DisciplineRingState extends ConsumerState<DisciplineRing> with SingleTick
                             Text(
                               remainingHabitsCount == 0 ? 'All Completed!' : '$remainingHabitsCount Remaining',
                               style: AppTypography.caption(
-                                color: remainingHabitsCount == 0 ? AppColors.accentEmerald : Colors.white38,
+                                color: remainingHabitsCount == 0 ? context.colors.accentEmerald : Colors.white38,
                               ),
                             ),
                           ],
@@ -156,7 +156,7 @@ class _DisciplineRingState extends ConsumerState<DisciplineRing> with SingleTick
                   ),
                   _buildMetricStat(
                     icon: Icons.check_circle_outline_rounded,
-                    color: AppColors.accentEmerald,
+                    color: context.colors.accentEmerald,
                     value: '$completedHabitsCount Tasks',
                     label: 'Completed',
                   ),

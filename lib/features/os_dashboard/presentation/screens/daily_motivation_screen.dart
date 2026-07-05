@@ -4,7 +4,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getzio_todo_app/core/theme/app_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../shared/widgets/preview_mode_banner.dart';
 
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/os_providers.dart';
@@ -180,13 +182,10 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
     final sortedAffirmations = [...pinnedCards, ...normalCards];
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: context.colors.bg1,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ─── BACKGROUND ENVIRONMENT (Clean Warm Cream Solid Color) ───
-          Positioned.fill(child: Container(color: const Color(0xFFFAF6F0))),
-
           // ─── SCROLLABLE CORE INTERFACE ───
           RepaintBoundary(
             child: SafeArea(
@@ -290,6 +289,12 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                 }
               },
             ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: const PreviewModeBanner(),
           ),
         ],
       ),

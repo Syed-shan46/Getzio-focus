@@ -81,8 +81,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.accentBlue.withValues(alpha: 0.12),
-                        AppColors.accentBlue.withValues(alpha: 0.03),
+                        context.colors.accentBlue.withValues(alpha: 0.12),
+                        context.colors.accentBlue.withValues(alpha: 0.03),
                         Colors.transparent,
                       ],
                       stops: const [0.3, 0.7, 1.0],
@@ -94,15 +94,15 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       height: 64,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.accentBlue.withValues(alpha: 0.08),
+                        color: context.colors.accentBlue.withValues(alpha: 0.08),
                         border: Border.all(
-                          color: AppColors.accentBlue.withValues(alpha: 0.2),
+                          color: context.colors.accentBlue.withValues(alpha: 0.2),
                           width: 1.5,
                         ),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.blur_on_rounded,
-                        color: AppColors.accentBlue,
+                        color: context.colors.accentBlue,
                         size: 32,
                       ),
                     ),

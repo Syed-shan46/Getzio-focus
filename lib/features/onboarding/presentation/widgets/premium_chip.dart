@@ -57,7 +57,7 @@ class _PremiumChipState extends State<PremiumChip>
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = widget.activeColor ?? AppColors.accentBlue;
+    final activeColor = widget.activeColor ?? context.colors.accentBlue;
 
     return ScaleTransition(
       scale: _scaleAnimation,
@@ -160,7 +160,7 @@ class PremiumPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = activeColor ?? AppColors.accentBlue;
+    final color = activeColor ?? context.colors.accentBlue;
 
     return GestureDetector(
       onTap: () {

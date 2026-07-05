@@ -7,7 +7,7 @@ import '../../domain/models/task_model.dart';
 import '../../data/repositories/tasks_repository.dart';
 import '../../../affirmations/domain/models/affirmation_model.dart';
 import '../../../../core/storage/sync_manager.dart';
-
+import '../../../../core/services/notification_service.dart';
 final tasksRepositoryProvider = Provider<TasksRepository>((ref) {
   final hive = ref.watch(hiveDatabaseProvider);
   return TasksRepository(hive, ref);
@@ -142,6 +142,35 @@ class TasksNotifier extends StateNotifier<TasksState> {
     final newList = [pendingTask, ...state.allTasks];
     state = state.copyWith(allTasks: newList);
     await _repository.saveLocalTasks(newList);
+
+    if (pendingTask.completed || pendingTask.status == TaskStatus.completed) {
+      NotificationService().cancelReminders(pendingTask.id);
+      for (final sub in pendingTask.subtasks) {
+        NotificationService().cancelReminders(sub.id);
+      }
+    } else {
+      NotificationService().scheduleItemReminder(
+        id: pendingTask.id,
+        title: pendingTask.title,
+        dueDate: pendingTask.dueDate,
+        dueTime: pendingTask.dueTime,
+        style: pendingTask.reminderStyle,
+      );
+      for (final sub in pendingTask.subtasks) {
+        if (sub.completed) {
+          NotificationService().cancelReminders(sub.id);
+        } else {
+          NotificationService().scheduleItemReminder(
+            id: sub.id,
+            title: sub.title,
+            taskTitle: pendingTask.title,
+            dueDate: sub.dueDate,
+            dueTime: sub.dueTime,
+            style: sub.reminderStyle,
+          );
+        }
+      }
+    }
     
     // Background sync
     final dio = _ref.read(dioClientProvider);
@@ -196,6 +225,35 @@ class TasksNotifier extends StateNotifier<TasksState> {
     state = state.copyWith(allTasks: newList);
     await _repository.saveLocalTasks(newList);
     
+    if (updatedTask.completed || updatedTask.status == TaskStatus.completed) {
+      NotificationService().cancelReminders(updatedTask.id);
+      for (final sub in updatedTask.subtasks) {
+        NotificationService().cancelReminders(sub.id);
+      }
+    } else {
+      NotificationService().scheduleItemReminder(
+        id: updatedTask.id,
+        title: updatedTask.title,
+        dueDate: updatedTask.dueDate,
+        dueTime: updatedTask.dueTime,
+        style: updatedTask.reminderStyle,
+      );
+      for (final sub in updatedTask.subtasks) {
+        if (sub.completed) {
+          NotificationService().cancelReminders(sub.id);
+        } else {
+          NotificationService().scheduleItemReminder(
+            id: sub.id,
+            title: sub.title,
+            taskTitle: updatedTask.title,
+            dueDate: sub.dueDate,
+            dueTime: sub.dueTime,
+            style: sub.reminderStyle,
+          );
+        }
+      }
+    }
+
     // Background sync
     final dio = _ref.read(dioClientProvider);
     dio.post('/tasks/sync', data: {
@@ -218,6 +276,8 @@ class TasksNotifier extends StateNotifier<TasksState> {
     final newList = state.allTasks.where((t) => t.id != id).toList();
     state = state.copyWith(allTasks: newList);
     await _repository.saveLocalTasks(newList);
+
+    NotificationService().cancelReminders(id);
 
     // Background sync
     final dio = _ref.read(dioClientProvider);

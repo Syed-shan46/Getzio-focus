@@ -242,8 +242,19 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
     super.dispose();
   }
 
-  // ─── AMBIENT WALLPAPER GENERATION ──────────────────────────────────────────
-  LinearGradient _getWallGradient(String wallStyle, String ambientMode) {
+  LinearGradient _getWallGradient(String wallStyle, String ambientMode, BuildContext context) {
+    if (Theme.of(context).brightness == Brightness.light) {
+      return LinearGradient(
+        colors: [
+          context.colors.bg1,
+          context.colors.bg1,
+          context.colors.bg1,
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+    }
+
     Color baseColor;
     switch (wallStyle) {
       case 'Classic Navy':
@@ -296,7 +307,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
     }
 
     return LinearGradient(
-      colors: [ambientAccent, baseColor, Colors.black],
+      colors: [baseColor, baseColor, baseColor],
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
     );
@@ -342,21 +353,22 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: context.colors.bg1,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Colors.white10),
+          side: BorderSide(color: context.colors.glassBorder),
         ),
-        title: const Text('Focus Completed'),
-        content: const Text(
+        title: Text('Focus Completed', style: TextStyle(color: context.colors.textPrimary)),
+        content: Text(
           'Beautiful concentration block. You earned +15 discipline points.',
+          style: TextStyle(color: context.colors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Collect Points',
-              style: TextStyle(color: AppColors.accentBlue),
+              style: TextStyle(color: context.colors.accentBlue),
             ),
           ),
         ],
@@ -570,6 +582,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                             wallGradient: _getWallGradient(
                               state.wallColor,
                               state.ambientMode,
+                              context,
                             ),
                             floorHeight: 160,
                             sunlightIntensity: sunlightIntensity,
@@ -852,9 +865,9 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
           // Waving linen curtain hanging on the right side
           Positioned(
             top: 2,
-            right: -12,
+            right: -8,
             bottom: 2,
-            width: 44,
+            width: 56,
             child: CustomPaint(
               painter: CurtainPainter(
                 time: _currentTime.millisecondsSinceEpoch * 0.001,
@@ -935,18 +948,34 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Colors.black.withValues(alpha: 0.75),
+              color: context.colors.textPrimary.withValues(alpha: 0.15),
               width: 2.0,
             ),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(6),
-            child: CustomPaint(
-              painter: CityViewWindowPainter(
-                resolvedMode: mode,
-                animationValue: _ambientController.value,
-                isTopWindow: false,
-              ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CustomPaint(
+                  painter: CityViewWindowPainter(
+                    resolvedMode: mode,
+                    animationValue: _ambientController.value,
+                    isTopWindow: false,
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  bottom: 0,
+                  right: -8,
+                  width: 56,
+                  child: CustomPaint(
+                    painter: CurtainPainter(
+                      time: _currentTime.millisecondsSinceEpoch * 0.001,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -1230,7 +1259,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: AppColors.accentBlue.withValues(alpha: 0.6),
+                          color: context.colors.accentBlue.withValues(alpha: 0.6),
                           blurRadius: 16,
                           spreadRadius: 2,
                         ),
@@ -1322,15 +1351,15 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
         width: MediaQuery.of(context).size.width * 0.9,
         height: MediaQuery.of(context).size.height * 0.8,
         decoration: BoxDecoration(
-          color: const Color(0xFF0F1424).withValues(alpha: 0.9),
+          color: context.colors.bg2.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: context.colors.glassBorder,
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 24,
               spreadRadius: 4,
             ),
@@ -1346,25 +1375,25 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                 children: [
                   Text(
                     _activeModule!.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Outfit',
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.accentBlue,
+                      color: context.colors.accentBlue,
                       letterSpacing: 1.5,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.close_rounded,
-                      color: Colors.white60,
+                      color: context.colors.textSecondary,
                     ),
                     onPressed: _closeModule,
                   ),
                 ],
               ),
             ),
-            const Divider(color: Colors.white10, height: 1),
+            Divider(color: context.colors.glassBorder, height: 1),
 
             // Content scroll area
             Expanded(
@@ -1411,11 +1440,11 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
+                  Row(
                     children: [
                       Icon(
                         Icons.local_drink_rounded,
-                        color: AppColors.accentBlue,
+                        color: context.colors.accentBlue,
                       ),
                       SizedBox(width: 8),
                       Text(
@@ -1440,8 +1469,8 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                   value: _waterLoggedMl / 3000.0,
                   minHeight: 8,
                   backgroundColor: Colors.white10,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppColors.accentBlue,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    context.colors.accentBlue,
                   ),
                 ),
               ),
@@ -1459,10 +1488,10 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                     icon: const Icon(Icons.add, size: 16),
                     label: const Text('Add 250ml'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accentBlue.withValues(
+                      backgroundColor: context.colors.accentBlue.withValues(
                         alpha: 0.15,
                       ),
-                      foregroundColor: AppColors.accentBlue,
+                      foregroundColor: context.colors.accentBlue,
                     ),
                   ),
                 ],
@@ -1574,12 +1603,12 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: _workoutComplete
-                        ? AppColors.accentEmerald.withValues(alpha: 0.08)
+                        ? context.colors.accentEmerald.withValues(alpha: 0.08)
                         : Colors.white.withValues(alpha: 0.02),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: _workoutComplete
-                          ? AppColors.accentEmerald.withValues(alpha: 0.3)
+                          ? context.colors.accentEmerald.withValues(alpha: 0.3)
                           : Colors.white10,
                     ),
                   ),
@@ -1589,7 +1618,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                       Icon(
                         Icons.fitness_center_rounded,
                         color: _workoutComplete
-                            ? AppColors.accentEmerald
+                            ? context.colors.accentEmerald
                             : Colors.redAccent,
                       ),
                       const SizedBox(height: 12),
@@ -1603,7 +1632,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: _workoutComplete
-                              ? AppColors.accentEmerald
+                              ? context.colors.accentEmerald
                               : Colors.white,
                         ),
                       ),
@@ -1623,11 +1652,11 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
+        Text(
           'Active Priorities',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: context.colors.textPrimary,
             fontSize: 16,
           ),
         ),
@@ -1641,20 +1670,20 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: isChecked
-                    ? AppColors.accentBlue.withValues(alpha: 0.06)
-                    : Colors.white.withValues(alpha: 0.02),
+                    ? context.colors.accentBlue.withValues(alpha: 0.06)
+                    : context.colors.textPrimary.withValues(alpha: 0.02),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isChecked
-                      ? AppColors.accentBlue.withValues(alpha: 0.3)
-                      : Colors.white10,
+                      ? context.colors.accentBlue.withValues(alpha: 0.3)
+                      : context.colors.glassBorder,
                 ),
               ),
               child: Row(
                 children: [
                   Checkbox(
                     value: isChecked,
-                    activeColor: AppColors.accentBlue,
+                    activeColor: context.colors.accentBlue,
                     onChanged: (val) {
                       HapticFeedback.lightImpact();
                       setState(() {
@@ -1668,7 +1697,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                       p['title'],
                       style: TextStyle(
                         fontSize: 14,
-                        color: isChecked ? Colors.white60 : Colors.white,
+                        color: isChecked ? context.colors.textSecondary : context.colors.textPrimary,
                         decoration: isChecked
                             ? TextDecoration.lineThrough
                             : null,
@@ -1885,7 +1914,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.accentBlue),
+              borderSide: BorderSide(color: context.colors.accentBlue),
             ),
           ),
         ),
@@ -1901,7 +1930,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
             });
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accentBlue,
+            backgroundColor: context.colors.accentBlue,
             foregroundColor: Colors.black,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
@@ -2112,9 +2141,9 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
             ),
             const SizedBox(width: 8),
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.add_circle,
-                color: AppColors.accentBlue,
+                color: context.colors.accentBlue,
                 size: 30,
               ),
               onPressed: () {
@@ -2155,11 +2184,11 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
             height: 130,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.accentBlue.withValues(
+              color: context.colors.accentBlue.withValues(
                 alpha: _focusRunning ? 0.08 : 0.03,
               ),
               border: Border.all(
-                color: AppColors.accentBlue.withValues(
+                color: context.colors.accentBlue.withValues(
                   alpha: _focusRunning ? 0.4 : 0.1,
                 ),
                 width: 2,
@@ -2201,7 +2230,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                 _focusRunning
                     ? Icons.pause_circle_filled_rounded
                     : Icons.play_circle_fill_rounded,
-                color: AppColors.accentBlue,
+                color: context.colors.accentBlue,
               ),
               onPressed: () {
                 HapticFeedback.mediumImpact();
@@ -2450,23 +2479,28 @@ class CurtainPainter extends CustomPainter {
 
     final path = Path();
     path.moveTo(0, 4);
-
+    
     final double waveMultiplier = math.sin(time * 1.5) * 1.5;
 
+    // Top edge
     path.lineTo(w, 4);
-    for (double y = 4; y <= h; y += 4) {
+    
+    // Right edge (pinned to wall)
+    path.lineTo(w, h);
+
+    // Left edge (swaying in the wind)
+    for (double y = h; y >= 4; y -= 4) {
       final double sway =
           math.sin((y / h * 4 * math.pi) + time * 1.8) * (2.0 + waveMultiplier);
-      path.lineTo(w - 2 + sway, y);
+      path.lineTo(sway, y);
     }
-    path.lineTo(0, h);
     path.close();
 
     final curtainPaint = Paint()
       ..shader = LinearGradient(
         colors: [
-          Colors.white.withValues(alpha: 0.22),
-          Colors.white.withValues(alpha: 0.06),
+          Colors.white.withValues(alpha: 0.70), // Much more opaque
+          Colors.white.withValues(alpha: 0.35),
         ],
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
@@ -2475,11 +2509,23 @@ class CurtainPainter extends CustomPainter {
     canvas.drawPath(path, curtainPaint);
 
     final foldPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.05)
-      ..strokeWidth = 1.2
+      ..color = Colors.black.withValues(alpha: 0.15) // Darker folds
+      ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
-    canvas.drawLine(Offset(w * 0.45, 4), Offset(w * 0.5, h), foldPaint);
-    canvas.drawLine(Offset(w * 0.75, 4), Offset(w * 0.8, h), foldPaint);
+
+    void drawFold(double startX, double swayFactor) {
+      final foldPath = Path();
+      foldPath.moveTo(startX, 4);
+      for (double y = 4; y <= h; y += 4) {
+        final double sway =
+            math.sin((y / h * 4 * math.pi) + time * 1.8) * (2.0 + waveMultiplier) * swayFactor;
+        foldPath.lineTo(startX + sway, y);
+      }
+      canvas.drawPath(foldPath, foldPaint);
+    }
+
+    drawFold(w * 0.45, 0.6); // Middle fold sways 60% as much
+    drawFold(w * 0.75, 0.3); // Right fold sways 30% as much
   }
 
   @override
@@ -2654,9 +2700,9 @@ class DoorPainter3D extends CustomPainter {
 
     // Draw an elegant room number/name plate in the upper center of the door
     final plaqueRect = Rect.fromCenter(
-      center: Offset(w / 2, h * 0.35),
-      width: w * 0.72,
-      height: 25,
+      center: Offset(w / 2, h * 0.32),
+      width: w * 0.76,
+      height: 16,
     );
     final plaquePaint = Paint()
       ..color = isUnlocked ? const Color(0xFF23150D) : const Color(0xFF1E293B)
@@ -2678,10 +2724,10 @@ class DoorPainter3D extends CustomPainter {
     );
 
     final textSpan = TextSpan(
-      text: 'VISION\nROOM',
+      text: 'VISION ROOM',
       style: TextStyle(
         fontFamily: 'Outfit',
-        fontSize: 5.8,
+        fontSize: 4.8,
         fontWeight: FontWeight.w700,
         color: isUnlocked
             ? const Color(0xFFC9A96E).withValues(alpha: 0.9)
@@ -5873,16 +5919,9 @@ class GlassDisplayCase extends StatelessWidget {
       height: 60,
       margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.025),
+        color: context.colors.textPrimary.withValues(alpha: 0.025),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: glassBorderColor, width: 0.8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.42),
-            blurRadius: 5.0,
-            offset: const Offset(1.5, 3.5),
-          ),
-        ],
+        border: Border.all(color: context.colors.glassBorder, width: 0.8),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(5),
@@ -5896,14 +5935,11 @@ class GlassDisplayCase extends StatelessWidget {
               right: 0,
               height: 8,
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF27272A), Color(0xFF09090B)],
+                    colors: [context.colors.bg2, context.colors.bg1],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                  ),
-                  border: Border(
-                    top: BorderSide(color: Colors.white10, width: 0.5),
                   ),
                 ),
               ),
@@ -5933,11 +5969,11 @@ class GlassDisplayCase extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Colors.white.withOpacity(0.16),
-                        Colors.white.withOpacity(0.04),
+                        context.colors.textPrimary.withValues(alpha: 0.16),
+                        context.colors.textPrimary.withValues(alpha: 0.04),
                         Colors.transparent,
-                        Colors.white.withOpacity(0.02),
-                        Colors.white.withOpacity(0.12),
+                        context.colors.textPrimary.withValues(alpha: 0.02),
+                        context.colors.textPrimary.withValues(alpha: 0.12),
                       ],
                       stops: const [0.0, 0.15, 0.45, 0.55, 0.75],
                     ),
@@ -5952,8 +5988,8 @@ class GlassDisplayCase extends StatelessWidget {
               child: Container(
                 width: 2,
                 height: 2,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF94A3B8),
+                decoration: BoxDecoration(
+                  color: context.colors.textMuted,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -5964,8 +6000,8 @@ class GlassDisplayCase extends StatelessWidget {
               child: Container(
                 width: 2,
                 height: 2,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF94A3B8),
+                decoration: BoxDecoration(
+                  color: context.colors.textMuted,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -6071,8 +6107,9 @@ class MiniatureCarWidget extends StatefulWidget {
 }
 
 class _MiniatureCarWidgetState extends State<MiniatureCarWidget>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _bounceController;
+  late AnimationController _hoverController;
 
   @override
   void initState() {
@@ -6081,11 +6118,16 @@ class _MiniatureCarWidgetState extends State<MiniatureCarWidget>
       vsync: this,
       duration: const Duration(milliseconds: 320),
     );
+    _hoverController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _bounceController.dispose();
+    _hoverController.dispose();
     super.dispose();
   }
 
@@ -6118,17 +6160,21 @@ class _MiniatureCarWidgetState extends State<MiniatureCarWidget>
     return GestureDetector(
       onTap: _triggerBounce,
       child: AnimatedBuilder(
-        animation: _bounceController,
+        animation: Listenable.merge([_bounceController, _hoverController]),
         builder: (context, child) {
-          final double value = _bounceController.value;
-          final double translateY = -10.0 * math.sin(value * math.pi);
+          final double bounceValue = _bounceController.value;
+          
+          final double hoverProgress = Curves.easeInOutSine.transform(_hoverController.value);
+          final double bobAngle = -0.07 + (hoverProgress * 0.05); // Nose bobs between -0.07 and -0.02
+          
+          final double translateY = -10.0 * math.sin(bounceValue * math.pi); // Only bounce in Y
 
           return Transform(
             transform: Matrix4.identity()
               ..setEntry(3, 2, 0.002) // perspective depth
               ..rotateX(0.06) // tilt forward to see the hood/roof
               ..rotateY(-0.12) // rotate slightly in Y to see 3D side profile
-              ..rotateZ(-0.06) // tilt front side down, back side up!
+              ..rotateZ(bobAngle) // Animate tilt (front side down and up)
               ..translate(0.0, translateY, 0.0), // add bounce translation
             alignment: Alignment.bottomCenter, // anchor to base stand
             child: SizedBox(
@@ -6138,23 +6184,6 @@ class _MiniatureCarWidgetState extends State<MiniatureCarWidget>
                 alignment: Alignment.bottomCenter,
                 clipBehavior: Clip.none,
                 children: [
-                  Positioned(
-                    bottom: 0,
-                    left: widget.width * 0.1,
-                    right: widget.width * 0.1,
-                    height: 2,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.45),
-                            blurRadius: 1.5,
-                            spreadRadius: 0.5,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                   Image.asset(
                     _getCarAssetPath(widget.carType),
                     width: widget.width,

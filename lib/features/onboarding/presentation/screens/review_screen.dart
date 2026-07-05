@@ -163,9 +163,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen>
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.auto_awesome_rounded,
-                            color: AppColors.accentBlue,
+                            color: context.colors.accentBlue,
                             size: 20,
                           ),
                           const SizedBox(width: 12),

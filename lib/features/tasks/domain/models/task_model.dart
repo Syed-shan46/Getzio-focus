@@ -3,6 +3,7 @@ import '../../../affirmations/domain/models/affirmation_model.dart'; // Reuse Sy
 
 enum TaskPriority { high, medium, low }
 enum TaskStatus { pending, inProgress, completed, overdue, cancelled }
+enum ReminderStyle { minimal, balanced, neverMiss, none }
 
 class SubtaskModel {
   final String id;
@@ -12,6 +13,7 @@ class SubtaskModel {
   final DateTime? dueDate;
   final String? dueTime;
   final bool reminder;
+  final ReminderStyle? reminderStyle;
   final int sortOrder;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -25,6 +27,7 @@ class SubtaskModel {
     this.dueDate,
     this.dueTime,
     this.reminder = false,
+    this.reminderStyle,
     this.sortOrder = 0,
     this.createdAt,
     this.updatedAt,
@@ -40,6 +43,7 @@ class SubtaskModel {
       dueDate: map['dueDate'] != null ? DateTime.tryParse(map['dueDate'].toString()) : null,
       dueTime: map['dueTime'],
       reminder: map['reminder'] ?? false,
+      reminderStyle: map['reminderStyle'] != null ? ReminderStyle.values.firstWhere((e) => e.name == map['reminderStyle'], orElse: () => ReminderStyle.balanced) : (map['reminder'] == true ? ReminderStyle.balanced : null),
       sortOrder: map['sortOrder'] ?? 0,
       createdAt: map['createdAt'] != null ? DateTime.tryParse(map['createdAt'].toString()) : null,
       updatedAt: map['updatedAt'] != null ? DateTime.tryParse(map['updatedAt'].toString()) : null,
@@ -56,6 +60,7 @@ class SubtaskModel {
       'dueDate': dueDate?.toIso8601String(),
       'dueTime': dueTime,
       'reminder': reminder,
+      'reminderStyle': reminderStyle?.name,
       'sortOrder': sortOrder,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
@@ -71,6 +76,7 @@ class SubtaskModel {
     DateTime? dueDate,
     String? dueTime,
     bool? reminder,
+    ReminderStyle? reminderStyle,
     int? sortOrder,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -84,6 +90,7 @@ class SubtaskModel {
       dueDate: dueDate ?? this.dueDate,
       dueTime: dueTime ?? this.dueTime,
       reminder: reminder ?? this.reminder,
+      reminderStyle: reminderStyle ?? this.reminderStyle,
       sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -111,6 +118,7 @@ class TaskModel {
   final DateTime? dueDate;
   final String? dueTime;
   final bool reminder;
+  final ReminderStyle? reminderStyle;
   final String? repeat;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -137,6 +145,7 @@ class TaskModel {
     this.dueDate,
     this.dueTime,
     this.reminder = false,
+    this.reminderStyle,
     this.repeat,
     this.createdAt,
     this.updatedAt,
@@ -202,6 +211,7 @@ class TaskModel {
       dueDate: map['dueDate'] != null ? DateTime.tryParse(map['dueDate'].toString()) : null,
       dueTime: map['dueTime'],
       reminder: map['reminder'] ?? false,
+      reminderStyle: map['reminderStyle'] != null ? ReminderStyle.values.firstWhere((e) => e.name == map['reminderStyle'], orElse: () => ReminderStyle.balanced) : (map['reminder'] == true ? ReminderStyle.balanced : null),
       repeat: map['repeat'],
       createdAt: map['createdAt'] != null ? DateTime.tryParse(map['createdAt'].toString()) : null,
       updatedAt: map['updatedAt'] != null ? DateTime.tryParse(map['updatedAt'].toString()) : null,
@@ -234,6 +244,7 @@ class TaskModel {
       'dueDate': dueDate?.toIso8601String(),
       'dueTime': dueTime,
       'reminder': reminder,
+      'reminderStyle': reminderStyle?.name,
       'repeat': repeat,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
@@ -262,6 +273,7 @@ class TaskModel {
     DateTime? dueDate,
     String? dueTime,
     bool? reminder,
+    ReminderStyle? reminderStyle,
     String? repeat,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -288,6 +300,7 @@ class TaskModel {
       dueDate: dueDate ?? this.dueDate,
       dueTime: dueTime ?? this.dueTime,
       reminder: reminder ?? this.reminder,
+      reminderStyle: reminderStyle ?? this.reminderStyle,
       repeat: repeat ?? this.repeat,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -295,5 +308,47 @@ class TaskModel {
       syncStatus: syncStatus ?? this.syncStatus,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
     );
+  }
+}
+
+extension SubtaskSorting on List<SubtaskModel> {
+  List<SubtaskModel> sortSmart() {
+    final List<SubtaskModel> sorted = List.from(this);
+    sorted.sort((a, b) {
+      if (a.completed && !b.completed) return 1;
+      if (!a.completed && b.completed) return -1;
+
+      if (a.completed && b.completed) {
+        if (a.completedAt != null && b.completedAt != null) {
+          return b.completedAt!.compareTo(a.completedAt!);
+        }
+        return 0;
+      }
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      int getUrgency(SubtaskModel task) {
+        if (task.dueDate == null) return 5;
+        final date = DateTime(task.dueDate!.year, task.dueDate!.month, task.dueDate!.day);
+        if (date.isBefore(today)) return 1;
+        if (date.isAtSameMomentAs(today)) return 2;
+        if (date.isAtSameMomentAs(today.add(const Duration(days: 1)))) return 3;
+        return 4;
+      }
+
+      final urgencyA = getUrgency(a);
+      final urgencyB = getUrgency(b);
+
+      if (urgencyA != urgencyB) {
+        return urgencyA.compareTo(urgencyB);
+      }
+
+      if (a.dueDate != null && b.dueDate != null) {
+        return a.dueDate!.compareTo(b.dueDate!);
+      }
+      return a.sortOrder.compareTo(b.sortOrder);
+    });
+    return sorted;
   }
 }

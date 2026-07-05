@@ -104,7 +104,7 @@ class HabitsScreen extends ConsumerWidget {
                       Text(
                         category.toUpperCase(),
                         style: AppTypography.captionSmall(
-                          color: AppColors.accentBlue,
+                          color: context.colors.accentBlue,
                         ).copyWith(
                           letterSpacing: 1.5,
                           fontWeight: FontWeight.bold,

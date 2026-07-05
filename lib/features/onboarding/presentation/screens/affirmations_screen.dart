@@ -90,7 +90,7 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                       children: [
                         Text(
                           'Daily\nAffirmations.',
-                          style: AppTypography.displayLarge(color: Colors.white).copyWith(
+                          style: AppTypography.displayLarge(color: context.colors.textPrimary).copyWith(
                             fontSize: 34,
                             height: 1.12,
                             letterSpacing: -0.8,
@@ -100,7 +100,7 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                         Text(
                           'Select affirmations that inspire you. Pin one to display in the main wall frame of your living workspace.',
                           style: AppTypography.bodyMedium(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: context.colors.textPrimary.withValues(alpha: 0.5),
                           ).copyWith(height: 1.5),
                         ),
                       ],
@@ -126,7 +126,7 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                             children: [
                               Text(
                                 'AFFIRMATION TEMPLATES',
-                                style: AppTypography.captionSmall(color: AppColors.accentBlue).copyWith(
+                                style: AppTypography.captionSmall(color: context.colors.accentBlue).copyWith(
                                   letterSpacing: 1.5,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -177,7 +177,7 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                             children: [
                               Text(
                                 'CREATE CUSTOM AFFIRMATION',
-                                style: AppTypography.captionSmall(color: AppColors.accentBlue).copyWith(
+                                style: AppTypography.captionSmall(color: context.colors.accentBlue).copyWith(
                                   letterSpacing: 1.5,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -189,17 +189,17 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.06),
+                                        color: context.colors.glassBorder,
                                         borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                                        border: Border.all(color: context.colors.glassBorder),
                                       ),
                                       child: TextField(
                                         controller: _customController,
-                                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                                        cursorColor: AppColors.accentBlue,
-                                        decoration: const InputDecoration(
+                                        style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
+                                        cursorColor: context.colors.accentBlue,
+                                        decoration: InputDecoration(
                                           hintText: 'Type your custom affirmation...',
-                                          hintStyle: TextStyle(color: Colors.white24, fontSize: 13),
+                                          hintStyle: TextStyle(color: context.colors.textPrimary.withValues(alpha: 0.24), fontSize: 13),
                                           border: InputBorder.none,
                                         ),
                                         onSubmitted: (_) => _addCustomAffirmation(),
@@ -208,7 +208,7 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   IconButton(
-                                    icon: const Icon(Icons.add_circle, color: AppColors.accentBlue, size: 36),
+                                    icon: Icon(Icons.add_circle, color: context.colors.accentBlue, size: 36),
                                     onPressed: _addCustomAffirmation,
                                   ),
                                 ],
@@ -227,7 +227,7 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                               children: [
                                 Text(
                                   'PIN TO WORKSPACE',
-                                  style: AppTypography.captionSmall(color: AppColors.accentBlue).copyWith(
+                                  style: AppTypography.captionSmall(color: context.colors.accentBlue).copyWith(
                                     letterSpacing: 1.5,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -243,26 +243,26 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                                       margin: const EdgeInsets.only(bottom: 8),
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.04),
+                                        color: context.colors.textPrimary.withValues(alpha: 0.04),
                                         borderRadius: BorderRadius.circular(14),
                                         border: Border.all(
                                           color: aff.isPinned
-                                              ? AppColors.accentBlue.withValues(alpha: 0.3)
-                                              : Colors.white.withValues(alpha: 0.06),
+                                              ? context.colors.accentBlue.withValues(alpha: 0.3)
+                                              : context.colors.glassBorder,
                                         ),
                                       ),
                                       child: Row(
                                         children: [
                                           Icon(
                                             aff.isPinned ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                            color: aff.isPinned ? AppColors.accentBlue : Colors.white24,
+                                            color: aff.isPinned ? context.colors.accentBlue : context.colors.textPrimary.withValues(alpha: 0.24),
                                             size: 16,
                                           ),
                                           const SizedBox(width: 12),
                                           Expanded(
                                             child: Text(
                                               aff.text,
-                                              style: const TextStyle(color: Colors.white, fontSize: 13),
+                                              style: TextStyle(color: context.colors.textPrimary, fontSize: 13),
                                             ),
                                           ),
                                           GestureDetector(
@@ -271,25 +271,25 @@ class _AffirmationsScreenState extends ConsumerState<AffirmationsScreen> {
                                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                               decoration: BoxDecoration(
                                                 color: aff.isPinned
-                                                    ? AppColors.accentBlue.withValues(alpha: 0.15)
+                                                    ? context.colors.accentBlue.withValues(alpha: 0.15)
                                                     : Colors.transparent,
                                                 borderRadius: BorderRadius.circular(8),
                                                 border: Border.all(
-                                                  color: aff.isPinned ? AppColors.accentBlue : Colors.white.withValues(alpha: 0.15),
+                                                  color: aff.isPinned ? context.colors.accentBlue : context.colors.textPrimary.withValues(alpha: 0.15),
                                                 ),
                                               ),
                                               child: Row(
                                                 children: [
                                                   Icon(
                                                     aff.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                                                    color: aff.isPinned ? AppColors.accentBlue : Colors.white70,
+                                                    color: aff.isPinned ? context.colors.accentBlue : context.colors.textSecondary,
                                                     size: 11,
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Text(
                                                     aff.isPinned ? 'Pinned' : 'Pin',
                                                     style: TextStyle(
-                                                      color: aff.isPinned ? AppColors.accentBlue : Colors.white70,
+                                                      color: aff.isPinned ? context.colors.accentBlue : context.colors.textSecondary,
                                                       fontSize: 10,
                                                       fontWeight: FontWeight.bold,
                                                     ),
@@ -341,10 +341,10 @@ class _GlassCard extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: context.colors.glass,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: context.colors.glassBorder,
               width: 0.5,
             ),
           ),

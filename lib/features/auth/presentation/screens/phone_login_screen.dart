@@ -113,7 +113,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                   Text(
                     'Sign in or register to secure your tasks',
                     textAlign: TextAlign.center,
-                    style: AppTypography.bodyMedium(color: AppColors.textSecondary),
+                    style: AppTypography.bodyMedium(color: context.colors.textSecondary),
                   ),
                   const SizedBox(height: AppSpacing.xxl),
 
@@ -127,7 +127,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                         Text(
                           'ENTER PHONE NUMBER',
                           style: AppTypography.captionSmall(
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                           ).copyWith(letterSpacing: 1.2),
                         ),
                         const SizedBox(height: AppSpacing.md),
@@ -140,8 +140,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                             border: Border.all(
                               color: _error != null 
-                                  ? AppColors.error.withValues(alpha: 0.5)
-                                  : AppColors.glassBorder,
+                                  ? context.colors.error.withValues(alpha: 0.5)
+                                  : context.colors.glassBorder,
                               width: 0.8,
                             ),
                           ),
@@ -150,14 +150,14 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                               Text(
                                 '+91',
                                 style: AppTypography.bodyLarge(
-                                  color: AppColors.textSecondary,
+                                  color: context.colors.textSecondary,
                                 ).copyWith(fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(width: AppSpacing.sm),
                               Container(
                                 width: 1,
                                 height: 20,
-                                color: AppColors.glassBorder,
+                                color: context.colors.glassBorder,
                               ),
                               const SizedBox(width: AppSpacing.sm),
                               Expanded(
@@ -166,16 +166,16 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                   focusNode: _focusNode,
                                   keyboardType: TextInputType.phone,
                                   style: AppTypography.bodyLarge(
-                                    color: AppColors.textPrimary,
+                                    color: context.colors.textPrimary,
                                   ),
-                                  cursorColor: AppColors.accentBlue,
+                                  cursorColor: context.colors.accentBlue,
                                   maxLength: 10,
                                   inputFormatters: [
                                     FilteringTextInputFormatter.digitsOnly,
                                   ],
-                                  decoration: const InputDecoration(
+                                  decoration: InputDecoration(
                                     hintText: '00000 00000',
-                                    hintStyle: TextStyle(color: AppColors.textMuted),
+                                    hintStyle: TextStyle(color: context.colors.textMuted),
                                     border: InputBorder.none,
                                     counterText: '',
                                     isDense: true,
@@ -192,7 +192,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                           const SizedBox(height: AppSpacing.sm),
                           Text(
                             _error!,
-                            style: AppTypography.caption(color: AppColors.error),
+                            style: AppTypography.caption(color: context.colors.error),
                           ),
                         ],
 
@@ -205,11 +205,11 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                             duration: const Duration(milliseconds: 200),
                             height: 52,
                             decoration: BoxDecoration(
-                              color: AppColors.accentBlue,
+                              color: context.colors.accentBlue,
                               borderRadius: BorderRadius.circular(AppRadius.sm),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.accentBlue.withValues(alpha: 0.3),
+                                  color: context.colors.accentBlue.withValues(alpha: 0.3),
                                   blurRadius: 16,
                                   offset: const Offset(0, 4),
                                 ),
@@ -243,14 +243,14 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                             textAlign: TextAlign.center,
                             text: TextSpan(
                               style: AppTypography.caption(
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                               ).copyWith(fontSize: 11, height: 1.4),
                               children: [
                                 const TextSpan(text: 'By continuing, you agree to our '),
                                 TextSpan(
                                   text: 'Terms of Service',
-                                  style: const TextStyle(
-                                    color: AppColors.accentBlue,
+                                  style: TextStyle(
+                                    color: context.colors.accentBlue,
                                     fontWeight: FontWeight.w600,
                                     decoration: TextDecoration.underline,
                                   ),
@@ -260,8 +260,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                 const TextSpan(text: ' & '),
                                 TextSpan(
                                   text: 'Privacy Policy',
-                                  style: const TextStyle(
-                                    color: AppColors.accentBlue,
+                                  style: TextStyle(
+                                    color: context.colors.accentBlue,
                                     fontWeight: FontWeight.w600,
                                     decoration: TextDecoration.underline,
                                   ),

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/models/affirmation_model.dart';
 import '../providers/affirmations_provider.dart';
+import 'package:getzio_todo_app/core/theme/app_theme.dart';
 
 class AffirmationBottomSheet extends ConsumerStatefulWidget {
   const AffirmationBottomSheet({super.key});
@@ -97,25 +98,25 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
   }
 
   Widget _buildPreviewCard() {
-    Color cardBg = Colors.white;
+    Color cardBg = context.colors.textPrimary;
     Color textCol = Colors.black;
     Color borderCol = Colors.transparent;
 
     switch (_colorTheme) {
       case 'Minimal White':
-        cardBg = Colors.white.withOpacity(0.95);
+        cardBg = context.colors.textPrimary.withValues(alpha: 0.95);
         textCol = const Color(0xFF1F2937);
         borderCol = Colors.black12;
         break;
       case 'Dark Glass':
-        cardBg = const Color(0xFF1F2937).withOpacity(0.75);
-        textCol = Colors.white;
-        borderCol = Colors.white10;
+        cardBg = const Color(0xFF1F2937).withValues(alpha: 0.75);
+        textCol = context.colors.textPrimary;
+        borderCol = context.colors.textPrimary.withValues(alpha: 0.10);
         break;
       case 'Midnight Black':
         cardBg = const Color(0xFF030712);
         textCol = const Color(0xFFF9FAFB);
-        borderCol = Colors.white10;
+        borderCol = context.colors.textPrimary.withValues(alpha: 0.10);
         break;
       case 'Sunrise Orange':
         cardBg = const Color(0xFFFFF7ED);
@@ -162,7 +163,7 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: textCol.withOpacity(0.06),
+                  color: textCol.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -170,7 +171,7 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
                   style: GoogleFonts.outfit(
                     fontSize: 8,
                     fontWeight: FontWeight.bold,
-                    color: textCol.withOpacity(0.7),
+                    color: textCol.withValues(alpha: 0.7),
                     letterSpacing: 1.0,
                   ),
                 ),
@@ -197,7 +198,7 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
             _author.isEmpty ? '— Author' : '— $_author',
             style: GoogleFonts.outfit(
               fontSize: 9,
-              color: textCol.withOpacity(0.6),
+              color: textCol.withValues(alpha: 0.6),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -229,7 +230,7 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white12,
+                    color: context.colors.textPrimary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -238,7 +239,7 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
               Text(
                 'Create Affirmation Art',
                 style: GoogleFonts.outfit(
-                  color: Colors.white,
+                  color: context.colors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -266,12 +267,12 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
                     children: [
                       Text(
                         'Affirmation Text',
-                        style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w500),
+                        style: GoogleFonts.outfit(color: context.colors.textSecondary.withValues(alpha: 0.7), fontSize: 11, fontWeight: FontWeight.w500),
                       ),
                       Text(
                         '${_text.length} / 120',
                         style: GoogleFonts.outfit(
-                          color: _text.length > 120 ? Colors.redAccent : Colors.white30,
+                          color: _text.length > 120 ? Colors.redAccent : context.colors.textPrimary.withValues(alpha: 0.30),
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),
@@ -282,16 +283,16 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
                   TextField(
                     controller: _textController,
                     maxLines: 2,
-                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
+                    style: GoogleFonts.outfit(color: context.colors.textPrimary, fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'Type custom affirmation mantra...',
-                      hintStyle: const TextStyle(color: Colors.white24, fontSize: 13),
+                      hintStyle: TextStyle(color: context.colors.textPrimary.withValues(alpha: 0.24), fontSize: 13),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.03),
+                      fillColor: context.colors.textPrimary.withValues(alpha: 0.03),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+                        borderSide: BorderSide(color: context.colors.textPrimary.withValues(alpha: 0.08)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -330,7 +331,7 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
               // Categories Selector
               Text(
                 'Category',
-                style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(color: context.colors.textSecondary.withValues(alpha: 0.7), fontSize: 11, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
               SizedBox(
@@ -350,14 +351,14 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
                         margin: const EdgeInsets.only(right: 8),
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFF3B82F6) : Colors.white.withOpacity(0.04),
+                          color: isSelected ? const Color(0xFF3B82F6) : context.colors.textPrimary.withValues(alpha: 0.04),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Center(
                           child: Text(
                             cat,
                             style: GoogleFonts.outfit(
-                              color: isSelected ? Colors.white : Colors.white70,
+                              color: isSelected ? context.colors.textPrimary : context.colors.textSecondary,
                               fontSize: 11,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
@@ -373,7 +374,7 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
               // Color Theme Selector
               Text(
                 'Theme Color',
-                style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(color: context.colors.textSecondary.withValues(alpha: 0.7), fontSize: 11, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
               SizedBox(
@@ -393,14 +394,14 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
                         margin: const EdgeInsets.only(right: 8),
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFF3B82F6) : Colors.white.withOpacity(0.04),
+                          color: isSelected ? const Color(0xFF3B82F6) : context.colors.textPrimary.withValues(alpha: 0.04),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Center(
                           child: Text(
                             theme,
                             style: GoogleFonts.outfit(
-                              color: isSelected ? Colors.white : Colors.white70,
+                              color: isSelected ? context.colors.textPrimary : context.colors.textSecondary,
                               fontSize: 11,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
@@ -437,13 +438,13 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
                         },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF10B981),
-                    disabledBackgroundColor: Colors.white10,
+                    disabledBackgroundColor: context.colors.textPrimary.withValues(alpha: 0.10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: Text(
                     'Save to Workspace',
                     style: GoogleFonts.outfit(
-                      color: _text.trim().isEmpty ? Colors.white24 : Colors.white,
+                      color: _text.trim().isEmpty ? context.colors.textPrimary.withValues(alpha: 0.24) : context.colors.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
@@ -467,21 +468,21 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
       children: [
         Text(
           label,
-          style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w500),
+          style: GoogleFonts.outfit(color: context.colors.textSecondary.withValues(alpha: 0.7), fontSize: 11, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
-          style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
+          style: GoogleFonts.outfit(color: context.colors.textPrimary, fontSize: 13),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Colors.white24, fontSize: 13),
+            hintStyle: TextStyle(color: context.colors.textPrimary.withValues(alpha: 0.24), fontSize: 13),
             filled: true,
-            fillColor: Colors.white.withOpacity(0.03),
+            fillColor: context.colors.textPrimary.withValues(alpha: 0.03),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+              borderSide: BorderSide(color: context.colors.textPrimary.withValues(alpha: 0.08)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),

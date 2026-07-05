@@ -1,0 +1,41 @@
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 24),
+
+                  // Milestones Header
+                  Text(
+                    'MILESTONES',
+                    style: TextStyle(
+                      color: context.colors.textPrimary.withValues(alpha: 0.24),
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  SizedBox(height: 12),
+
+                  // Milestones Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildMilestoneNode(Icons.flag_outlined, '25%', 'Getting Started', progressPercent >= 25),
+                      Icon(Icons.chevron_right_rounded, color: context.colors.textPrimary.withValues(alpha: 0.10), size: 16),
+                      _buildMilestoneNode(Icons.trending_up_rounded, '50%', 'On Track', progressPercent >= 50),
+                      Icon(Icons.chevron_right_rounded, color: context.colors.textPrimary.withValues(alpha: 0.10), size: 16),
+                      _buildMilestoneNode(Icons.emoji_events_outlined, '75%', 'Almost There', progressPercent >= 75),
+                      Icon(Icons.chevron_right_rounded, color: context.colors.textPrimary.withValues(alpha: 0.10), size: 16),
+                      _buildMilestoneNode(Icons.rocket_launch_outlined, '100%', 'Goal Achieved', progressPercent >= 100),
+                    ],
+                  ),
+                  SizedBox(height: 28),
+
+                  // Bottom Motivation Card
+                  Container(
+                    height: 95,
+                    decoration: BoxDecoration(

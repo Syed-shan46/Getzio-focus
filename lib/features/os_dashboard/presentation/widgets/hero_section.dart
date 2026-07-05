@@ -66,7 +66,7 @@ class HeroSection extends ConsumerWidget {
               height: 56,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.glassBorder, width: 2),
+                border: Border.all(color: context.colors.glassBorder, width: 2),
                 color: Colors.white12,
               ),
               child: const Icon(Icons.person, color: Colors.white54, size: 32),
@@ -78,7 +78,7 @@ class HeroSection extends ConsumerWidget {
         // Motivational Anchor
         Text(
           '"Today\'s actions build tomorrow\'s identity."',
-          style: AppTypography.bodyMedium(color: AppColors.accentBlue).copyWith(fontStyle: FontStyle.italic),
+          style: AppTypography.bodyMedium(color: context.colors.accentBlue).copyWith(fontStyle: FontStyle.italic),
         ),
         const SizedBox(height: 24),
 

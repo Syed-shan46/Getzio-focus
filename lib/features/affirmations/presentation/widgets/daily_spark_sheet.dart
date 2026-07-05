@@ -8,6 +8,7 @@ import 'hanging_affirmation_board.dart';
 import '../providers/affirmations_provider.dart';
 import '../../domain/models/affirmation_model.dart';
 import 'affirmation_bottom_sheet.dart';
+import 'package:getzio_todo_app/core/theme/app_theme.dart';
 
 /// A premium full-screen bottom sheet that reveals the hanging affirmation
 /// board with backdrop blur, fade-in, and spring animation.
@@ -245,7 +246,7 @@ class _ActionsBottomSheet extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1510),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: context.colors.glassBorder),
       ),
       child: SafeArea(
         child: Padding(
@@ -260,7 +261,7 @@ class _ActionsBottomSheet extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: context.colors.textPrimary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -269,7 +270,7 @@ class _ActionsBottomSheet extends StatelessWidget {
                 'Board Actions',
                 style: GoogleFonts.outfit(
                   fontSize: 20,
-                  color: Colors.white,
+                  color: context.colors.textPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -320,9 +321,9 @@ class _ActionTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: context.colors.textPrimary.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(color: context.colors.glassBorder),
         ),
         child: Row(
           children: [
@@ -332,7 +333,7 @@ class _ActionTile extends StatelessWidget {
               label,
               style: GoogleFonts.outfit(
                 fontSize: 15,
-                color: Colors.white,
+                color: context.colors.textPrimary,
                 fontWeight: FontWeight.w500,
               ),
             ),

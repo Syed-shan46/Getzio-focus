@@ -123,7 +123,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                   Text(
                     'We sent a verification code to\n${widget.phoneNumber}',
                     textAlign: TextAlign.center,
-                    style: AppTypography.bodyMedium(color: AppColors.textSecondary),
+                    style: AppTypography.bodyMedium(color: context.colors.textSecondary),
                   ),
                   const SizedBox(height: AppSpacing.xxl),
 
@@ -137,7 +137,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                         Text(
                           'ENTER OTP CODE',
                           style: AppTypography.captionSmall(
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                           ).copyWith(letterSpacing: 1.2),
                         ),
                         const SizedBox(height: AppSpacing.md),
@@ -150,8 +150,8 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                             border: Border.all(
                               color: _error != null 
-                                  ? AppColors.error.withValues(alpha: 0.5)
-                                  : AppColors.glassBorder,
+                                  ? context.colors.error.withValues(alpha: 0.5)
+                                  : context.colors.glassBorder,
                               width: 0.8,
                             ),
                           ),
@@ -164,14 +164,14 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                             style: AppTypography.displayMedium().copyWith(
                               letterSpacing: 8,
                             ),
-                            cursorColor: AppColors.accentBlue,
+                            cursorColor: context.colors.accentBlue,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                             ],
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               hintText: '••••••',
                               hintStyle: TextStyle(
-                                color: AppColors.textMuted,
+                                color: context.colors.textMuted,
                                 letterSpacing: 8,
                               ),
                               border: InputBorder.none,
@@ -192,7 +192,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                           Text(
                             _error!,
                             textAlign: TextAlign.center,
-                            style: AppTypography.caption(color: AppColors.error),
+                            style: AppTypography.caption(color: context.colors.error),
                           ),
                         ],
 
@@ -205,11 +205,11 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                             duration: const Duration(milliseconds: 200),
                             height: 52,
                             decoration: BoxDecoration(
-                              color: AppColors.accentBlue,
+                              color: context.colors.accentBlue,
                               borderRadius: BorderRadius.circular(AppRadius.sm),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.accentBlue.withValues(alpha: 0.3),
+                                  color: context.colors.accentBlue.withValues(alpha: 0.3),
                                   blurRadius: 16,
                                   offset: const Offset(0, 4),
                                 ),

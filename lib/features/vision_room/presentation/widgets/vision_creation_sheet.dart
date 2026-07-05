@@ -401,24 +401,24 @@ class _EditModeCardState extends State<_EditModeCard> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppColors.accentBlue.withValues(
+                context.colors.accentBlue.withValues(
                   alpha: _isPressed ? 0.25 : 0.15,
                 ),
-                AppColors.accentBlue.withValues(alpha: 0.05),
+                context.colors.accentBlue.withValues(alpha: 0.05),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.accentBlue.withValues(
+              color: context.colors.accentBlue.withValues(
                 alpha: _isPressed ? 0.6 : 0.3,
               ),
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.accentBlue.withValues(alpha: 0.1),
+                color: context.colors.accentBlue.withValues(alpha: 0.1),
                 blurRadius: 16,
                 spreadRadius: 0,
               ),
@@ -430,12 +430,12 @@ class _EditModeCardState extends State<_EditModeCard> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.accentBlue.withValues(alpha: 0.25),
+                  color: context.colors.accentBlue.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.edit_rounded,
-                  color: AppColors.accentBlue,
+                  color: context.colors.accentBlue,
                   size: 18,
                 ),
               ),
@@ -465,7 +465,7 @@ class _EditModeCardState extends State<_EditModeCard> {
               ),
               Icon(
                 Icons.arrow_forward_ios_rounded,
-                color: AppColors.accentBlue.withValues(alpha: 0.6),
+                color: context.colors.accentBlue.withValues(alpha: 0.6),
                 size: 14,
               ),
             ],

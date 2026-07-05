@@ -66,7 +66,7 @@ class LockedFeatureCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: progress,
                     backgroundColor: Colors.white.withValues(alpha: 0.05),
-                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentBlue),
+                    valueColor: AlwaysStoppedAnimation<Color>(context.colors.accentBlue),
                     minHeight: 8,
                   ),
                 ),
@@ -77,7 +77,7 @@ class LockedFeatureCard extends StatelessWidget {
                     Text('$currentXp / $targetXp XP', style: AppTypography.titleMedium(color: Colors.white)),
                     Text(
                       '$remaining XP Remaining',
-                      style: AppTypography.captionSmall(color: AppColors.accentBlue),
+                      style: AppTypography.captionSmall(color: context.colors.accentBlue),
                     ),
                   ],
                 ),

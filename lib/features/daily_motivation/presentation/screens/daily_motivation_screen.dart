@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/storage/hive_database.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../os_dashboard/presentation/screens/os_dashboard_screen.dart';
+import '../../../../core/theme/app_theme.dart';
 
 /// Premium model representing a single daily quote
 class MotivationQuote {
@@ -256,101 +257,12 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: context.colors.bg1,
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: _navigateToHome,
         child: Stack(
           children: [
-            // 1. Warm Vision Room Gradient Background with Top-Right Sunlight Bloom
-            Positioned.fill(
-              child: AnimatedBuilder(
-                animation: _bgFadeAnimation,
-                builder: (context, child) {
-                  return Opacity(
-                    opacity: _bgFadeAnimation.value,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF0F1524), // Dark deep purple-blue
-                            Color(0xFF131B30),
-                            Color(0xFF1F1D36), // Warm ambient tint
-                          ],
-                        ),
-                      ),
-                      child: child,
-                    ),
-                  );
-                },
-                child: Stack(
-                  children: [
-                    // Sunlight glow from top-right corner
-                    Positioned(
-                      top: -100,
-                      right: -100,
-                      child: Container(
-                        width: 400,
-                        height: 400,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              const Color(0xFFFFD59E).withOpacity(0.18), // Warm golden sun bloom
-                              const Color(0xFFFF9E79).withOpacity(0.06),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Ambient light center bloom
-                    Center(
-                      child: Container(
-                        width: 600,
-                        height: 600,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              const Color(0xFF6B5B95).withOpacity(0.08),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // 2. Animated Custom Dust Particles
-            Positioned.fill(
-              child: CustomPaint(
-                painter: DustParticlesPainter(particles: _particles),
-              ),
-            ),
-
-            // 3. Vignette Overlay (Dark soft border edges for focus and luxury depth)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment.center,
-                      radius: 1.3,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(0.25),
-                        Colors.black.withOpacity(0.55),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
 
             // 4. Main Interactive UI Layout
             SafeArea(
@@ -381,7 +293,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                             style: GoogleFonts.outfit(
                               fontSize: 34,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: context.colors.textPrimary,
                               letterSpacing: -0.5,
                             ),
                           ),
@@ -394,7 +306,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                                 style: GoogleFonts.inter(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: context.colors.textSecondary,
                                 ),
                               ),
                               Container(
@@ -403,7 +315,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                                 height: 4,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white.withOpacity(0.3),
+                                  color: context.colors.textMuted.withValues(alpha: 0.3),
                                 ),
                               ),
                               Text(
@@ -411,7 +323,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                                 style: GoogleFonts.inter(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w400,
-                                  color: Colors.white.withOpacity(0.5),
+                                  color: context.colors.textMuted,
                                 ),
                               ),
                             ],
@@ -437,14 +349,14 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(28),
-                          color: Colors.white.withOpacity(0.04),
+                          color: context.colors.glass,
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.08),
+                            color: context.colors.glassBorder,
                             width: 1.2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: context.colors.darkOverlay,
                               blurRadius: 30,
                               offset: const Offset(0, 15),
                             ),
@@ -465,7 +377,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                                 style: GoogleFonts.outfit(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w400,
-                                  color: Colors.white.withOpacity(0.95),
+                                  color: context.colors.textPrimary,
                                   height: 1.45,
                                   letterSpacing: -0.2,
                                 ),
@@ -484,7 +396,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
-                                    color: const Color(0xFFFFD59E).withOpacity(0.85),
+                                    color: context.colors.textSecondary,
                                     letterSpacing: 0.5,
                                   ),
                                 ),
@@ -512,7 +424,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
-                          color: Colors.white.withOpacity(0.3),
+                          color: context.colors.textMuted,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -535,8 +447,8 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                           ElevatedButton(
                             onPressed: _navigateToHome,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFF0F1524),
+                              backgroundColor: context.colors.textPrimary,
+                              foregroundColor: context.colors.bg1,
                               padding: const EdgeInsets.symmetric(vertical: 18),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
@@ -566,7 +478,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w400,
-                              color: Colors.white.withOpacity(0.4),
+                              color: context.colors.textMuted,
                             ),
                           ),
                         ],
@@ -596,7 +508,7 @@ class DustParticlesPainter extends CustomPainter {
     final paint = Paint()..style = PaintingStyle.fill;
 
     for (var p in particles) {
-      paint.color = Colors.white.withOpacity(p.opacity);
+      paint.color = const Color(0xFFFFFFFF).withValues(alpha: p.opacity);
       canvas.drawCircle(
         Offset(p.x * size.width, p.y * size.height),
         p.size,

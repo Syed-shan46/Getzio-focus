@@ -42,7 +42,7 @@ class SampleDataSeedingService {
 
     // 4. Workspace Settings
     await hiveDb.saveWorkspaceSettings({
-      'woodTexture': 'Walnut',
+      'woodTexture': 'Oak',
       'wallColor': 'Deep Indigo',
       'plantType': 'Bonsai',
       'ambientMode': 'Auto',
@@ -467,6 +467,361 @@ class SampleDataSeedingService {
         'materialStyle': 'default',
         'metadata': visionMeta,
       }
+    ]);
+
+    // 10. Premium Tasks Module — Rich demo tasks for guest experience
+    await hiveDb.saveTasks([
+      {
+        'id': 'task_demo_1',
+        'title': 'Launch My Startup',
+        'description': 'Build and ship the MVP of my productivity app to the Play Store.',
+        'category': 'Work',
+        'priority': 'high',
+        'status': 'in_progress',
+        'progress': 35.0,
+        'manualProgress': 35.0,
+        'completed': false,
+        'pinned': true,
+        'dueDate': now.add(const Duration(days: 12)).toIso8601String(),
+        'dueTime': '10:00 AM',
+        'reminder': true,
+        'reminderStyle': 'balanced',
+        'syncStatus': 'pending',
+        'createdAt': now.subtract(const Duration(days: 5)).toIso8601String(),
+        'subtasks': [
+          {'id': 'st_1_1', 'title': 'Research competitors', 'completed': true, 'sortOrder': 0, 'createdAt': now.subtract(const Duration(days: 5)).toIso8601String(), 'completedAt': now.subtract(const Duration(days: 3)).toIso8601String()},
+          {'id': 'st_1_2', 'title': 'Design logo', 'completed': true, 'sortOrder': 1, 'createdAt': now.subtract(const Duration(days: 4)).toIso8601String(), 'completedAt': now.subtract(const Duration(days: 2)).toIso8601String()},
+          {'id': 'st_1_3', 'title': 'Build landing page', 'completed': false, 'sortOrder': 2, 'dueDate': now.add(const Duration(days: 5)).toIso8601String(), 'createdAt': now.subtract(const Duration(days: 3)).toIso8601String()},
+          {'id': 'st_1_4', 'title': 'Publish to Play Store', 'completed': false, 'sortOrder': 3, 'dueDate': now.add(const Duration(days: 10)).toIso8601String(), 'createdAt': now.subtract(const Duration(days: 3)).toIso8601String()},
+          {'id': 'st_1_5', 'title': 'Launch marketing campaign', 'completed': false, 'sortOrder': 4, 'dueDate': now.add(const Duration(days: 12)).toIso8601String(), 'createdAt': now.subtract(const Duration(days: 2)).toIso8601String()},
+        ],
+      },
+      {
+        'id': 'task_demo_2',
+        'title': 'Get Fit',
+        'description': 'Build a consistent workout habit with proper nutrition.',
+        'category': 'Health',
+        'priority': 'medium',
+        'status': 'in_progress',
+        'progress': 60.0,
+        'manualProgress': 60.0,
+        'completed': false,
+        'pinned': false,
+        'dueDate': now.add(const Duration(days: 21)).toIso8601String(),
+        'dueTime': '06:30 AM',
+        'reminder': true,
+        'reminderStyle': 'minimal',
+        'syncStatus': 'pending',
+        'createdAt': now.subtract(const Duration(days: 7)).toIso8601String(),
+        'subtasks': [
+          {'id': 'st_2_1', 'title': 'Morning Walk', 'completed': true, 'sortOrder': 0, 'createdAt': now.subtract(const Duration(days: 7)).toIso8601String(), 'completedAt': now.subtract(const Duration(days: 1)).toIso8601String()},
+          {'id': 'st_2_2', 'title': 'Drink 2L Water', 'completed': true, 'sortOrder': 1, 'createdAt': now.subtract(const Duration(days: 7)).toIso8601String(), 'completedAt': now.subtract(const Duration(days: 1)).toIso8601String()},
+          {'id': 'st_2_3', 'title': 'Gym Workout', 'completed': false, 'sortOrder': 2, 'dueDate': now.add(const Duration(days: 1)).toIso8601String(), 'dueTime': '07:00 AM', 'createdAt': now.subtract(const Duration(days: 5)).toIso8601String()},
+          {'id': 'st_2_4', 'title': 'Meal Prep', 'completed': false, 'sortOrder': 3, 'dueDate': now.add(const Duration(days: 3)).toIso8601String(), 'createdAt': now.subtract(const Duration(days: 5)).toIso8601String()},
+        ],
+      },
+      {
+        'id': 'task_demo_3',
+        'title': 'Learn Flutter',
+        'description': 'Master Flutter framework and publish a real app.',
+        'category': 'Learning',
+        'priority': 'medium',
+        'status': 'in_progress',
+        'progress': 25.0,
+        'manualProgress': 25.0,
+        'completed': false,
+        'pinned': false,
+        'dueDate': now.add(const Duration(days: 45)).toIso8601String(),
+        'reminder': true,
+        'reminderStyle': 'balanced',
+        'syncStatus': 'pending',
+        'createdAt': now.subtract(const Duration(days: 10)).toIso8601String(),
+        'subtasks': [
+          {'id': 'st_3_1', 'title': 'Install Flutter SDK', 'completed': true, 'sortOrder': 0, 'createdAt': now.subtract(const Duration(days: 10)).toIso8601String(), 'completedAt': now.subtract(const Duration(days: 9)).toIso8601String()},
+          {'id': 'st_3_2', 'title': 'Build First App', 'completed': true, 'sortOrder': 1, 'createdAt': now.subtract(const Duration(days: 8)).toIso8601String(), 'completedAt': now.subtract(const Duration(days: 5)).toIso8601String()},
+          {'id': 'st_3_3', 'title': 'Learn State Management', 'completed': false, 'sortOrder': 2, 'dueDate': now.add(const Duration(days: 20)).toIso8601String(), 'createdAt': now.subtract(const Duration(days: 5)).toIso8601String()},
+          {'id': 'st_3_4', 'title': 'Publish App', 'completed': false, 'sortOrder': 3, 'dueDate': now.add(const Duration(days: 45)).toIso8601String(), 'createdAt': now.subtract(const Duration(days: 5)).toIso8601String()},
+        ],
+      },
+      {
+        'id': 'task_demo_4',
+        'title': 'Read Atomic Habits',
+        'description': 'Finish reading and apply key principles from Atomic Habits.',
+        'category': 'Personal',
+        'priority': 'low',
+        'status': 'in_progress',
+        'progress': 50.0,
+        'manualProgress': 50.0,
+        'completed': false,
+        'pinned': false,
+        'dueDate': now.add(const Duration(days: 14)).toIso8601String(),
+        'reminder': false,
+        'reminderStyle': 'none',
+        'syncStatus': 'pending',
+        'createdAt': now.subtract(const Duration(days: 14)).toIso8601String(),
+        'subtasks': [
+          {'id': 'st_4_1', 'title': 'Read chapters 1–5', 'completed': true, 'sortOrder': 0, 'completedAt': now.subtract(const Duration(days: 7)).toIso8601String()},
+          {'id': 'st_4_2', 'title': 'Take notes on habit stacking', 'completed': true, 'sortOrder': 1, 'completedAt': now.subtract(const Duration(days: 4)).toIso8601String()},
+          {'id': 'st_4_3', 'title': 'Finish remaining chapters', 'completed': false, 'sortOrder': 2, 'dueDate': now.add(const Duration(days: 7)).toIso8601String()},
+          {'id': 'st_4_4', 'title': 'Write personal implementation plan', 'completed': false, 'sortOrder': 3, 'dueDate': now.add(const Duration(days: 14)).toIso8601String()},
+        ],
+      },
+    ]);
+
+    // 11. Enhanced Goals with Roadmaps
+    await hiveDb.saveSelectedGoals([
+      {
+        'id': 'goal_demo_1',
+        'localId': 'goal_demo_1',
+        'title': 'BMW S1000RR',
+        'category': 'Finance',
+        'target': 100,
+        'currentProgress': 25,
+        'status': 'in-progress',
+        'priority': 'high',
+        'deadline': DateTime(2026, 9, 30).toIso8601String(),
+        'syncStatus': 'pending',
+        'milestones': [
+          {
+            'id': 'm_demo_1_1',
+            'title': 'Save First ₹5,00,000',
+            'isCompleted': true,
+            'order': 0,
+            'subtasks': [
+              {'id': 'sub_d_1_1_1', 'title': 'Open dedicated savings account', 'isCompleted': true},
+              {'id': 'sub_d_1_1_2', 'title': 'Set up monthly auto-transfer ₹50,000', 'isCompleted': true},
+            ]
+          },
+          {
+            'id': 'm_demo_1_2',
+            'title': 'Reach ₹15,00,000 Mark',
+            'isCompleted': false,
+            'order': 1,
+            'subtasks': [
+              {'id': 'sub_d_1_2_1', 'title': 'Increase monthly savings to ₹75,000', 'isCompleted': false},
+              {'id': 'sub_d_1_2_2', 'title': 'Review investment returns quarterly', 'isCompleted': false},
+            ]
+          },
+          {
+            'id': 'm_demo_1_3',
+            'title': 'Purchase & Registration',
+            'isCompleted': false,
+            'order': 2,
+            'subtasks': [
+              {'id': 'sub_d_1_3_1', 'title': 'Visit BMW showroom for test ride', 'isCompleted': false},
+              {'id': 'sub_d_1_3_2', 'title': 'Complete loan documentation', 'isCompleted': false},
+            ]
+          }
+        ]
+      },
+      {
+        'id': 'goal_demo_2',
+        'localId': 'goal_demo_2',
+        'title': 'Dream Home',
+        'category': 'Finance',
+        'target': 100,
+        'currentProgress': 45,
+        'status': 'in-progress',
+        'priority': 'high',
+        'deadline': DateTime(2028, 12, 31).toIso8601String(),
+        'syncStatus': 'pending',
+        'milestones': [
+          {
+            'id': 'm_demo_2_1',
+            'title': 'Save Down Payment',
+            'isCompleted': true,
+            'order': 0,
+            'subtasks': [
+              {'id': 'sub_d_2_1_1', 'title': 'Research property rates in preferred area', 'isCompleted': true},
+              {'id': 'sub_d_2_1_2', 'title': 'Start SIP for down payment fund', 'isCompleted': true},
+            ]
+          },
+          {
+            'id': 'm_demo_2_2',
+            'title': 'Get Loan Pre-Approval',
+            'isCompleted': false,
+            'order': 1,
+            'subtasks': [
+              {'id': 'sub_d_2_2_1', 'title': 'Improve credit score to 750+', 'isCompleted': false},
+              {'id': 'sub_d_2_2_2', 'title': 'Compare bank loan offers', 'isCompleted': false},
+            ]
+          },
+        ]
+      },
+      {
+        'id': 'goal_demo_3',
+        'localId': 'goal_demo_3',
+        'title': 'Travel Japan',
+        'category': 'Lifestyle',
+        'target': 100,
+        'currentProgress': 15,
+        'status': 'in-progress',
+        'priority': 'medium',
+        'deadline': DateTime(2027, 3, 15).toIso8601String(),
+        'syncStatus': 'pending',
+        'milestones': [
+          {
+            'id': 'm_demo_3_1',
+            'title': 'Plan Itinerary',
+            'isCompleted': true,
+            'order': 0,
+            'subtasks': [
+              {'id': 'sub_d_3_1_1', 'title': 'Research Tokyo, Kyoto, Osaka routes', 'isCompleted': true},
+              {'id': 'sub_d_3_1_2', 'title': 'Book Japan Rail Pass', 'isCompleted': false},
+            ]
+          },
+          {
+            'id': 'm_demo_3_2',
+            'title': 'Save ₹3,00,000 Travel Fund',
+            'isCompleted': false,
+            'order': 1,
+            'subtasks': [
+              {'id': 'sub_d_3_2_1', 'title': 'Set aside ₹25,000/month', 'isCompleted': false},
+            ]
+          },
+        ]
+      },
+    ]);
+
+    // 12. Enhanced Affirmations — More categories and richer content
+    await hiveDb.saveSelectedAffirmations([
+      {
+        'id': 'aff_demo_1', 'localId': 'aff_demo_1',
+        'text': 'My mind is sharp, focused, and ready for greatness today.',
+        'author': 'Getzio', 'category': 'Mindset', 'colorTheme': 'Deep Indigo',
+        'isPinned': true, 'syncStatus': 'pending',
+      },
+      {
+        'id': 'aff_demo_2', 'localId': 'aff_demo_2',
+        'text': 'I nourish my body with movement, rest, and whole foods every single day.',
+        'author': 'Getzio', 'category': 'Health', 'colorTheme': 'Emerald Green',
+        'isPinned': false, 'syncStatus': 'pending',
+      },
+      {
+        'id': 'aff_demo_3', 'localId': 'aff_demo_3',
+        'text': 'Success is inevitable when I show up daily and give my absolute best.',
+        'author': 'Getzio', 'category': 'Success', 'colorTheme': 'Warm Amber',
+        'isPinned': true, 'syncStatus': 'pending',
+      },
+      {
+        'id': 'aff_demo_4', 'localId': 'aff_demo_4',
+        'text': 'Every challenge I face is a launching pad for my personal evolution.',
+        'author': 'Getzio', 'category': 'Growth', 'colorTheme': 'Minimal White',
+        'isPinned': false, 'syncStatus': 'pending',
+      },
+      {
+        'id': 'aff_demo_5', 'localId': 'aff_demo_5',
+        'text': 'Discipline today creates the freedom I crave tomorrow.',
+        'author': 'Getzio', 'category': 'Discipline', 'colorTheme': 'Deep Indigo',
+        'isPinned': true, 'syncStatus': 'pending',
+      },
+      {
+        'id': 'aff_demo_6', 'localId': 'aff_demo_6',
+        'text': 'I trust the process, move forward with conviction, and let faith guide me.',
+        'author': 'Getzio', 'category': 'Faith', 'colorTheme': 'Rose Quartz',
+        'isPinned': false, 'syncStatus': 'pending',
+      },
+      {
+        'id': 'aff_demo_7', 'localId': 'aff_demo_7',
+        'text': 'I am grateful for this moment and the infinite opportunities it holds.',
+        'author': 'Getzio', 'category': 'Gratitude', 'colorTheme': 'Emerald Green',
+        'isPinned': false, 'syncStatus': 'pending',
+      },
+    ]);
+
+    // 13. Enhanced Vision Room Items — More variety
+    await hiveDb.saveVisionItems([
+      // Column 1 (Left)
+      {
+        'id': 'vis_demo_1', 'type': 'stickyNote',
+        'content': 'Focus on daily consistency. Tiny steps lead to massive gains. ✨',
+        'x': -340.0, 'y': -220.0, 'width': 180.0, 'height': 160.0, 'rotation': -0.05,
+        'colorValue': 0xFF1D4ED8, 'isPinned': true, 'zIndex': 1,
+        'attachmentType': 'pin', 'attachmentStyle': 'redPin', 'materialStyle': 'default',
+        'metadata': visionMeta,
+      },
+      {
+        'id': 'vis_demo_2', 'type': 'countdown',
+        'content': 'Launch Startup', 'countdownDate': now.add(const Duration(days: 29)).toIso8601String(),
+        'x': -340.0, 'y': 20.0, 'width': 180.0, 'height': 110.0, 'rotation': 0.02,
+        'colorValue': 0xFF7C2D12, 'isPinned': false, 'zIndex': 2,
+        'attachmentType': 'pin', 'attachmentStyle': 'redPin', 'materialStyle': 'default',
+        'metadata': visionMeta,
+      },
+      {
+        'id': 'vis_demo_countdown_2', 'type': 'countdown',
+        'content': 'Japan Trip', 'countdownDate': now.add(const Duration(days: 250)).toIso8601String(),
+        'x': -340.0, 'y': 180.0, 'width': 180.0, 'height': 110.0, 'rotation': -0.01,
+        'colorValue': 0xFF1E3A5F, 'isPinned': false, 'zIndex': 12,
+        'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default',
+        'metadata': visionMeta,
+      },
+      // Column 2 (Center)
+      {
+        'id': 'vis_demo_3', 'type': 'image',
+        'content': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=80',
+        'x': -100.0, 'y': -240.0, 'width': 220.0, 'height': 170.0, 'rotation': 0.03,
+        'colorValue': 0xFF1E1B4B, 'isPinned': false, 'zIndex': 3,
+        'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'polaroid',
+        'metadata': visionMeta,
+      },
+      {
+        'id': 'vis_demo_4', 'type': 'quote',
+        'content': '"The secret of your future is hidden in your daily routine."',
+        'x': -100.0, 'y': -10.0, 'width': 220.0, 'height': 130.0, 'rotation': -0.02,
+        'colorValue': 0xFF0F172A, 'isPinned': true, 'zIndex': 4,
+        'attachmentType': 'pin', 'attachmentStyle': 'redPin', 'materialStyle': 'kraft',
+        'metadata': {...visionMeta, 'author': 'Mike Murdock'},
+      },
+      {
+        'id': 'vis_demo_5', 'type': 'financeGoal',
+        'content': 'Emergency Fund',
+        'x': -100.0, 'y': 170.0, 'width': 220.0, 'height': 100.0, 'rotation': 0.04,
+        'colorValue': 0xFF065F46, 'isPinned': false, 'zIndex': 5,
+        'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default',
+        'metadata': {...visionMeta, 'monthlyAmount': '15000', 'targetAmount': '200000'},
+      },
+      {
+        'id': 'vis_demo_finance_2', 'type': 'financeGoal',
+        'content': 'MacBook Pro Fund',
+        'x': -100.0, 'y': 320.0, 'width': 220.0, 'height': 100.0, 'rotation': -0.01,
+        'colorValue': 0xFF374151, 'isPinned': false, 'zIndex': 13,
+        'attachmentType': 'pin', 'attachmentStyle': 'redPin', 'materialStyle': 'default',
+        'metadata': {...visionMeta, 'monthlyAmount': '10000', 'targetAmount': '150000'},
+      },
+      // Column 3 (Right)
+      {
+        'id': 'vis_demo_6', 'type': 'goal',
+        'content': 'Launch Side Hustle MVP', 'secondaryContent': 'Productivity',
+        'x': 180.0, 'y': -220.0, 'width': 200.0, 'height': 130.0, 'rotation': -0.04,
+        'colorValue': 0xFF0F172A, 'isPinned': false, 'zIndex': 6,
+        'attachmentType': 'pin', 'attachmentStyle': 'redPin', 'materialStyle': 'default',
+        'metadata': {...visionMeta, 'targetDate': now.add(const Duration(days: 30)).toIso8601String(), 'category': 'Productivity'},
+      },
+      {
+        'id': 'vis_demo_7', 'type': 'quote',
+        'content': '"Stay hungry. Stay foolish."',
+        'x': 180.0, 'y': -40.0, 'width': 200.0, 'height': 120.0, 'rotation': 0.02,
+        'colorValue': 0xFF5B21B6, 'isPinned': false, 'zIndex': 7,
+        'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default',
+        'metadata': {...visionMeta, 'author': 'Steve Jobs'},
+      },
+      {
+        'id': 'vis_demo_8', 'type': 'task',
+        'content': 'Write Landing Page Script',
+        'x': 180.0, 'y': 130.0, 'width': 200.0, 'height': 140.0, 'rotation': -0.03,
+        'colorValue': 0xFF0F172A, 'isPinned': true, 'zIndex': 8,
+        'attachmentType': 'pin', 'attachmentStyle': 'redPin', 'materialStyle': 'default',
+        'metadata': visionMeta,
+      },
+      {
+        'id': 'vis_demo_countdown_3', 'type': 'countdown',
+        'content': 'Birthday', 'countdownDate': now.add(const Duration(days: 110)).toIso8601String(),
+        'x': 180.0, 'y': 310.0, 'width': 200.0, 'height': 110.0, 'rotation': 0.01,
+        'colorValue': 0xFF831843, 'isPinned': false, 'zIndex': 14,
+        'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default',
+        'metadata': visionMeta,
+      },
     ]);
 
     await hiveDb.saveSetupCompleted(true);
