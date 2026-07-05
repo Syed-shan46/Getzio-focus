@@ -835,29 +835,6 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
                 FocusScope.of(context).unfocus();
               },
               onScaleStart: (details) {
-                final canvasPoint = _toCanvasCoordinates(
-                  details.localFocalPoint,
-                  viewportTransform,
-                );
-                _interactingItemId = null;
-                for (var item in items.reversed) {
-                  final rect = Rect.fromLTWH(
-                    item.x,
-                    item.y,
-                    item.width,
-                    item.height,
-                  );
-                  if (rect.contains(canvasPoint)) {
-                    _interactingItemId = item.id;
-                    _itemStartWidth = item.width;
-                    _itemStartHeight = item.height;
-                    _itemStartRotation = item.rotation;
-                    ref.read(canvasStateProvider.notifier).selectItem(item.id);
-                    _propertiesAnimController.forward();
-                    HapticFeedback.selectionClick();
-                    break;
-                  }
-                }
                 if (_interactingItemId == null) {
                   _startViewportTransform = Matrix4.copy(viewportTransform);
                   _startFocalPoint = details.localFocalPoint;
@@ -877,7 +854,7 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
                       .updatePosition(_interactingItemId!, dx, dy);
                   ref
                       .read(canvasStateProvider.notifier)
-                      .commitTransform(
+                      .updateTransform(
                         _interactingItemId!,
                         _itemStartWidth * details.scale,
                         _itemStartHeight * details.scale,
@@ -924,6 +901,7 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
                         item.width,
                         item.height,
                         item.rotation,
+                        isFinal: true,
                       );
                   HapticFeedback.lightImpact();
                   _springItemId = _interactingItemId;
@@ -954,14 +932,34 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
                             ? _springAnimation.value
                             : 0.0;
                         return Positioned(
+                          key: ValueKey(item.id),
                           left: item.x,
                           top: item.y,
-                          child: _buildCanvasItem(
-                            item,
-                            isSelected,
-                            isInteracting,
-                            springValue,
-                            cust.boardStyle,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTapDown: (details) {
+                              setState(() {
+                                _interactingItemId = item.id;
+                                _itemStartWidth = item.width;
+                                _itemStartHeight = item.height;
+                                _itemStartRotation = item.rotation;
+                              });
+                              ref.read(canvasStateProvider.notifier).selectItem(item.id);
+                              _propertiesAnimController.forward();
+                              HapticFeedback.selectionClick();
+                            },
+                            onTap: () {
+                              setState(() {
+                                _interactingItemId = null;
+                              });
+                            },
+                            child: _buildCanvasItem(
+                              item,
+                              isSelected,
+                              isInteracting,
+                              springValue,
+                              cust.boardStyle,
+                            ),
                           ),
                         );
                       }),

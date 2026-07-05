@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'procedural_wind_controller.dart';
+import '../../providers/vision_room_providers.dart';
 
 class RealisticStickyNoteWrapper extends ConsumerStatefulWidget {
   final String noteId;
@@ -101,17 +102,17 @@ class _RealisticStickyNoteWrapperState extends ConsumerState<RealisticStickyNote
     );
     _interactionController.animateWith(_springSimulation!);
   }
-
   @override
   Widget build(BuildContext context) {
     final windController = ref.watch(proceduralWindProvider);
+    final isEditMode = ref.watch(editModeProvider);
     
     return RepaintBoundary(
       child: GestureDetector(
-        onTapDown: _handleTapDown,
-        onPanStart: _handlePanStart,
-        onPanEnd: _handlePanEnd,
-        onPanCancel: () => _handlePanEnd(DragEndDetails(velocity: Velocity.zero)),
+        onTapDown: isEditMode ? null : _handleTapDown,
+        onPanStart: isEditMode ? null : _handlePanStart,
+        onPanEnd: isEditMode ? null : _handlePanEnd,
+        onPanCancel: isEditMode ? null : () => _handlePanEnd(DragEndDetails(velocity: Velocity.zero)),
         behavior: HitTestBehavior.deferToChild,
         child: AnimatedBuilder(
           animation: Listenable.merge([

@@ -219,7 +219,7 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
         : Offset(0, 8 * cardCfg.shadowIntensity);
 
     final Border? selectionBorder = widget.isSelected
-        ? Border.all(color: context.colors.accentBlue, width: 3)
+        ? Border.all(color: Colors.red, width: 3)
         : null;
 
     final double cr = cardCfg.cornerRadius;
@@ -495,6 +495,41 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
                     clipBehavior: Clip.none,
                     children: [
                       Positioned.fill(child: boardAdjustedWidget),
+                      if (widget.isSelected)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.red,
+                                  width: 3.0,
+                                ),
+                                borderRadius: item.type == VisionItemType.stickyNote.name
+                                    ? (cardCfg.squareMode
+                                        ? BorderRadius.zero
+                                        : BorderRadius.only(
+                                            topLeft: Radius.circular(cardCfg.roundedMode ? cr : 2),
+                                            topRight: Radius.circular(cardCfg.roundedMode ? cr : 2),
+                                            bottomLeft: Radius.circular(cardCfg.roundedMode ? cr : 2),
+                                            bottomRight: Radius.circular(cardCfg.roundedMode ? 24 : cr),
+                                          ))
+                                    : (item.type == VisionItemType.quote.name
+                                        ? (['Elegant Minimal', 'Glass Card', 'Neon'].contains(item.metadata?['style'] ?? 'Elegant Minimal')
+                                            ? BorderRadius.zero
+                                            : (item.metadata?['style'] == 'Typewriter'
+                                                ? BorderRadius.circular(4)
+                                                : BorderRadius.circular(8)))
+                                        : (item.type == VisionItemType.image.name
+                                            ? BorderRadius.zero
+                                            : (item.type == VisionItemType.decoration.name && item.content.startsWith('frame_')
+                                                ? BorderRadius.circular(12)
+                                                : (item.type == VisionItemType.decoration.name
+                                                    ? BorderRadius.circular(cr)
+                                                    : BorderRadius.circular(8))))),
+                              ),
+                            ),
+                          ),
+                        ),
                       if (showProgress && item.type != VisionItemType.goal.name)
                         Positioned(
                           top: -12,

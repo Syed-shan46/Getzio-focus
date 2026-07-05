@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../domain/models/sticky_note.dart';
 import '../providers/sticky_note_provider.dart';
 import '../providers/vision_room_providers.dart';
+import '../providers/canvas_providers.dart';
 import 'sticky_note_bottom_sheet.dart';
 
 class StickyNoteWidget extends ConsumerStatefulWidget {
@@ -32,61 +33,75 @@ class _StickyNoteWidgetState extends ConsumerState<StickyNoteWidget> {
     final isEditMode = ref.watch(editModeProvider);
     final isCompleted = widget.note.progress == 100;
     final paperColor = Color(int.parse(widget.note.color.replaceFirst('#', '0xFF')));
+    final isSelected = ref.watch(canvasStateProvider).selectedIds.contains(widget.note.id);
+    final transform = Matrix4.rotationZ(widget.note.rotation)..scale(widget.note.scale);
 
-    return GestureDetector(
-      onTap: () {
-        if (!isEditMode) {
+    return Transform(
+      transform: transform,
+      alignment: Alignment.center,
+      child: GestureDetector(
+        onTapDown: isEditMode
+            ? (details) {
+                ref.read(canvasStateProvider.notifier).selectItem(widget.note.id);
+                HapticFeedback.selectionClick();
+              }
+            : null,
+        onTap: () {
+          if (!isEditMode) {
+            HapticFeedback.lightImpact();
+            StickyNoteBottomSheet.show(context, existingNote: widget.note);
+          }
+        },
+        onScaleStart: isEditMode ? (details) {
+          _dragStartX = details.focalPoint.dx;
+          _dragStartY = details.focalPoint.dy;
+          _initialX = widget.note.x;
+          _initialY = widget.note.y;
+          _initialScale = widget.note.scale;
+          _initialRotation = widget.note.rotation;
+        } : null,
+        onScaleUpdate: isEditMode ? (details) {
+          final dx = details.focalPoint.dx - _dragStartX;
+          final dy = details.focalPoint.dy - _dragStartY;
+          final updated = widget.note.copyWith(
+            x: _initialX + dx,
+            y: _initialY + dy,
+            scale: _initialScale * details.scale,
+            rotation: _initialRotation + details.rotation,
+          );
+          ref.read(stickyNotesProvider.notifier).updateNote(updated);
+        } : null,
+        onScaleEnd: isEditMode ? (_) {
           HapticFeedback.lightImpact();
-          StickyNoteBottomSheet.show(context, existingNote: widget.note);
-        }
-      },
-      onScaleStart: isEditMode ? (details) {
-        _dragStartX = details.focalPoint.dx;
-        _dragStartY = details.focalPoint.dy;
-        _initialX = widget.note.x;
-        _initialY = widget.note.y;
-        _initialScale = widget.note.scale;
-        _initialRotation = widget.note.rotation;
-      } : null,
-      onScaleUpdate: isEditMode ? (details) {
-        final dx = details.focalPoint.dx - _dragStartX;
-        final dy = details.focalPoint.dy - _dragStartY;
-        final updated = widget.note.copyWith(
-          x: _initialX + dx,
-          y: _initialY + dy,
-          scale: _initialScale * details.scale,
-          rotation: _initialRotation + details.rotation,
-        );
-        ref.read(stickyNotesProvider.notifier).updateNote(updated);
-      } : null,
-      onScaleEnd: isEditMode ? (_) {
-        HapticFeedback.lightImpact();
-      } : null,
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovering = true),
-        onExit: (_) => setState(() => _isHovering = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 160,
-          height: 160,
-          transform: Matrix4.rotationZ(widget.note.rotation)..scale(widget.note.scale),
-          transformAlignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: paperColor,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: _isHovering || isEditMode ? 0.3 : 0.15),
-                blurRadius: _isHovering || isEditMode ? 12 : 6,
-                offset: Offset(4, _isHovering || isEditMode ? 8 : 4),
-              ),
-              // Inner shadow to simulate paper texture
-              BoxShadow(
-                color: Colors.white.withValues(alpha: 0.4),
-                blurRadius: 4,
-                offset: const Offset(-2, -2),
-              ),
+        } : null,
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovering = true),
+          onExit: (_) => setState(() => _isHovering = false),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 160,
+            height: 160,
+            decoration: BoxDecoration(
+              color: paperColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: _isHovering || isEditMode ? 0.3 : 0.15),
+                  blurRadius: _isHovering || isEditMode ? 12 : 6,
+                  offset: Offset(4, _isHovering || isEditMode ? 8 : 4),
+                ),
+                // Inner shadow to simulate paper texture
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  blurRadius: 4,
+                  offset: const Offset(-2, -2),
+                ),
             ],
-            border: isEditMode ? Border.all(color: Colors.blueAccent, width: 2) : null,
+            border: isEditMode
+                ? Border.all(
+                    color: isSelected ? Colors.red : Colors.blueAccent,
+                    width: isSelected ? 3.0 : 2.0,
+                  )
+                : null,
           ),
           child: Stack(
             clipBehavior: Clip.none,
@@ -175,6 +190,7 @@ class _StickyNoteWidgetState extends ConsumerState<StickyNoteWidget> {
           ),
         ),
       ),
-    );
+    ),
+   );
   }
 }

@@ -704,6 +704,25 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     commitState(state.copyWith(items: newItems));
   }
 
+  void updateTransform(
+    String id,
+    double newWidth,
+    double newHeight,
+    double newRotation,
+  ) {
+    final updatedItems = state.items.map((item) {
+      if (item.id == id) {
+        return item.copyWith(
+          width: newWidth.clamp(50.0, 2000.0),
+          height: newHeight.clamp(50.0, 2000.0),
+          rotation: newRotation,
+        );
+      }
+      return item;
+    }).toList();
+    state = state.copyWith(items: updatedItems);
+  }
+
   void removeItem(String id) {
     commitState(
       state.copyWith(

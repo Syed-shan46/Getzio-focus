@@ -115,6 +115,18 @@ class _TaskCardState extends ConsumerState<TaskCard> {
       case 'learning':
       case 'study':
         return const Color(0xFF3B82F6); // Blue
+      case 'vision room':
+        return const Color(0xFFA855F7); // Violet
+      case 'affirmations':
+        return const Color(0xFFEC4899); // Pink
+      case 'goals':
+        return const Color(0xFFF59E0B); // Amber
+      case 'productivity':
+        return const Color(0xFF6366F1); // Indigo
+      case 'finance':
+        return const Color(0xFF14B8A6); // Teal
+      case 'health':
+        return const Color(0xFFEF4444); // Red
       default:
         return const Color(0xFFF97316); // Orange
     }

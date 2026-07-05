@@ -658,6 +658,22 @@ class HiveDatabase {
 
   // ─── Affirmation Metadata (repeat counts, last viewed, etc.) ──────────
 
+  Future<void> saveSampleDataSeeded(bool seeded) async {
+    await _settingsBox.put('sample_data_seeded', seeded);
+  }
+
+  bool isSampleDataSeeded() {
+    return _settingsBox.get('sample_data_seeded', defaultValue: false) as bool;
+  }
+
+  Future<void> saveSampleDataVersion(int version) async {
+    await _settingsBox.put('sample_data_version', version);
+  }
+
+  int getSampleDataVersion() {
+    return _settingsBox.get('sample_data_version', defaultValue: 0) as int;
+  }
+
   Future<void> saveAffirmationMetadata(String key, dynamic value) async {
     await _settingsBox.put('affirmation_meta_$key', value);
   }

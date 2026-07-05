@@ -143,7 +143,7 @@ class _HangingPenState extends State<HangingPen> with TickerProviderStateMixin {
             ),
           ),
           child: Text(
-            'Vision',
+            'Focus',
             style: TextStyle(
               fontFamily: 'Kalam',
               fontWeight: FontWeight.bold,
@@ -212,7 +212,9 @@ class _HangingPenState extends State<HangingPen> with TickerProviderStateMixin {
                         child: GestureDetector(
                           onTap: _onPenTap,
                           behavior: HitTestBehavior.opaque,
-                          child: _buildPenImage(MediaQuery.paddingOf(context).top),
+                          child: _buildPenImage(
+                            MediaQuery.paddingOf(context).top,
+                          ),
                         ),
                       ),
                     ),

@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vector_math/vector_math_64.dart' show Vector3;
+
 import '../../domain/models/vision_item.dart';
 import '../../domain/models/vision_customization.dart';
 import '../providers/canvas_providers.dart';
@@ -68,14 +68,6 @@ class _VisionWallState extends ConsumerState<VisionWall>
     super.dispose();
   }
 
-  Offset _toCanvasCoordinates(Offset screenPoint, Matrix4 transform) {
-    final inverse = Matrix4.copy(transform);
-    if (inverse.invert() == 0.0) return screenPoint;
-    final vector = Vector3(screenPoint.dx, screenPoint.dy, 0);
-    final result = inverse.transform3(vector);
-    return Offset(result.x, result.y);
-  }
-
   @override
   Widget build(BuildContext context) {
     final canvasState = ref.watch(canvasStateProvider);
@@ -99,33 +91,8 @@ class _VisionWallState extends ConsumerState<VisionWall>
             },
             onScaleStart: isEditMode
                 ? (details) {
-                    final canvasPoint = _toCanvasCoordinates(
-                      details.localFocalPoint,
-                      Matrix4.identity(),
-                    );
-                    _interactingItemId = null;
-                    for (var item in items.reversed) {
-                      final double h = item.type == VisionItemType.task.name
-                          ? item.width * (260.0 / 200.0)
-                          : item.height;
-                      final rect = Rect.fromLTWH(
-                        item.x,
-                        item.y,
-                        item.width,
-                        h,
-                      );
-                      if (rect.contains(canvasPoint)) {
-                        _interactingItemId = item.id;
-                        _itemStartWidth = item.width;
-                        _itemStartHeight = h;
-                        _itemStartRotation = item.rotation;
-                        ref
-                            .read(canvasStateProvider.notifier)
-                            .selectItem(item.id);
-                        HapticFeedback.selectionClick();
-                        break;
-                      }
-                    }
+                    // Interaction target and start parameters are initialized on touch down
+                    // by the child GestureDetector's onTapDown for 100% accurate hit-testing.
                   }
                 : null,
             onScaleUpdate: isEditMode
@@ -138,7 +105,7 @@ class _VisionWallState extends ConsumerState<VisionWall>
                           .updatePosition(_interactingItemId!, dx, dy);
                       ref
                           .read(canvasStateProvider.notifier)
-                          .commitTransform(
+                          .updateTransform(
                             _interactingItemId!,
                             _itemStartWidth * details.scale,
                             _itemStartHeight * details.scale,
@@ -160,6 +127,7 @@ class _VisionWallState extends ConsumerState<VisionWall>
                             item.width,
                             item.height,
                             item.rotation,
+                            isFinal: true,
                           );
                       HapticFeedback.lightImpact();
                       _springItemId = _interactingItemId;
@@ -182,16 +150,33 @@ class _VisionWallState extends ConsumerState<VisionWall>
                       : 0.0;
 
                   return Positioned(
+                    key: ValueKey(item.id),
                     left: item.x,
                     top: item.y,
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTap: () {
+                      onTapDown: (details) {
                         if (isEditMode) {
+                          final double h = item.type == VisionItemType.task.name
+                              ? item.width * (260.0 / 200.0)
+                              : item.height;
+                          setState(() {
+                            _interactingItemId = item.id;
+                            _itemStartWidth = item.width;
+                            _itemStartHeight = h;
+                            _itemStartRotation = item.rotation;
+                          });
                           ref.read(canvasStateProvider.notifier).selectItem(item.id);
                           HapticFeedback.selectionClick();
-                        } else {
+                        }
+                      },
+                      onTap: () {
+                        if (!isEditMode) {
                           SmartObjectSheetRouter.open(context, item);
+                        } else {
+                          setState(() {
+                            _interactingItemId = null;
+                          });
                         }
                       },
                       child: CanvasItemWidget(
@@ -211,6 +196,7 @@ class _VisionWallState extends ConsumerState<VisionWall>
                     .where((note) => !note.category.contains('#shelf'))
                     .map((note) {
                   return Positioned(
+                    key: ValueKey(note.id),
                     left: note.x,
                     top: note.y,
                     child: StickyNoteWidget(note: note),

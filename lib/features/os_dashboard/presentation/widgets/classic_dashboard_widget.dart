@@ -23,7 +23,6 @@ import '../../../vision_room/presentation/providers/canvas_providers.dart';
 import '../../../vision_room/domain/models/vision_item.dart';
 import '../../../vision_room/domain/models/smart_object_models.dart';
 import '../../../vision_room/presentation/widgets/smart_object_sheets.dart';
-import '../../../../shared/widgets/preview_mode_banner.dart';
 
 class ClassicDashboardWidget extends ConsumerStatefulWidget {
   const ClassicDashboardWidget({super.key});
@@ -2318,12 +2317,7 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
             ),
           ),
         ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: const PreviewModeBanner(),
-        ),
+
       ],
     );
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../shared/widgets/preview_mode_banner.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../providers/tasks_provider.dart';
@@ -307,15 +306,17 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         : null;
 
     final String title = focusTask?.title ?? "No focus task for today";
-    final String description =
-        (focusTask?.description != null && focusTask!.description!.isNotEmpty)
-        ? focusTask.description!
-        : "Add or select a task to focus on.";
+    final String description = focusTask?.description ?? '';
+    final String taskDescription =
+        description.isNotEmpty ? description : "Add or select a task to focus on.";
     final String remaining = "${todayPendingTasks.length} Tasks";
     final String priority = focusTask != null
         ? focusTask.priority.name[0].toUpperCase() +
               focusTask.priority.name.substring(1)
         : "None";
+
+    final accentColor = context.colors.warning;
+    final surfaceColor = context.colors.bg3;
 
     return Container(
       width: double.infinity,
@@ -335,8 +336,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.black.withValues(alpha: 0.2),
-              Colors.black.withValues(alpha: 0.8),
+              surfaceColor.withValues(alpha: 0.2),
+              surfaceColor.withValues(alpha: 0.85),
             ],
           ),
         ),
@@ -348,14 +349,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.4),
+                color: surfaceColor.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                border: Border.all(color: accentColor.withValues(alpha: 0.3)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 10),
+                  Icon(Icons.star, color: accentColor, size: 10),
                   const SizedBox(width: 4),
                   Text(
                     "TODAY'S FOCUS",
@@ -382,7 +383,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              description,
+              taskDescription,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.outfit(
@@ -393,9 +394,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.work_outline_rounded,
-                  color: Colors.amber,
+                  color: accentColor,
                   size: 14,
                 ),
                 const SizedBox(width: 4),
@@ -422,9 +423,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                   ],
                 ),
                 const SizedBox(width: 16),
-                const Icon(
+                Icon(
                   Icons.warning_amber_rounded,
-                  color: Colors.amber,
+                  color: accentColor,
                   size: 14,
                 ),
                 const SizedBox(width: 4),
@@ -775,13 +776,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             ),
           ),
 
-          // PreviewModeBanner at the bottom
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: const PreviewModeBanner(),
-          ),
         ],
       ),
     );

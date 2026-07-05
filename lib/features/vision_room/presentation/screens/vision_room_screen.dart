@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../shared/widgets/preview_mode_banner.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -54,6 +53,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
   late Animation<double> _scaleAnimation;
 
   final ImagePicker _picker = ImagePicker();
+  Offset _toolbarOffset = Offset.zero;
 
   final List<String> _wallNames = [
     'Finance Wall',
@@ -571,6 +571,14 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
       }
     });
 
+    ref.listen<bool>(editModeProvider, (previous, next) {
+      if (next != previous) {
+        setState(() {
+          _toolbarOffset = Offset.zero;
+        });
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
@@ -683,15 +691,20 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                       bottom: 30,
                       left: 0,
                       right: 0,
-                      child: _buildEditToolbar(),
+                      child: Transform.translate(
+                        offset: _toolbarOffset,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.deferToChild,
+                          onPanUpdate: (details) {
+                            setState(() {
+                              _toolbarOffset += details.delta;
+                            });
+                          },
+                          child: _buildEditToolbar(),
+                        ),
+                      ),
                     ),
 
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: const PreviewModeBanner(),
-                  ),
                 ],
               ),
             ),

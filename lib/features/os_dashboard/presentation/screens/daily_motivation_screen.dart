@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getzio_todo_app/core/theme/app_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../shared/widgets/preview_mode_banner.dart';
 
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/os_providers.dart';
@@ -290,12 +289,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
               },
             ),
           ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: const PreviewModeBanner(),
-          ),
+
         ],
       ),
     );

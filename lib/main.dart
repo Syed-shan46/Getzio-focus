@@ -68,7 +68,10 @@ void main() async {
 }
 
 Future<void> _seedGuestSessionIfNeeded(HiveDatabase hiveDb) async {
-  if (!hiveDb.isSetupCompleted() && hiveDb.getAuthToken() == null) {
+  if (hiveDb.getAuthToken() != null) return;
+  final needsSeed = !hiveDb.isSampleDataSeeded() ||
+      hiveDb.getSampleDataVersion() < SampleDataSeedingService.currentVersion;
+  if (needsSeed) {
     log('[Seed] Seeding default guest session data using SampleDataSeedingService...');
     await SampleDataSeedingService.seedAll(hiveDb);
   }
