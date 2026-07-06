@@ -83,6 +83,9 @@ class TasksNotifier extends StateNotifier<TasksState> {
   }
 
   Future<void> _loadData() async {
+    final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
+    print('[Tasks] _loadData hasToken: $hasToken');
+
     // 1. Load instantly from local cache
     try {
       final localTasks = _repository.getLocalTasks();
@@ -90,17 +93,21 @@ class TasksNotifier extends StateNotifier<TasksState> {
       if (localTasks.isNotEmpty) {
         state = state.copyWith(allTasks: localTasks, isLoading: false);
       } else {
-        state = state.copyWith(isLoading: true);
+        if (!hasToken) {
+          // Seed guest tasks
+          final seeded = _getGuestSeededTasks();
+          state = state.copyWith(allTasks: seeded, isLoading: false);
+          await _repository.saveLocalTasks(seeded);
+        } else {
+          state = state.copyWith(isLoading: true);
+        }
       }
     } catch (e, st) {
       print('[Tasks] ERROR loading local tasks: $e');
-      print('[Tasks] Stack: $st');
       state = state.copyWith(isLoading: true);
     }
 
     // 2. Silently fetch fresh data from server in background
-    final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
-    print('[Tasks] hasToken: $hasToken');
     if (!hasToken) {
       state = state.copyWith(isLoading: false);
       return;
@@ -109,14 +116,8 @@ class TasksNotifier extends StateNotifier<TasksState> {
     _repository.fetchTasksFromServer().then((serverTasks) async {
       print('[Tasks] Server returned ${serverTasks?.length ?? 0} tasks');
       if (serverTasks != null) {
-        // Compare to check if identical
-        final localJson = jsonEncode(state.allTasks.map((t) => t.toMap()).toList());
-        final serverJson = jsonEncode(serverTasks.map((t) => t.toMap()).toList());
-
-        if (localJson != serverJson) {
-          state = state.copyWith(allTasks: serverTasks, isLoading: false);
-          await _repository.saveLocalTasks(serverTasks);
-        }
+        state = state.copyWith(allTasks: serverTasks, isLoading: false);
+        await _repository.saveLocalTasks(serverTasks);
       }
       // Process pending sync queue
       _ref.read(syncManagerProvider).processQueue();
@@ -298,3 +299,168 @@ final tasksProvider = StateNotifierProvider<TasksNotifier, TasksState>((ref) {
   final repo = ref.watch(tasksRepositoryProvider);
   return TasksNotifier(repo, ref);
 });
+
+List<TaskModel> _getGuestSeededTasks() {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final yesterday = today.subtract(const Duration(days: 1));
+  final threeDaysAgo = today.subtract(const Duration(days: 3));
+
+  return [
+    // Today's Targets (3 cards)
+    TaskModel(
+      id: 'guest_today_1',
+      title: 'Outline Weekly Goals',
+      description: 'Prepare target overview list and organize boards.',
+      category: 'Work',
+      priority: TaskPriority.high,
+      dueDate: today,
+      dueTime: '10:00 AM',
+      reminder: true,
+      reminderStyle: ReminderStyle.balanced,
+      createdAt: now,
+      updatedAt: now,
+      subtasks: [
+        SubtaskModel(
+          id: 'guest_today_1_sub1',
+          title: 'Draft board outline',
+          completed: false,
+          dueDate: today,
+          dueTime: '10:00 AM',
+        ),
+        SubtaskModel(
+          id: 'guest_today_1_sub2',
+          title: 'Review team backlog',
+          completed: true,
+          dueDate: today,
+          dueTime: '11:00 AM',
+        ),
+      ],
+    ),
+    TaskModel(
+      id: 'guest_today_2',
+      title: 'Full Body HIIT Workout',
+      description: 'Complete HIIT circuit and light stretching.',
+      category: 'Fitness',
+      priority: TaskPriority.medium,
+      dueDate: today,
+      dueTime: '6:30 PM',
+      reminder: true,
+      reminderStyle: ReminderStyle.balanced,
+      createdAt: now,
+      updatedAt: now,
+      subtasks: [
+        SubtaskModel(
+          id: 'guest_today_2_sub1',
+          title: 'Warmup stretches',
+          completed: false,
+          dueDate: today,
+          dueTime: '6:30 PM',
+        ),
+      ],
+    ),
+    TaskModel(
+      id: 'guest_today_3',
+      title: 'Read 15 Pages of Book',
+      description: 'Focus on productivity book chapter 4.',
+      category: 'Personal',
+      priority: TaskPriority.low,
+      dueDate: today,
+      createdAt: now,
+      updatedAt: now,
+      subtasks: [],
+    ),
+
+    // Completed Targets (3 cards)
+    TaskModel(
+      id: 'guest_comp_1',
+      title: 'Design Dashboard Mockups',
+      description: 'Complete UI layout variants for the Tasks feature.',
+      category: 'Work',
+      priority: TaskPriority.high,
+      dueDate: yesterday,
+      completed: true,
+      completedAt: yesterday,
+      createdAt: yesterday,
+      updatedAt: yesterday,
+      subtasks: [
+        SubtaskModel(
+          id: 'guest_comp_1_sub1',
+          title: 'Layout structure setup',
+          completed: true,
+          dueDate: yesterday,
+        ),
+      ],
+    ),
+    TaskModel(
+      id: 'guest_comp_2',
+      title: 'Monthly Budget Review',
+      description: 'Calculate subscription renewals and personal expenses.',
+      category: 'Finance',
+      priority: TaskPriority.medium,
+      dueDate: yesterday,
+      completed: true,
+      completedAt: yesterday,
+      createdAt: yesterday,
+      updatedAt: yesterday,
+      subtasks: [],
+    ),
+    TaskModel(
+      id: 'guest_comp_3',
+      title: 'Water Houseplants',
+      description: 'Water indoor plants and add fertilizer.',
+      category: 'Personal',
+      priority: TaskPriority.low,
+      dueDate: yesterday,
+      completed: true,
+      completedAt: yesterday,
+      createdAt: yesterday,
+      updatedAt: yesterday,
+      subtasks: [],
+    ),
+
+    // Overdue Targets (3 cards)
+    TaskModel(
+      id: 'guest_over_1',
+      title: 'Submit Project Milestone 1',
+      description: 'Publish documentation and initial code branch.',
+      category: 'Work',
+      priority: TaskPriority.high,
+      dueDate: yesterday,
+      dueTime: '2:00 PM',
+      createdAt: yesterday,
+      updatedAt: yesterday,
+      subtasks: [
+        SubtaskModel(
+          id: 'guest_over_1_sub1',
+          title: 'Finalize branch tests',
+          completed: false,
+          dueDate: yesterday,
+          dueTime: '2:00 PM',
+        ),
+      ],
+    ),
+    TaskModel(
+      id: 'guest_over_2',
+      title: 'Plan Travel Vacation Route',
+      description: 'Outline flights, hotels, and tourist spots.',
+      category: 'Travel',
+      priority: TaskPriority.medium,
+      dueDate: threeDaysAgo,
+      createdAt: threeDaysAgo,
+      updatedAt: threeDaysAgo,
+      subtasks: [],
+    ),
+    TaskModel(
+      id: 'guest_over_3',
+      title: 'Schedule Annual Dentist Checkup',
+      description: 'Call dentist office for appointment options.',
+      category: 'Health',
+      priority: TaskPriority.low,
+      dueDate: yesterday,
+      createdAt: yesterday,
+      updatedAt: yesterday,
+      subtasks: [],
+    ),
+  ];
+}

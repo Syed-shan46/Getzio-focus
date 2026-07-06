@@ -180,117 +180,134 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
     // Sort so pinned are kept at top of list
     final sortedAffirmations = [...pinnedCards, ...normalCards];
 
-    return Scaffold(
-      backgroundColor: context.colors.bg1,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // ─── SCROLLABLE CORE INTERFACE ───
-          RepaintBoundary(
-            child: SafeArea(
-              child: Column(
-                children: [
-                  _buildHeader(osState, affState),
+    final Color color1 = const Color(0xFFF97316).withValues(alpha: 0.06);
+    final Color color2 = const Color(0xFF8B5CF6).withValues(alpha: 0.06);
 
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      physics: const BouncingScrollPhysics(),
-                      itemCount:
-                          2 +
-                          (sortedAffirmations.isEmpty
-                              ? 2
-                              : sortedAffirmations.length + 1),
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return Column(
-                            children: [
-                              _buildHeroCard(
-                                pinnedCards.isNotEmpty
-                                    ? pinnedCards.first
-                                    : null,
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              context.colors.bg1,
+              Color.alphaBlend(color1, context.colors.bg1),
+              Color.alphaBlend(color2, context.colors.bg1),
+              context.colors.bg1,
+            ],
+            stops: const [0.0, 0.35, 0.7, 1.0],
+          ),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // ─── SCROLLABLE CORE INTERFACE ───
+            RepaintBoundary(
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    _buildHeader(osState, affState),
+  
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        physics: const BouncingScrollPhysics(),
+                        itemCount:
+                            2 +
+                            (sortedAffirmations.isEmpty
+                                ? 2
+                                : sortedAffirmations.length + 1),
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return Column(
+                              children: [
+                                _buildHeroCard(
+                                  pinnedCards.isNotEmpty
+                                      ? pinnedCards.first
+                                      : null,
+                                  osState,
+                                ),
+                                const SizedBox(height: 20),
+                                _buildCategoryChips(affState),
+                                const SizedBox(height: 16),
+                              ],
+                            );
+                          }
+                          if (sortedAffirmations.isEmpty) {
+                            if (index == 1) return _buildEmptyPlaceholder();
+                            return const SizedBox(height: 80);
+                          }
+                          final cardIndex = index - 1;
+                          if (cardIndex < sortedAffirmations.length) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _buildVertical3DCard(
+                                sortedAffirmations[cardIndex],
                                 osState,
                               ),
-                              const SizedBox(height: 20),
-                              _buildCategoryChips(affState),
-                              const SizedBox(height: 16),
-                            ],
-                          );
-                        }
-                        if (sortedAffirmations.isEmpty) {
-                          if (index == 1) return _buildEmptyPlaceholder();
+                            );
+                          }
                           return const SizedBox(height: 80);
-                        }
-                        final cardIndex = index - 1;
-                        if (cardIndex < sortedAffirmations.length) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _buildVertical3DCard(
-                              sortedAffirmations[cardIndex],
-                              osState,
-                            ),
-                          );
-                        }
-                        return const SizedBox(height: 80);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          Positioned(
-            bottom: 90,
-            right: 20,
-            child: GestureDetector(
-              onTap: () {
-                final isGuest = ref.read(authProvider).valueOrNull == null;
-                if (isGuest) {
-                  PremiumAuthSheet.show(context);
-                } else {
-                  AffirmationBottomSheet.show(context);
-                }
-              },
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF8B5A2B),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF3C2E24).withOpacity(0.25),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
+                        },
+                      ),
                     ),
                   ],
                 ),
-                child: Icon(
-                  Icons.add_rounded,
-                  color: Colors.white.withOpacity(0.85),
-                  size: 28,
+              ),
+            ),
+  
+            Positioned(
+              bottom: 90,
+              right: 20,
+              child: GestureDetector(
+                onTap: () {
+                  final isGuest = ref.read(authProvider).valueOrNull == null;
+                  if (isGuest) {
+                    PremiumAuthSheet.show(context);
+                  } else {
+                    AffirmationBottomSheet.show(context);
+                  }
+                },
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF8B5A2B),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF3C2E24).withOpacity(0.25),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.add_rounded,
+                    color: Colors.white.withOpacity(0.85),
+                    size: 28,
+                  ),
                 ),
               ),
             ),
-          ),
-          Positioned.fill(
-            child: HangingDailySpark(
-              isSheetOpen: _isDailySparkOpen,
-              onTap: () async {
-                setState(() => _isDailySparkOpen = true);
-                await DailySparkSheet.show(context);
-                if (mounted) {
-                  setState(() => _isDailySparkOpen = false);
-                }
-              },
+            Positioned.fill(
+              child: HangingDailySpark(
+                isSheetOpen: _isDailySparkOpen,
+                onTap: () async {
+                  setState(() => _isDailySparkOpen = true);
+                  await DailySparkSheet.show(context);
+                  if (mounted) {
+                    setState(() => _isDailySparkOpen = false);
+                  }
+                },
+              ),
             ),
-          ),
-
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -300,6 +317,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildHeader(OSState osState, AffirmationsState affState) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final authUser = ref.watch(authProvider).valueOrNull;
     final greetingName = authUser != null && authUser.name.isNotEmpty
         ? authUser.name
@@ -319,16 +337,22 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF3ECE4),
+                      color: isDark
+                          ? context.colors.bg2
+                          : const Color(0xFFF3ECE4),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFFE6DFD5),
+                        color: isDark
+                            ? context.colors.glassBorder
+                            : const Color(0xFFE6DFD5),
                         width: 0.8,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_back_ios_new_rounded,
-                      color: Color(0xFF6B4E3D),
+                      color: isDark
+                          ? context.colors.textPrimary
+                          : const Color(0xFF6B4E3D),
                       size: 15,
                     ),
                   ),
@@ -345,7 +369,9 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
               IconButton(
                 icon: Icon(
                   _isSearching ? Icons.close : Icons.search_rounded,
-                  color: const Color(0xFF6B4E3D),
+                  color: isDark
+                      ? context.colors.textPrimary
+                      : const Color(0xFF6B4E3D),
                   size: 24,
                 ),
                 onPressed: () {
@@ -370,33 +396,49 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                 controller: _searchController,
                 autofocus: true,
                 style: GoogleFonts.outfit(
-                  color: const Color(0xFF3C2E24),
+                  color: isDark
+                      ? context.colors.textPrimary
+                      : const Color(0xFF3C2E24),
                   fontSize: 13,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Search mental affirmations...',
-                  hintStyle: const TextStyle(
-                    color: Color(0xFF8B7355),
+                  hintStyle: TextStyle(
+                    color: isDark
+                        ? context.colors.textSecondary
+                        : const Color(0xFF8B7355),
                     fontSize: 13,
                   ),
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.search_rounded,
-                    color: Color(0xFF6B4E3D),
+                    color: isDark
+                        ? context.colors.textSecondary
+                        : const Color(0xFF6B4E3D),
                     size: 18,
                   ),
                   filled: true,
-                  fillColor: const Color(0xFFFFFDF9),
+                  fillColor: isDark
+                      ? context.colors.bg2
+                      : const Color(0xFFFFFDF9),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 14,
                     vertical: 8,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE6DFD5)),
+                    borderSide: BorderSide(
+                      color: isDark
+                          ? context.colors.glassBorder
+                          : const Color(0xFFE6DFD5),
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF6B4E3D)),
+                    borderSide: BorderSide(
+                      color: isDark
+                          ? context.colors.accentBlue
+                          : const Color(0xFF6B4E3D),
+                    ),
                   ),
                 ),
               ),
@@ -407,23 +449,29 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
   }
 
   Widget _buildSyncBadge(AffirmationsState affState) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     IconData icon = Icons.cloud_done_rounded;
-    Color col = const Color(0xFF2E7D32); // Deep green for light theme
+    Color col = isDark
+        ? context.colors.success
+        : const Color(0xFF2E7D32); // Deep green for light theme
 
     if (affState.isSyncing) {
       icon = Icons.sync_rounded;
-      col = const Color(0xFFF59E0B);
+      col = isDark ? context.colors.warning : const Color(0xFFF59E0B);
     } else if (affState.isOffline) {
       icon = Icons.cloud_off_rounded;
-      col = const Color(0xFF8B7355);
+      col = isDark ? context.colors.textSecondary : const Color(0xFF8B7355);
     }
 
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3ECE4),
+        color: isDark ? context.colors.bg2 : const Color(0xFFF3ECE4),
         shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xFFE6DFD5), width: 0.8),
+        border: Border.all(
+          color: isDark ? context.colors.glassBorder : const Color(0xFFE6DFD5),
+          width: 0.8,
+        ),
       ),
       child: Icon(icon, color: col, size: 16),
     );
@@ -434,6 +482,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildHeroCard(DailyAffirmation? pinned, OSState osState) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final text = pinned != null ? pinned.text : osState.dailyQuote;
     final author = pinned != null
         ? (pinned.author ?? 'Anonymous')
@@ -453,12 +502,21 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
       },
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFFAF6F0), // Matching mockup background
+          color: isDark
+              ? context.colors.bg2
+              : const Color(0xFFFAF6F0), // Matching mockup background
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE6DFD5), width: 1.0),
+          border: Border.all(
+            color: isDark
+                ? context.colors.glassBorder
+                : const Color(0xFFE6DFD5),
+            width: 1.0,
+          ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF3C2E24).withOpacity(0.06),
+              color: isDark
+                  ? Colors.black.withOpacity(0.2)
+                  : const Color(0xFF3C2E24).withOpacity(0.06),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),
@@ -478,16 +536,20 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF3ECE4),
+                    color: isDark
+                        ? context.colors.glass
+                        : const Color(0xFFF3ECE4),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.push_pin,
                         size: 8,
-                        color: Color(0xFF6B4E3D),
+                        color: isDark
+                            ? context.colors.accentBlue
+                            : const Color(0xFF6B4E3D),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -495,7 +557,9 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                         style: GoogleFonts.outfit(
                           fontSize: 8,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF6B4E3D),
+                          color: isDark
+                              ? context.colors.accentBlue
+                              : const Color(0xFF6B4E3D),
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -506,7 +570,9 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                   'Theme: $theme ☀️',
                   style: GoogleFonts.outfit(
                     fontSize: 9,
-                    color: const Color(0xFF8B7355),
+                    color: isDark
+                        ? context.colors.textSecondary
+                        : const Color(0xFF8B7355),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -548,7 +614,9 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                           '“',
                           style: GoogleFonts.playfairDisplay(
                             fontSize: 22,
-                            color: const Color(0xFFE6DFD5),
+                            color: isDark
+                                ? Colors.white24
+                                : const Color(0xFFE6DFD5),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -565,7 +633,9 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                               text,
                               style: GoogleFonts.playfairDisplay(
                                 fontSize: 13,
-                                color: const Color(0xFF3C2E24),
+                                color: isDark
+                                    ? context.colors.textPrimary
+                                    : const Color(0xFF3C2E24),
                                 fontWeight: FontWeight.bold,
                                 height: 1.35,
                               ),
@@ -577,7 +647,9 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                               '— $author',
                               style: GoogleFonts.outfit(
                                 fontSize: 10,
-                                color: const Color(0xFF8B7355),
+                                color: isDark
+                                    ? context.colors.textSecondary
+                                    : const Color(0xFF8B7355),
                                 fontStyle: FontStyle.italic,
                               ),
                             ),
@@ -592,7 +664,9 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                           '”',
                           style: GoogleFonts.playfairDisplay(
                             fontSize: 22,
-                            color: const Color(0xFFE6DFD5),
+                            color: isDark
+                                ? Colors.white24
+                                : const Color(0xFFE6DFD5),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -613,6 +687,24 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildCategoryChips(AffirmationsState state) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedBgColor = isDark
+        ? context.colors.accentBlue.withValues(alpha: 0.15)
+        : const Color(0xFF6B4E3D);
+    final unselectedBgColor = isDark
+        ? context.colors.textPrimary.withValues(alpha: 0.03)
+        : const Color(0xFFFFFDF9);
+    final selectedBorderColor = isDark
+        ? context.colors.accentBlue
+        : const Color(0xFF6B4E3D);
+    final unselectedBorderColor = isDark
+        ? context.colors.textPrimary.withValues(alpha: 0.15)
+        : const Color(0xFFE6DFD5);
+    final selectedTextColor = isDark ? context.colors.accentBlue : Colors.white;
+    final unselectedTextColor = isDark
+        ? context.colors.textSecondary
+        : const Color(0xFF8B7355);
+
     return SizedBox(
       height: 30,
       child: ListView.builder(
@@ -639,18 +731,16 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? const Color(0xFF6B4E3D) // Dark brown selected chip
-                    : const Color(0xFFFFFDF9), // Unselected chip background
+                color: isSelected ? selectedBgColor : unselectedBgColor,
                 borderRadius: BorderRadius.circular(15),
                 border: Border.all(
                   color: isSelected
-                      ? const Color(0xFF6B4E3D)
-                      : const Color(0xFFE6DFD5),
+                      ? selectedBorderColor
+                      : unselectedBorderColor,
                   width: 1.0,
                 ),
                 boxShadow: [
-                  if (!isSelected)
+                  if (!isSelected && !isDark)
                     BoxShadow(
                       color: const Color(0xFF3C2E24).withOpacity(0.03),
                       blurRadius: 4,
@@ -663,10 +753,10 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (isSelected && cat == 'All') ...[
-                      const Icon(
+                      Icon(
                         Icons.auto_awesome,
                         size: 10,
-                        color: Colors.white,
+                        color: selectedTextColor,
                       ),
                       const SizedBox(width: 4),
                     ],
@@ -674,8 +764,8 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                       cat,
                       style: GoogleFonts.outfit(
                         color: isSelected
-                            ? Colors.white
-                            : const Color(0xFF8B7355),
+                            ? selectedTextColor
+                            : unselectedTextColor,
                         fontSize: 10.5,
                         fontWeight: isSelected
                             ? FontWeight.bold
@@ -855,17 +945,22 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
   }
 
   Widget _buildEmptyPlaceholder() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(40),
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.spa_outlined, color: Colors.white24, size: 40),
+            Icon(
+              Icons.spa_outlined,
+              color: isDark ? Colors.white24 : Colors.black26,
+              size: 40,
+            ),
             const SizedBox(height: 16),
             Text(
               'Peaceful Reflection Space',
               style: GoogleFonts.playfairDisplay(
-                color: Colors.white54,
+                color: isDark ? Colors.white54 : Colors.black87,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -875,7 +970,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
               'No affirmations created inside this category. Tap the button below to anchor a new morning mantra.',
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
-                color: Colors.white30,
+                color: isDark ? Colors.white30 : Colors.black45,
                 fontSize: 11,
                 height: 1.45,
               ),
@@ -1038,7 +1133,10 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
   }
 
   Widget _buildVertical3DCard(DailyAffirmation aff, OSState osState) {
-    final cardBg = _getCategoryCardBg(aff.category);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark
+        ? context.colors.bg2
+        : _getCategoryCardBg(aff.category);
     final themeCol = _getCategoryColor(aff.category);
     final iconData = _getCategoryIcon(aff.category);
     final catName = _getCategoryDisplayName(aff.category).toUpperCase();
@@ -1067,12 +1165,16 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
             color: cardBg,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE6DFD5).withOpacity(0.3),
+              color: isDark
+                  ? context.colors.glassBorder
+                  : const Color(0xFFE6DFD5).withOpacity(0.3),
               width: 0.8,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF3C2E24).withOpacity(0.02),
+                color: isDark
+                    ? Colors.black.withOpacity(0.15)
+                    : const Color(0xFF3C2E24).withOpacity(0.02),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -1118,7 +1220,9 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                     Text(
                       aff.text,
                       style: GoogleFonts.outfit(
-                        color: const Color(0xFF3C2E24),
+                        color: isDark
+                            ? context.colors.textPrimary
+                            : const Color(0xFF3C2E24),
                         fontSize: 11.5,
                         fontWeight: FontWeight.w500,
                         height: 1.3,
@@ -1137,11 +1241,15 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                 height: 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFFF3ECE4).withOpacity(0.5),
+                  color: isDark
+                      ? context.colors.glass
+                      : const Color(0xFFF3ECE4).withOpacity(0.5),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.chevron_right_rounded,
-                  color: Color(0xFF6B4E3D),
+                  color: isDark
+                      ? context.colors.textSecondary
+                      : const Color(0xFF6B4E3D),
                   size: 16,
                 ),
               ),
@@ -1166,10 +1274,10 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
       return Icons.self_improvement_rounded;
     }
     if (lower.contains('growth') || lower.contains('learning')) {
-      return Icons.park_rounded;
+      return Icons.school_rounded;
     }
     if (lower.contains('gratitude')) {
-      return Icons.volunteer_activism_rounded;
+      return Icons.favorite_rounded;
     }
     if (lower.contains('peace') ||
         lower.contains('faith') ||

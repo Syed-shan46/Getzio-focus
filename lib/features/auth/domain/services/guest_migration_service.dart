@@ -9,6 +9,7 @@ import '../../../os_dashboard/presentation/providers/os_providers.dart';
 import '../../../os_dashboard/presentation/providers/daily_motivation_provider.dart';
 import '../../../vision_room/domain/models/vision_item.dart';
 import '../../../vision_room/data/repositories/vision_room_repository.dart';
+import '../../../tasks/presentation/providers/tasks_provider.dart';
 
 class GuestDataMigrationService {
   static const String _logTag = '[Migration]';
@@ -455,6 +456,9 @@ class GuestDataMigrationService {
       }
 
       dev.log('$_logTag All collections populated to Local Database successfully.');
+      
+      // Refresh Tasks provider
+      await ref.read(tasksProvider.notifier).refresh();
     } catch (e) {
       dev.log('$_logTag Failed to reload/update server state to Hive: $e');
     }

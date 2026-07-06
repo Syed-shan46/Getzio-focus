@@ -42,7 +42,6 @@ class NotificationService {
       final androidImplementation = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       if (androidImplementation != null) {
         await androidImplementation.requestNotificationsPermission();
-        await androidImplementation.requestExactAlarmsPermission();
       }
     }
 
@@ -84,70 +83,25 @@ class NotificationService {
       final targetTime = DateTime(dueDate.year, dueDate.month, dueDate.day, time.hour, time.minute);
       if (targetTime.isBefore(now)) return;
 
-      // 1 hour before (Never Miss only)
-      if (style == ReminderStyle.neverMiss) {
-        final oneHourBefore = targetTime.subtract(const Duration(hours: 1));
-        if (oneHourBefore.isAfter(now)) {
-          await _scheduleNotification(
-            id: baseId + 1,
-            title: 'Upcoming: $displayTitle',
-            body: 'Starts in 1 hour$displayContext.',
-            scheduledDate: oneHourBefore,
-          );
-        }
-      }
-
-      // 30 mins before (Balanced & Never Miss)
-      if (style == ReminderStyle.balanced || style == ReminderStyle.neverMiss) {
-        final thirtyMinsBefore = targetTime.subtract(const Duration(minutes: 30));
-        if (thirtyMinsBefore.isAfter(now)) {
-          await _scheduleNotification(
-            id: baseId + 2,
-            title: 'Upcoming: $displayTitle',
-            body: 'Starts in 30 minutes$displayContext.',
-            scheduledDate: thirtyMinsBefore,
-          );
-        }
-      }
-
-      // Exact Due Time (Minimal, Balanced, Never Miss)
-      await _scheduleNotification(
-        id: baseId + 3,
-        title: isSubtask ? 'Subtask Due' : 'Task Due',
-        body: 'It\'s time to work on "$displayTitle".$displayContext',
-        scheduledDate: targetTime,
-      );
-
-      // Overdue (30 mins after) - (Balanced, Never Miss)
-      if (style == ReminderStyle.balanced || style == ReminderStyle.neverMiss) {
-        final overdueTime = targetTime.add(const Duration(minutes: 30));
+      // Exactly 30 minutes before target time
+      final thirtyMinsBefore = targetTime.subtract(const Duration(minutes: 30));
+      if (thirtyMinsBefore.isAfter(now)) {
         await _scheduleNotification(
-          id: baseId + 4,
-          title: 'Overdue: $displayTitle',
-          body: 'Your ${isSubtask ? 'subtask' : 'task'} is overdue. Finish it to keep your momentum!',
-          scheduledDate: overdueTime,
+          id: baseId + 1,
+          title: 'Upcoming: $displayTitle',
+          body: 'Starts in 30 minutes$displayContext.',
+          scheduledDate: thirtyMinsBefore,
         );
       }
-
     } else {
-      // Only Due Date Exists (No Time)
+      // Only Due Date Exists (No Time) -> Schedule at 9:00 AM on due date
       final morningTime = DateTime(dueDate.year, dueDate.month, dueDate.day, 9, 0); // 9:00 AM
-      final eveningTime = DateTime(dueDate.year, dueDate.month, dueDate.day, 18, 0); // 6:00 PM
-      
       if (morningTime.isAfter(now)) {
         await _scheduleNotification(
           id: baseId + 1,
           title: 'Today\'s Target',
           body: 'Finish "$displayTitle"$displayContext.',
           scheduledDate: morningTime,
-        );
-      } else if (eveningTime.isAfter(now)) {
-        // If morning passed but evening hasn't, just schedule evening if incomplete
-        await _scheduleNotification(
-          id: baseId + 2,
-          title: 'Evening Check-in',
-          body: 'Don\'t forget to finish "$displayTitle"$displayContext.',
-          scheduledDate: eveningTime,
         );
       }
     }
@@ -167,22 +121,26 @@ class NotificationService {
     required String body,
     required DateTime scheduledDate,
   }) async {
-    await _notificationsPlugin.zonedSchedule(
-      id: id,
-      title: title,
-      body: body,
-      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'tasks_channel',
-          'Task Reminders',
-          channelDescription: 'Notifications for tasks and subtasks',
-          importance: Importance.high,
-          priority: Priority.high,
+    try {
+      await _notificationsPlugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'tasks_channel',
+            'Task Reminders',
+            channelDescription: 'Notifications for tasks and subtasks',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
         ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    );
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+    } catch (e) {
+      debugPrint('Error scheduling notification: $e');
+    }
   }
 }

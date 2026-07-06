@@ -28,17 +28,18 @@ class VisionBoardView extends ConsumerWidget {
 
     return Stack(
       children: [
-        Positioned.fill(
-          child: _BoardBackground(style: cust.boardStyle),
-        ),
+        Positioned.fill(child: _BoardBackground(style: cust.boardStyle)),
         if (items.isEmpty)
           const Positioned.fill(
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.lightbulb_outline_rounded,
-                      color: Colors.white24, size: 48),
+                  Icon(
+                    Icons.lightbulb_outline_rounded,
+                    color: Colors.white24,
+                    size: 48,
+                  ),
                   SizedBox(height: 16),
                   Text(
                     'Your Vision Board is empty',
@@ -51,29 +52,12 @@ class VisionBoardView extends ConsumerWidget {
                   SizedBox(height: 8),
                   Text(
                     'Tap the pen to start adding your dreams',
-                    style: TextStyle(
-                      color: Colors.white24,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: Colors.white24, fontSize: 13),
                   ),
                 ],
               ),
             ),
           ),
-        ...[
-          ...items.where((item) => item.type != VisionItemType.countdown.name),
-          ...items.where((item) => item.type == VisionItemType.countdown.name),
-        ].map((item) {
-          return Positioned(
-            left: item.x,
-            top: item.y,
-            child: _ViewItemWidget(
-              item: item,
-              boardStyle: cust.boardStyle,
-              cardCfg: cardCfg,
-            ),
-          );
-        }),
       ],
     );
   }
@@ -85,9 +69,7 @@ class _BoardBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: _boxDecor(style),
-    );
+    return Container(decoration: _boxDecor(style));
   }
 
   BoxDecoration _boxDecor(VisionBoardStyle style) {
@@ -116,7 +98,10 @@ class _BoardBackground extends StatelessWidget {
       case VisionBoardStyle.magneticMetal:
         return BoxDecoration(
           color: const Color(0xFF2A2A2E),
-          border: Border.all(color: Colors.grey.withValues(alpha: 0.3), width: 1),
+          border: Border.all(
+            color: Colors.grey.withValues(alpha: 0.3),
+            width: 1,
+          ),
         );
       case VisionBoardStyle.canvasWall:
         return const BoxDecoration(color: Color(0xFFF5F0E8));
@@ -228,11 +213,16 @@ class _ViewItemWidget extends StatelessWidget {
                   bottomRight: Radius.circular(cardCfg.roundedMode ? 24 : cr),
                 ),
           border: cardCfg.borderThickness > 0
-              ? Border.all(color: Colors.white.withValues(alpha: 0.1), width: cardCfg.borderThickness)
+              ? Border.all(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  width: cardCfg.borderThickness,
+                )
               : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4 * cardCfg.shadowIntensity),
+              color: Colors.black.withValues(
+                alpha: 0.4 * cardCfg.shadowIntensity,
+              ),
               blurRadius: cardCfg.shadowIntensity * 30,
               offset: Offset(0, 8 * cardCfg.shadowIntensity),
             ),
@@ -288,7 +278,10 @@ class _ViewItemWidget extends StatelessWidget {
                   ? BorderRadius.zero
                   : BorderRadius.circular(cardCfg.cornerRadius),
               border: cardCfg.borderThickness > 0
-                  ? Border.all(color: Colors.white.withValues(alpha: 0.2), width: cardCfg.borderThickness)
+                  ? Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      width: cardCfg.borderThickness,
+                    )
                   : null,
             ),
             child: Center(
@@ -311,16 +304,15 @@ class _ViewItemWidget extends StatelessWidget {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3 * cardCfg.shadowIntensity),
+              color: Colors.black.withValues(
+                alpha: 0.3 * cardCfg.shadowIntensity,
+              ),
               blurRadius: cardCfg.shadowIntensity * 30,
               offset: Offset(0, 8 * cardCfg.shadowIntensity),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: card,
-        ),
+        child: ClipRRect(borderRadius: BorderRadius.circular(8), child: card),
       ),
     );
   }

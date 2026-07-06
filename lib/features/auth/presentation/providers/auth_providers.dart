@@ -11,6 +11,7 @@ import '../../../affirmations/presentation/providers/affirmations_provider.dart'
 import '../../../vision_room/presentation/providers/canvas_providers.dart';
 import '../../../os_dashboard/presentation/providers/os_providers.dart';
 import '../../../os_dashboard/presentation/providers/daily_motivation_provider.dart';
+import '../../../tasks/presentation/providers/tasks_provider.dart';
 import '../../domain/models/auth_user_model.dart';
 import '../../domain/services/guest_migration_service.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -437,6 +438,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
         _ref.invalidate(osStateProvider);
         _ref.invalidate(previewModeProvider);
         _ref.invalidate(dailyMotivationProvider);
+        _ref.invalidate(tasksProvider);
       });
       
       state = const AsyncValue.data(null);

@@ -61,8 +61,9 @@ class _StickyNoteWidgetState extends ConsumerState<StickyNoteWidget> {
           _initialRotation = widget.note.rotation;
         } : null,
         onScaleUpdate: isEditMode ? (details) {
-          final dx = details.focalPoint.dx - _dragStartX;
-          final dy = details.focalPoint.dy - _dragStartY;
+          final double scaleFactor = MediaQuery.of(context).size.width / 360.0;
+          final dx = (details.focalPoint.dx - _dragStartX) / scaleFactor;
+          final dy = (details.focalPoint.dy - _dragStartY) / scaleFactor;
           final updated = widget.note.copyWith(
             x: _initialX + dx,
             y: _initialY + dy,

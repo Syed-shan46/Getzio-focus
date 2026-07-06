@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -11,7 +12,6 @@ import '../providers/canvas_providers.dart';
 import '../providers/customization_provider.dart';
 import '../providers/vision_room_providers.dart';
 import '../providers/sticky_note_provider.dart';
-import '../widgets/attachment_widgets.dart';
 import '../widgets/sticky_note_widget.dart';
 import '../widgets/quote_card_widget.dart';
 import '../widgets/goal_card_widget.dart';
@@ -76,6 +76,9 @@ class _VisionWallState extends ConsumerState<VisionWall>
     final isEditMode = ref.watch(editModeProvider);
     final selectedIds = canvasState.selectedIds;
 
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double scaleFactor = screenWidth / 360.0;
+
     return Stack(
       children: [
         // Items Layer
@@ -98,8 +101,8 @@ class _VisionWallState extends ConsumerState<VisionWall>
             onScaleUpdate: isEditMode
                 ? (details) {
                     if (_interactingItemId != null) {
-                      final dx = details.focalPointDelta.dx;
-                      final dy = details.focalPointDelta.dy;
+                      final dx = details.focalPointDelta.dx / scaleFactor;
+                      final dy = details.focalPointDelta.dy / scaleFactor;
                       ref
                           .read(canvasStateProvider.notifier)
                           .updatePosition(_interactingItemId!, dx, dy);
@@ -140,8 +143,12 @@ class _VisionWallState extends ConsumerState<VisionWall>
             child: Stack(
               children: [
                 ...[
-                  ...items.where((item) => item.type != VisionItemType.countdown.name),
-                  ...items.where((item) => item.type == VisionItemType.countdown.name),
+                  ...items.where(
+                    (item) => item.type != VisionItemType.countdown.name,
+                  ),
+                  ...items.where(
+                    (item) => item.type == VisionItemType.countdown.name,
+                  ),
                 ].map((item) {
                   final isSelected = selectedIds.contains(item.id);
                   final isInteracting = _interactingItemId == item.id;
@@ -151,8 +158,8 @@ class _VisionWallState extends ConsumerState<VisionWall>
 
                   return Positioned(
                     key: ValueKey(item.id),
-                    left: item.x,
-                    top: item.y,
+                    left: item.x * scaleFactor,
+                    top: item.y * scaleFactor,
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTapDown: (details) {
@@ -166,7 +173,9 @@ class _VisionWallState extends ConsumerState<VisionWall>
                             _itemStartHeight = h;
                             _itemStartRotation = item.rotation;
                           });
-                          ref.read(canvasStateProvider.notifier).selectItem(item.id);
+                          ref
+                              .read(canvasStateProvider.notifier)
+                              .selectItem(item.id);
                           HapticFeedback.selectionClick();
                         }
                       },
@@ -181,7 +190,10 @@ class _VisionWallState extends ConsumerState<VisionWall>
                       },
                       child: CanvasItemWidget(
                         key: ValueKey(item.id),
-                        item: item,
+                        item: item.copyWith(
+                          width: item.width * scaleFactor,
+                          height: item.height * scaleFactor,
+                        ),
                         isSelected: isSelected,
                         isInteracting: isInteracting,
                         boardStyle: cust.boardStyle,
@@ -190,18 +202,19 @@ class _VisionWallState extends ConsumerState<VisionWall>
                     ),
                   );
                 }),
-                
+
                 // Add Premium Sticky Notes from Hive/API
-                ...ref.watch(stickyNotesProvider)
+                ...ref
+                    .watch(stickyNotesProvider)
                     .where((note) => !note.category.contains('#shelf'))
                     .map((note) {
-                  return Positioned(
-                    key: ValueKey(note.id),
-                    left: note.x,
-                    top: note.y,
-                    child: StickyNoteWidget(note: note),
-                  );
-                }),
+                      return Positioned(
+                        key: ValueKey(note.id),
+                        left: note.x * scaleFactor,
+                        top: note.y * scaleFactor,
+                        child: StickyNoteWidget(note: note),
+                      );
+                    }),
               ],
             ),
           ),
@@ -210,7 +223,6 @@ class _VisionWallState extends ConsumerState<VisionWall>
     );
   }
 }
-
 
 // ─── BOARD BACKGROUND ─────────────────────────────────────────────────────
 

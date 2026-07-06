@@ -29,6 +29,14 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
   bool _pinned = false;
   double _manualProgress = 0;
   List<SubtaskModel> _subtasks = [];
+  
+  // Smart Planning Subtask Editor state
+  bool _showSubtaskEditor = false;
+  int? _editingSubtaskIndex;
+  final _subtaskTitleController = TextEditingController();
+  DateTime? _subtaskDueDate;
+  String? _subtaskDueTime;
+  bool _subtaskReminder = true;
 
   bool get _isReadOnly => ref.read(hiveDatabaseProvider).getAuthToken() == null;
 
@@ -75,13 +83,205 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
   void dispose() {
     _titleController.dispose();
     _descController.dispose();
+    _subtaskTitleController.dispose();
     super.dispose();
+  }
+
+  void _openSubtaskEditor({int? index}) {
+    setState(() {
+      _editingSubtaskIndex = index;
+      _showSubtaskEditor = true;
+      if (index != null) {
+        final sub = _subtasks[index];
+        _subtaskTitleController.text = sub.title;
+        _subtaskDueDate = sub.dueDate;
+        _subtaskDueTime = sub.dueTime;
+        _subtaskReminder = sub.reminder;
+      } else {
+        _subtaskTitleController.clear();
+        _subtaskDueDate = DateTime.now(); // default today
+        _subtaskDueTime = null;
+        _subtaskReminder = true;
+      }
+    });
+  }
+
+  void _saveSubtask() {
+    final title = _subtaskTitleController.text.trim();
+    if (title.isEmpty) return;
+
+    setState(() {
+      if (_editingSubtaskIndex != null) {
+        final existing = _subtasks[_editingSubtaskIndex!];
+        _subtasks[_editingSubtaskIndex!] = existing.copyWith(
+          title: title,
+          dueDate: _subtaskDueDate,
+          dueTime: _subtaskDueTime,
+          reminder: _subtaskReminder,
+          reminderStyle: _subtaskReminder ? ReminderStyle.balanced : ReminderStyle.none,
+          updatedAt: DateTime.now(),
+        );
+      } else {
+        _subtasks.add(
+          SubtaskModel(
+            id: const Uuid().v4(),
+            title: title,
+            completed: false,
+            dueDate: _subtaskDueDate,
+            dueTime: _subtaskDueTime,
+            reminder: _subtaskReminder,
+            reminderStyle: _subtaskReminder ? ReminderStyle.balanced : ReminderStyle.none,
+            sortOrder: _subtasks.length,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+      }
+      
+      _sortSubtasks();
+      
+      _showSubtaskEditor = false;
+      _editingSubtaskIndex = null;
+      _subtaskTitleController.clear();
+      _subtaskDueDate = null;
+      _subtaskDueTime = null;
+      _subtaskReminder = true;
+    });
+  }
+
+  void _cancelSubtaskEditor() {
+    setState(() {
+      _showSubtaskEditor = false;
+      _editingSubtaskIndex = null;
+      _subtaskTitleController.clear();
+      _subtaskDueDate = null;
+      _subtaskDueTime = null;
+      _subtaskReminder = true;
+    });
+  }
+
+  void _sortSubtasks() {
+    _subtasks.sort((a, b) {
+      if (a.completed != b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      
+      if (a.completed && b.completed) {
+        if (a.completedAt == null) return 1;
+        if (b.completedAt == null) return -1;
+        return b.completedAt!.compareTo(a.completedAt!);
+      }
+      
+      if (a.dueDate != null && b.dueDate == null) return -1;
+      if (a.dueDate == null && b.dueDate != null) return 1;
+      if (a.dueDate != null && b.dueDate != null) {
+        final aDate = DateTime(a.dueDate!.year, a.dueDate!.month, a.dueDate!.day);
+        final bDate = DateTime(b.dueDate!.year, b.dueDate!.month, b.dueDate!.day);
+        if (aDate != bDate) {
+          return aDate.compareTo(bDate);
+        }
+        
+        if (a.dueTime != null && b.dueTime == null) return -1;
+        if (a.dueTime == null && b.dueTime != null) return 1;
+        if (a.dueTime != null && b.dueTime != null) {
+          return a.dueTime!.compareTo(b.dueTime!);
+        }
+      }
+      
+      return a.sortOrder.compareTo(b.sortOrder);
+    });
+  }
+
+  String _getCountdownString(DateTime? date, String? timeStr) {
+    if (date == null) return 'No deadline set';
+    final now = DateTime.now();
+    
+    DateTime targetDateTime;
+    if (timeStr != null) {
+      final timeFormat = DateFormat('h:mm a');
+      try {
+        final parsedTime = timeFormat.parse(timeStr);
+        targetDateTime = DateTime(date.year, date.month, date.day, parsedTime.hour, parsedTime.minute);
+      } catch (_) {
+        targetDateTime = DateTime(date.year, date.month, date.day);
+      }
+    } else {
+      targetDateTime = DateTime(date.year, date.month, date.day, 23, 59);
+    }
+
+    final diff = targetDateTime.difference(now);
+    
+    if (diff.isNegative) {
+      if (diff.inDays.abs() > 0) {
+        return 'Overdue by ${diff.inDays.abs()} Days';
+      } else if (diff.inHours.abs() > 0) {
+        return 'Overdue by ${diff.inHours.abs()}h';
+      } else {
+        return 'Overdue';
+      }
+    }
+
+    if (timeStr != null) {
+      if (diff.inHours > 0) {
+        return '${diff.inHours}h ${diff.inMinutes % 60}m left';
+      } else {
+        return '${diff.inMinutes} mins left';
+      }
+    } else {
+      final today = DateTime(now.year, now.month, now.day);
+      final targetDate = DateTime(date.year, date.month, date.day);
+      final daysDiff = targetDate.difference(today).inDays;
+      if (daysDiff == 0) {
+        return 'Today';
+      } else if (daysDiff == 1) {
+        return 'Tomorrow';
+      } else {
+        return '$daysDiff Days Left';
+      }
+    }
+  }
+
+  Color _getCountdownColor(DateTime? date, String? timeStr, bool completed) {
+    if (completed) return Colors.grey;
+    if (date == null) return Colors.grey;
+    final now = DateTime.now();
+    
+    DateTime targetDateTime;
+    if (timeStr != null) {
+      final timeFormat = DateFormat('h:mm a');
+      try {
+        final parsedTime = timeFormat.parse(timeStr);
+        targetDateTime = DateTime(date.year, date.month, date.day, parsedTime.hour, parsedTime.minute);
+      } catch (_) {
+        targetDateTime = DateTime(date.year, date.month, date.day);
+      }
+    } else {
+      targetDateTime = DateTime(date.year, date.month, date.day, 23, 59);
+    }
+
+    final diff = targetDateTime.difference(now);
+    if (diff.isNegative) return Colors.redAccent;
+
+    if (timeStr != null) {
+      if (diff.inHours < 3) return Colors.redAccent;
+      return Colors.amber;
+    } else {
+      final today = DateTime(now.year, now.month, now.day);
+      final targetDate = DateTime(date.year, date.month, date.day);
+      final daysDiff = targetDate.difference(today).inDays;
+      if (daysDiff <= 0) {
+        return Colors.amber;
+      } else if (daysDiff <= 3) {
+        return Colors.amber;
+      } else {
+        return Colors.greenAccent;
+      }
+    }
   }
 
   void _saveTask() {
     if (_titleController.text.trim().isEmpty) return;
 
-    // Fix sort order before saving
     for (int i = 0; i < _subtasks.length; i++) {
       _subtasks[i] = _subtasks[i].copyWith(sortOrder: i);
     }
@@ -121,18 +321,6 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
     Navigator.pop(context);
   }
 
-  void _addSubtask() {
-    setState(() {
-      _subtasks.add(
-        SubtaskModel(
-          id: const Uuid().v4(),
-          title: 'New Subtask',
-          sortOrder: _subtasks.length,
-        ),
-      );
-    });
-  }
-
   void _removeSubtask(int index) {
     setState(() {
       _subtasks.removeAt(index);
@@ -146,17 +334,18 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
         completed: !current.completed,
         completedAt: !current.completed ? DateTime.now() : null,
       );
-    });
-  }
-
-  void _updateSubtaskTitle(int index, String newTitle) {
-    setState(() {
-      _subtasks[index] = _subtasks[index].copyWith(title: newTitle);
+      _sortSubtasks();
     });
   }
 
   Widget _buildSubtaskItem(int index) {
     final subtask = _subtasks[index];
+    final dateStr = subtask.dueDate == null
+        ? null
+        : DateFormat('dd MMM').format(subtask.dueDate!);
+    final countdown = _getCountdownString(subtask.dueDate, subtask.dueTime);
+    final countdownColor = _getCountdownColor(subtask.dueDate, subtask.dueTime, subtask.completed);
+
     return Container(
       key: ValueKey(subtask.id),
       margin: const EdgeInsets.only(bottom: 8),
@@ -166,51 +355,320 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
         border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        leading: GestureDetector(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            _toggleSubtask(index);
-          },
-          child: Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: subtask.completed ? Colors.greenAccent : Colors.white54,
-                width: 1.5,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        leading: ReorderableDragStartListener(
+          index: index,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.drag_handle_rounded, color: Colors.white30, size: 20),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  _toggleSubtask(index);
+                },
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: subtask.completed ? Colors.greenAccent : Colors.white54,
+                      width: 1.5,
+                    ),
+                    color: subtask.completed
+                        ? Colors.greenAccent.withValues(alpha: 0.2)
+                        : Colors.transparent,
+                  ),
+                  child: subtask.completed
+                      ? const Icon(Icons.check, size: 14, color: Colors.greenAccent)
+                      : null,
+                ),
               ),
-              color: subtask.completed
-                  ? Colors.greenAccent.withValues(alpha: 0.2)
-                  : Colors.transparent,
+            ],
+          ),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              subtask.title,
+              style: GoogleFonts.outfit(
+                color: subtask.completed ? Colors.white54 : Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                decoration: subtask.completed ? TextDecoration.lineThrough : null,
+              ),
             ),
-            child: subtask.completed
-                ? const Icon(Icons.check, size: 16, color: Colors.greenAccent)
-                : null,
-          ),
+            if (subtask.dueDate != null) ...[
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.calendar_today_rounded, size: 9, color: Colors.blueAccent),
+                        const SizedBox(width: 3),
+                        Text(
+                          dateStr ?? '',
+                          style: GoogleFonts.outfit(color: Colors.white70, fontSize: 9),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (subtask.dueTime != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.access_time_rounded, size: 9, color: Colors.amber),
+                          const SizedBox(width: 3),
+                          Text(
+                            subtask.dueTime!,
+                            style: GoogleFonts.outfit(color: Colors.white70, fontSize: 9),
+                          ),
+                        ],
+                      ),
+                    ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: countdownColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      countdown,
+                      style: GoogleFonts.outfit(
+                        color: countdownColor,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
         ),
-        title: TextFormField(
-          initialValue: subtask.title,
-          style: GoogleFonts.outfit(
-            color: subtask.completed ? Colors.white54 : Colors.white,
-            decoration: subtask.completed ? TextDecoration.lineThrough : null,
-          ),
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            isDense: true,
-            contentPadding: EdgeInsets.zero,
-          ),
-          onChanged: (val) => _updateSubtaskTitle(index, val),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit_rounded, color: Colors.white54, size: 18),
+              onPressed: () => _openSubtaskEditor(index: index),
+              constraints: const BoxConstraints(),
+              padding: EdgeInsets.zero,
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+              onPressed: () => _removeSubtask(index),
+              constraints: const BoxConstraints(),
+              padding: EdgeInsets.zero,
+            ),
+          ],
         ),
-        trailing: IconButton(
-          icon: const Icon(
-            Icons.delete_outline,
-            color: Colors.redAccent,
-            size: 20,
+      ),
+    );
+  }
+
+  Widget _buildSubtaskEditorCard() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _editingSubtaskIndex != null ? 'Edit Subtask' : 'New Subtask',
+            style: GoogleFonts.outfit(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          onPressed: () => _removeSubtask(index),
-        ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _subtaskTitleController,
+            style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: 'e.g. Design Landing Page',
+              hintStyle: GoogleFonts.outfit(color: Colors.white30),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.03),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _subtaskDueDate ?? DateTime.now(),
+                      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                    );
+                    if (date != null) {
+                      setState(() => _subtaskDueDate = date);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today_rounded, color: Colors.blueAccent, size: 14),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _subtaskDueDate == null
+                                ? 'Target Date'
+                                : DateFormat('dd MMM yyyy').format(_subtaskDueDate!),
+                            style: GoogleFonts.outfit(
+                              color: _subtaskDueDate == null ? Colors.white54 : Colors.white,
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    if (time != null) {
+                      setState(() => _subtaskDueTime = time.format(context));
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.access_time_rounded, color: Colors.amber, size: 14),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _subtaskDueTime ?? 'Target Time',
+                            style: GoogleFonts.outfit(
+                              color: _subtaskDueTime == null ? Colors.white54 : Colors.white,
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (_subtaskDueTime != null)
+                          GestureDetector(
+                            onTap: () {
+                              setState(() => _subtaskDueTime = null);
+                            },
+                            child: const Icon(Icons.close_rounded, color: Colors.white38, size: 14),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.notifications_active_outlined, color: Colors.greenAccent, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Notify me before deadline',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+              Switch(
+                value: _subtaskReminder,
+                onChanged: (val) => setState(() => _subtaskReminder = val),
+                activeColor: Colors.blueAccent,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: _cancelSubtaskEditor,
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton(
+                onPressed: _saveSubtask,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Save Subtask',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -598,52 +1056,68 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                           ],
                         ),
                         const SizedBox(height: 12),
+                        if (_showSubtaskEditor) _buildSubtaskEditorCard(),
 
-                        if (_subtasks.isEmpty)
+                        if (_subtasks.isEmpty) ...[
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Text(
-                              'No subtasks yet. Break your task into smaller steps.',
+                              'Break your task into smaller achievable steps.',
                               style: GoogleFonts.outfit(
                                 color: Colors.white38,
                                 fontSize: 12,
                               ),
                             ),
-                          )
-                        else
-                          ...List.generate(
-                            _subtasks.length,
-                            (index) => _buildSubtaskItem(index),
+                          ),
+                        ] else
+                          ReorderableListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _subtasks.length,
+                            itemBuilder: (context, index) => _buildSubtaskItem(index),
+                            onReorder: (oldIndex, newIndex) {
+                              setState(() {
+                                if (newIndex > oldIndex) {
+                                  newIndex -= 1;
+                                }
+                                final item = _subtasks.removeAt(oldIndex);
+                                _subtasks.insert(newIndex, item);
+                                for (int i = 0; i < _subtasks.length; i++) {
+                                  _subtasks[i] = _subtasks[i].copyWith(sortOrder: i);
+                                }
+                              });
+                            },
                           ),
 
                         const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 44,
-                          child: OutlinedButton.icon(
-                            onPressed: _addSubtask,
-                            icon: const Icon(
-                              Icons.add,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                            label: Text(
-                              'Add Subtask',
-                              style: GoogleFonts.outfit(
+                        if (!_showSubtaskEditor)
+                          SizedBox(
+                            width: double.infinity,
+                            height: 44,
+                            child: OutlinedButton.icon(
+                              onPressed: () => _openSubtaskEditor(),
+                              icon: const Icon(
+                                Icons.add,
                                 color: Colors.white,
-                                fontSize: 13,
+                                size: 16,
                               ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(
-                                color: Colors.white.withValues(alpha: 0.2),
+                              label: Text(
+                                'Add Subtask',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                ),
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
                           ),
-                        ),
                             ],
                           ),
                         ),

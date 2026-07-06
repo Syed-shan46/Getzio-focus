@@ -25,8 +25,9 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _getMotivationalGreeting(String? userName) {
-    final name = (userName != null && userName.isNotEmpty && userName != 'Getzio User') 
-        ? userName 
+    final name =
+        (userName != null && userName.isNotEmpty && userName != 'Getzio User')
+        ? userName
         : 'Syed';
     final hour = DateTime.now().hour;
     final greetings = [
@@ -54,7 +55,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return mantras[dayOfYear % mantras.length];
   }
 
-  void _confirmAccountDeletion(BuildContext context, WidgetRef ref, StateSetter setModalState) {
+  void _confirmAccountDeletion(
+    BuildContext context,
+    WidgetRef ref,
+    StateSetter setModalState,
+  ) {
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -77,14 +82,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'Cancel',
-                style: AppTypography.bodyMedium(color: context.colors.textSecondary),
+                style: AppTypography.bodyMedium(
+                  color: context.colors.textSecondary,
+                ),
               ),
             ),
             TextButton(
               onPressed: () async {
                 Navigator.pop(dialogContext); // Close dialog
                 Navigator.pop(context); // Close profile bottom sheet
-                
+
                 try {
                   await ref.read(authProvider.notifier).deleteAccount();
                   if (context.mounted) {
@@ -116,7 +123,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               },
               child: Text(
                 'Delete',
-                style: AppTypography.bodyMedium(color: context.colors.error).copyWith(fontWeight: FontWeight.w600),
+                style: AppTypography.bodyMedium(
+                  color: context.colors.error,
+                ).copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -127,13 +136,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _showAddTask() {
     HapticFeedback.mediumImpact();
-    
+
     final hasToken = ref.read(hiveDatabaseProvider).getAuthToken() != null;
     if (!hasToken) {
       PremiumAuthSheet.show(
         context,
         customTitle: 'Create & Manage Tasks',
-        customDescription: 'Sign in to create tasks, set reminders, and sync your progress across all your devices.',
+        customDescription:
+            'Sign in to create tasks, set reminders, and sync your progress across all your devices.',
       );
       return;
     }
@@ -149,7 +159,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _showProfileBottomSheet(AuthUserModel user) {
     HapticFeedback.mediumImpact();
-    
+
     bool loading = false;
     String? error;
     final initialName = user.name == 'Getzio User' ? '' : user.name;
@@ -164,7 +174,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-            
+
             return AnimatedPadding(
               duration: const Duration(milliseconds: 150),
               curve: Curves.easeOut,
@@ -176,7 +186,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(AppRadius.xl),
                   ),
-                  border: Border.all(color: context.colors.glassBorder, width: 0.5),
+                  border: Border.all(
+                    color: context.colors.glassBorder,
+                    width: 0.5,
+                  ),
                 ),
                 child: SafeArea(
                   child: Column(
@@ -195,14 +208,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                       ),
-                      Text('Profile Settings', style: AppTypography.titleLarge(color: context.colors.textPrimary)),
+                      Text(
+                        'Profile Settings',
+                        style: AppTypography.titleLarge(
+                          color: context.colors.textPrimary,
+                        ),
+                      ),
                       const SizedBox(height: AppSpacing.md),
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: context.colors.glass,
                           borderRadius: BorderRadius.circular(AppRadius.sm),
-                          border: Border.all(color: context.colors.glassBorder, width: 0.5),
+                          border: Border.all(
+                            color: context.colors.glassBorder,
+                            width: 0.5,
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -210,8 +231,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Mobile', style: AppTypography.bodyMedium(color: context.colors.textSecondary)),
-                                Text(user.mobile, style: AppTypography.bodyLarge(color: context.colors.textPrimary)),
+                                Text(
+                                  'Mobile',
+                                  style: AppTypography.bodyMedium(
+                                    color: context.colors.textSecondary,
+                                  ),
+                                ),
+                                Text(
+                                  user.mobile,
+                                  style: AppTypography.bodyLarge(
+                                    color: context.colors.textPrimary,
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: AppSpacing.lg),
@@ -223,11 +254,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             const SizedBox(height: AppSpacing.xs),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: context.colors.glassBorder,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: context.colors.glassBorder, width: 0.5),
+                                border: Border.all(
+                                  color: context.colors.glassBorder,
+                                  width: 0.5,
+                                ),
                               ),
                               child: TextField(
                                 controller: nameController,
@@ -235,10 +272,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 cursorColor: context.colors.accentBlue,
                                 decoration: InputDecoration(
                                   hintText: 'Enter your name',
-                                  hintStyle: TextStyle(color: context.colors.textMuted),
+                                  hintStyle: TextStyle(
+                                    color: context.colors.textMuted,
+                                  ),
                                   border: InputBorder.none,
                                   isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
                                 ),
                               ),
                             ),
@@ -251,7 +292,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Text(
                           error!,
                           textAlign: TextAlign.center,
-                          style: AppTypography.caption(color: context.colors.error),
+                          style: AppTypography.caption(
+                            color: context.colors.error,
+                          ),
                         ),
                       ],
                       const SizedBox(height: AppSpacing.xl),
@@ -267,13 +310,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   : () async {
                                       HapticFeedback.mediumImpact();
                                       Navigator.pop(context);
-                                      await ref.read(authProvider.notifier).logout();
+                                      await ref
+                                          .read(authProvider.notifier)
+                                          .logout();
                                     },
                               child: Container(
                                 height: 50,
                                 decoration: BoxDecoration(
                                   color: context.colors.glass,
-                                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.sm,
+                                  ),
                                   border: Border.all(
                                     color: context.colors.glassBorder,
                                     width: 0.5,
@@ -299,7 +346,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               onTap: loading
                                   ? null
                                   : () async {
-                                      final newName = nameController.text.trim();
+                                      final newName = nameController.text
+                                          .trim();
                                       if (newName.isEmpty) {
                                         setModalState(() {
                                           error = 'Name cannot be empty';
@@ -307,7 +355,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         HapticFeedback.vibrate();
                                         return;
                                       }
-                                      
+
                                       setModalState(() {
                                         loading = true;
                                         error = null;
@@ -315,23 +363,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       HapticFeedback.mediumImpact();
 
                                       try {
-                                        await ref.read(authProvider.notifier).updateName(newName);
+                                        await ref
+                                            .read(authProvider.notifier)
+                                            .updateName(newName);
                                         if (context.mounted) {
                                           Navigator.pop(context);
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
                                               content: Text(
                                                 'Profile updated successfully!',
-                                                style: AppTypography.bodyMedium(color: Colors.white),
+                                                style: AppTypography.bodyMedium(
+                                                  color: Colors.white,
+                                                ),
                                               ),
-                                              backgroundColor: context.colors.accentEmerald,
-                                              behavior: SnackBarBehavior.floating,
+                                              backgroundColor:
+                                                  context.colors.accentEmerald,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
                                             ),
                                           );
                                         }
                                       } catch (e) {
                                         setModalState(() {
-                                          error = e.toString().replaceFirst('Exception: ', '');
+                                          error = e.toString().replaceFirst(
+                                            'Exception: ',
+                                            '',
+                                          );
                                           loading = false;
                                         });
                                       }
@@ -341,10 +400,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 height: 50,
                                 decoration: BoxDecoration(
                                   color: context.colors.accentBlue,
-                                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.sm,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: context.colors.accentBlue.withValues(alpha: 0.3),
+                                      color: context.colors.accentBlue
+                                          .withValues(alpha: 0.3),
                                       blurRadius: 16,
                                       offset: const Offset(0, 4),
                                     ),
@@ -362,9 +424,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         )
                                       : Text(
                                           'Save Changes',
-                                          style: AppTypography.bodyLarge(
-                                            color: Colors.white,
-                                          ).copyWith(fontWeight: FontWeight.w600),
+                                          style:
+                                              AppTypography.bodyLarge(
+                                                color: Colors.white,
+                                              ).copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                         ),
                                 ),
                               ),
@@ -378,17 +443,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       // Delete Account option
                       Center(
                         child: TextButton(
-                          onPressed: loading 
-                              ? null 
-                              : () => _confirmAccountDeletion(context, ref, setModalState),
+                          onPressed: loading
+                              ? null
+                              : () => _confirmAccountDeletion(
+                                  context,
+                                  ref,
+                                  setModalState,
+                                ),
                           child: Text(
                             'Delete Account',
-                            style: AppTypography.caption(
-                              color: context.colors.error.withValues(alpha: 0.8),
-                            ).copyWith(
-                              decoration: TextDecoration.underline,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style:
+                                AppTypography.caption(
+                                  color: context.colors.error.withValues(
+                                    alpha: 0.8,
+                                  ),
+                                ).copyWith(
+                                  decoration: TextDecoration.underline,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                         ),
                       ),
@@ -436,7 +508,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildContent(List<TodoModel> todos, TodoStats stats, DateTime now, AuthUserModel? user) {
+  Widget _buildContent(
+    List<TodoModel> todos,
+    TodoStats stats,
+    DateTime now,
+    AuthUserModel? user,
+  ) {
     return RefreshIndicator(
       onRefresh: () => ref.read(todosProvider.notifier).refresh(),
       color: context.colors.accentBlue,
@@ -480,7 +557,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 AppSpacing.lg,
                 AppSpacing.md,
               ),
-              child: Text("Today's Targets", style: AppTypography.titleLarge()),
+              child: Text("Today's", style: AppTypography.titleLarge()),
             ),
           ),
 
@@ -533,7 +610,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      greeting, 
+                      greeting,
                       style: AppTypography.displayMedium(),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

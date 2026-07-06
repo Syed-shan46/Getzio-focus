@@ -44,11 +44,11 @@ class _ClassicDashboardWidgetState
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          const TasksScreen(),                      // Tasks
+          const TasksScreen(), // Tasks
           const DailyMotivationScreen(isTab: true), // Affirmations
-          const OSDashboardScreen(isTab: true),     // Room (Living Space)
-          _GoalsTab(),                              // Goals (Placeholder)
-          _ProfileTab(),                            // Profile
+          const OSDashboardScreen(isTab: true), // Room (Living Space)
+          _GoalsTab(), // Goals (Placeholder)
+          _ProfileTab(), // Profile
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -56,21 +56,29 @@ class _ClassicDashboardWidgetState
   }
 
   Widget _buildBottomNav() {
-    // Fully transparent for all screens to let individual screen background colors show through
-    final Color navBgColor = Colors.transparent;
-    final Color borderColor = Colors.transparent;
-    final List<BoxShadow> navBoxShadow = [];
-    final double blurSigma = 0.0;
+    final needsThemeBg = _currentIndex != 2;
+
+    final Color navBgColor = needsThemeBg
+        ? context.colors.bg1.withValues(alpha: 0.85)
+        : Colors.transparent;
+    final Color borderColor = needsThemeBg
+        ? context.colors.textPrimary.withValues(alpha: 0.08)
+        : Colors.transparent;
+    final List<BoxShadow> navBoxShadow = needsThemeBg
+        ? [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, -4),
+            ),
+          ]
+        : [];
+    final double blurSigma = needsThemeBg ? 15.0 : 0.0;
 
     return Container(
       decoration: BoxDecoration(
         color: navBgColor,
-        border: Border(
-          top: BorderSide(
-            color: borderColor,
-            width: 0.5,
-          ),
-        ),
+        border: Border(top: BorderSide(color: borderColor, width: 0.5)),
         boxShadow: navBoxShadow,
       ),
       child: ClipRect(
@@ -79,8 +87,7 @@ class _ClassicDashboardWidgetState
           child: SafeArea(
             top: false,
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -99,24 +106,17 @@ class _ClassicDashboardWidgetState
   }
 
   Widget _buildNavItem(int index, IconData icon, String label) {
-
     final isActive = _currentIndex == index;
-    final isAffirmations = _currentIndex == 1;
     final isRoom = _currentIndex == 2;
 
     // Adaptive colors
-    final activeColor = isAffirmations 
-        ? const Color(0xFF6B4E3D) 
-        : isRoom 
-            ? Colors.white 
-            : const Color(0xFFF97316);
-            
-    final inactiveColor = isAffirmations 
-        ? const Color(0xFF8B7355).withValues(alpha: 0.6) 
-        : isRoom 
-            ? Colors.white.withValues(alpha: 0.6)
-            : context.colors.textPrimary.withValues(alpha: 0.35);
+    final activeColor = isRoom
+        ? Colors.white
+        : const Color(0xFFF97316);
 
+    final inactiveColor = isRoom
+        ? Colors.white.withValues(alpha: 0.6)
+        : context.colors.textPrimary.withValues(alpha: 0.35);
 
     return GestureDetector(
       onTap: () {
@@ -128,36 +128,10 @@ class _ClassicDashboardWidgetState
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          gradient: isActive
-              ? LinearGradient(
-                  colors: isAffirmations
-                      ? [
-                          const Color(0xFF8B5A2B).withValues(alpha: 0.08),
-                          const Color(0xFF6B4E3D).withValues(alpha: 0.08),
-                        ]
-                      : isRoom
-                          ? [
-                              Colors.white.withValues(alpha: 0.15),
-                              Colors.white.withValues(alpha: 0.05),
-                            ]
-                          : [
-                              const Color(0xFFF97316).withValues(alpha: 0.18),
-                              const Color(0xFF8B5CF6).withValues(alpha: 0.18),
-                            ],
-                )
-              : null,
-          color: isActive ? null : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 21,
-              color: isActive ? activeColor : inactiveColor,
-            ),
+            Icon(icon, size: 21, color: isActive ? activeColor : inactiveColor),
             const SizedBox(height: 3),
             Text(
               label,
@@ -193,10 +167,7 @@ class _HomeTab extends ConsumerWidget {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Color(0xFF0F1524),
-            Color(0xFF070A13),
-          ],
+          colors: [Color(0xFF0F1524), Color(0xFF070A13)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -228,7 +199,10 @@ class _HomeTab extends ConsumerWidget {
                           if (!isLoggedIn) ...[
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.amber.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(4),
@@ -240,7 +214,11 @@ class _HomeTab extends ConsumerWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.cloud_off_rounded, size: 10, color: Colors.amber),
+                                  const Icon(
+                                    Icons.cloud_off_rounded,
+                                    size: 10,
+                                    color: Colors.amber,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Stored on this device only',
@@ -271,7 +249,10 @@ class _HomeTab extends ConsumerWidget {
                     children: [
                       // Quick Customize Button
                       IconButton(
-                        icon: const Icon(Icons.tune_rounded, color: Colors.white70),
+                        icon: const Icon(
+                          Icons.tune_rounded,
+                          color: Colors.white70,
+                        ),
                         onPressed: () {
                           HapticFeedback.lightImpact();
                           WorkspaceCustomizationSheet.show(context);
@@ -345,10 +326,7 @@ class _HomeTab extends ConsumerWidget {
       padding: const EdgeInsets.all(18),
       child: Row(
         children: [
-          const Text(
-            '☁️',
-            style: TextStyle(fontSize: 32),
-          ),
+          const Text('☁️', style: TextStyle(fontSize: 32)),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -384,7 +362,9 @@ class _HomeTab extends ConsumerWidget {
               backgroundColor: AppColors.accentBlue,
               foregroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               elevation: 0,
             ),
             child: Text(
@@ -494,10 +474,7 @@ class _HomeTab extends ConsumerWidget {
           const SizedBox(height: 2),
           Text(
             subtitle,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 11.5,
-            ),
+            style: const TextStyle(color: Colors.white54, fontSize: 11.5),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -516,10 +493,7 @@ class _HomeTab extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       child: Column(
         children: [
-          const Text(
-            '🖼️',
-            style: TextStyle(fontSize: 22),
-          ),
+          const Text('🖼️', style: TextStyle(fontSize: 22)),
           const SizedBox(height: 8),
           Text(
             '"${state.dailyQuote}"',
@@ -571,14 +545,18 @@ class _HomeTab extends ConsumerWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.accentBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   '${state.completedHabitIdsToday.length}/${state.selectedHabits.length} Done',
-                  style: TextStyle(color: AppColors.accentBlue,
+                  style: TextStyle(
+                    color: AppColors.accentBlue,
                     fontWeight: FontWeight.bold,
                     fontSize: 11,
                   ),
@@ -606,22 +584,27 @@ class _HomeTab extends ConsumerWidget {
               itemCount: state.selectedHabits.length,
               itemBuilder: (context, idx) {
                 final habit = state.selectedHabits[idx];
-                final isCompleted = state.completedHabitIdsToday.contains(habit.id);
+                final isCompleted = state.completedHabitIdsToday.contains(
+                  habit.id,
+                );
                 return Container(
                   margin: const EdgeInsets.only(bottom: 10),
                   decoration: BoxDecoration(
-                    color: isCompleted 
+                    color: isCompleted
                         ? AppColors.accentBlue.withValues(alpha: 0.04)
                         : Colors.white.withValues(alpha: 0.01),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isCompleted 
+                      color: isCompleted
                           ? AppColors.accentBlue.withValues(alpha: 0.12)
                           : Colors.white.withValues(alpha: 0.03),
                     ),
                   ),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 2,
+                    ),
                     dense: true,
                     leading: Container(
                       width: 32,
@@ -642,7 +625,9 @@ class _HomeTab extends ConsumerWidget {
                         color: isCompleted ? Colors.white70 : Colors.white,
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
-                        decoration: isCompleted ? TextDecoration.lineThrough : null,
+                        decoration: isCompleted
+                            ? TextDecoration.lineThrough
+                            : null,
                       ),
                     ),
                     subtitle: Text(
@@ -656,7 +641,9 @@ class _HomeTab extends ConsumerWidget {
                       value: isCompleted,
                       activeColor: AppColors.accentBlue,
                       checkColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       side: const BorderSide(color: Colors.white30, width: 1.5),
                       onChanged: (val) {
                         HapticFeedback.mediumImpact();
@@ -737,7 +724,8 @@ class _HomeTab extends ConsumerWidget {
               children: selectedGoals.map((goal) {
                 final title = goal['title'] as String? ?? 'Goal';
                 final category = goal['category'] as String? ?? 'General';
-                final current = (goal['currentProgress'] as num?)?.toDouble() ?? 30.0;
+                final current =
+                    (goal['currentProgress'] as num?)?.toDouble() ?? 30.0;
                 final target = (goal['target'] as num?)?.toDouble() ?? 100.0;
                 final progress = (current / target).clamp(0.0, 1.0);
 
@@ -747,7 +735,9 @@ class _HomeTab extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.01),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.03),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -770,7 +760,8 @@ class _HomeTab extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Text(
                             '${(progress * 100).toInt()}%',
-                            style: TextStyle(color: AppColors.accentBlue,
+                            style: TextStyle(
+                              color: AppColors.accentBlue,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -794,7 +785,9 @@ class _HomeTab extends ConsumerWidget {
                           value: progress,
                           minHeight: 5,
                           backgroundColor: Colors.white12,
-                          valueColor: AlwaysStoppedAnimation(AppColors.accentBlue),
+                          valueColor: AlwaysStoppedAnimation(
+                            AppColors.accentBlue,
+                          ),
                         ),
                       ),
                     ],
@@ -807,11 +800,20 @@ class _HomeTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildTrackersGrid(WidgetRef ref, OSState state, OSStateNotifier notifier) {
+  Widget _buildTrackersGrid(
+    WidgetRef ref,
+    OSState state,
+    OSStateNotifier notifier,
+  ) {
     final hiveDb = ref.read(hiveDatabaseProvider);
-    final readingPrefs = hiveDb.getReadingPreferences() ?? {'bookTarget': 12, 'dailyReadingMinutes': 20};
-    final healthPrefs = hiveDb.getHealthPreferences() ?? {'waterTarget': 2000, 'sleepTarget': 8};
-    final financePrefs = hiveDb.getFinancePreferences() ?? {'monthlySavings': 10000};
+    final readingPrefs =
+        hiveDb.getReadingPreferences() ??
+        {'bookTarget': 12, 'dailyReadingMinutes': 20};
+    final healthPrefs =
+        hiveDb.getHealthPreferences() ??
+        {'waterTarget': 2000, 'sleepTarget': 8};
+    final financePrefs =
+        hiveDb.getFinancePreferences() ?? {'monthlySavings': 10000};
 
     final int waterTarget = healthPrefs['waterTarget'] ?? 2000;
     final int sleepTarget = healthPrefs['sleepTarget'] ?? 8;
@@ -844,7 +846,11 @@ class _HomeTab extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.health_and_safety_rounded, color: AppColors.accentEmerald, size: 20),
+                  Icon(
+                    Icons.health_and_safety_rounded,
+                    color: AppColors.accentEmerald,
+                    size: 20,
+                  ),
                   const SizedBox(width: 10),
                   Text(
                     'Health & Lifestyle',
@@ -905,7 +911,8 @@ class _HomeTab extends ConsumerWidget {
               const SizedBox(height: 16),
               _buildTrackerSlider(
                 title: 'Daily Pages Read',
-                valueStr: '15 / ${readingPrefs['dailyReadingMinutes'] ?? 20} Pages',
+                valueStr:
+                    '15 / ${readingPrefs['dailyReadingMinutes'] ?? 20} Pages',
                 progress: 15 / (readingPrefs['dailyReadingMinutes'] ?? 20),
                 accentColor: Colors.amber,
               ),
@@ -932,7 +939,11 @@ class _HomeTab extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.savings_rounded, color: Colors.orangeAccent, size: 20),
+                  const Icon(
+                    Icons.savings_rounded,
+                    color: Colors.orangeAccent,
+                    size: 20,
+                  ),
                   const SizedBox(width: 10),
                   Text(
                     'Financial Savings',
@@ -1062,7 +1073,11 @@ class _AffirmationsTab extends ConsumerWidget {
                       ),
                     ),
                     child: IconButton(
-                      icon: Icon(Icons.add_rounded, color: AppColors.accentBlue, size: 22),
+                      icon: Icon(
+                        Icons.add_rounded,
+                        color: AppColors.accentBlue,
+                        size: 22,
+                      ),
                       onPressed: () {
                         HapticFeedback.mediumImpact();
                         AffirmationBottomSheet.show(context);
@@ -1078,20 +1093,37 @@ class _AffirmationsTab extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.02),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.04),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _affStat('Total', '${affirmations.length}', Icons.format_quote_rounded),
+                    _affStat(
+                      'Total',
+                      '${affirmations.length}',
+                      Icons.format_quote_rounded,
+                    ),
                     Container(width: 1, height: 24, color: Colors.white10),
-                    _affStat('Practiced', '${affState.completedTodayCount}', Icons.check_circle_outline_rounded),
+                    _affStat(
+                      'Practiced',
+                      '${affState.completedTodayCount}',
+                      Icons.check_circle_outline_rounded,
+                    ),
                     Container(width: 1, height: 24, color: Colors.white10),
-                    _affStat('Favorites', '${affirmations.where((a) => a.isFavorite).length}', Icons.favorite_rounded),
+                    _affStat(
+                      'Favorites',
+                      '${affirmations.where((a) => a.isFavorite).length}',
+                      Icons.favorite_rounded,
+                    ),
                   ],
                 ),
               ),
@@ -1105,8 +1137,11 @@ class _AffirmationsTab extends ConsumerWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.auto_awesome_rounded, size: 48,
-                              color: AppColors.accentBlue.withValues(alpha: 0.3)),
+                          Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 48,
+                            color: AppColors.accentBlue.withValues(alpha: 0.3),
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'No affirmations yet',
@@ -1139,7 +1174,8 @@ class _AffirmationsTab extends ConsumerWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ReaderViewScreen(affirmation: aff),
+                                builder: (_) =>
+                                    ReaderViewScreen(affirmation: aff),
                               ),
                             );
                           },
@@ -1151,7 +1187,9 @@ class _AffirmationsTab extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(18),
                               border: Border.all(
                                 color: aff.isPinned
-                                    ? AppColors.accentBlue.withValues(alpha: 0.15)
+                                    ? AppColors.accentBlue.withValues(
+                                        alpha: 0.15,
+                                      )
                                     : Colors.white.withValues(alpha: 0.04),
                               ),
                             ),
@@ -1162,7 +1200,9 @@ class _AffirmationsTab extends ConsumerWidget {
                                   width: 44,
                                   height: 44,
                                   decoration: BoxDecoration(
-                                    color: _affThemeColor(aff.colorTheme).withValues(alpha: 0.1),
+                                    color: _affThemeColor(
+                                      aff.colorTheme,
+                                    ).withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   alignment: Alignment.center,
@@ -1174,16 +1214,22 @@ class _AffirmationsTab extends ConsumerWidget {
                                 const SizedBox(width: 14),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
                                           if (aff.isPinned)
                                             Padding(
-                                              padding: const EdgeInsets.only(right: 6),
-                                              child: Icon(Icons.push_pin_rounded,
-                                                  size: 12,
-                                                  color: AppColors.accentBlue.withValues(alpha: 0.6)),
+                                              padding: const EdgeInsets.only(
+                                                right: 6,
+                                              ),
+                                              child: Icon(
+                                                Icons.push_pin_rounded,
+                                                size: 12,
+                                                color: AppColors.accentBlue
+                                                    .withValues(alpha: 0.6),
+                                              ),
                                             ),
                                           Expanded(
                                             child: Text(
@@ -1203,7 +1249,9 @@ class _AffirmationsTab extends ConsumerWidget {
                                       Text(
                                         '"${aff.text}"',
                                         style: GoogleFonts.playfairDisplay(
-                                          color: Colors.white.withValues(alpha: 0.5),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.5,
+                                          ),
                                           fontSize: 12,
                                           fontStyle: FontStyle.italic,
                                         ),
@@ -1215,10 +1263,18 @@ class _AffirmationsTab extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 8),
                                 if (aff.isFavorite)
-                                  Icon(Icons.favorite_rounded,
-                                      size: 16, color: Colors.redAccent.withValues(alpha: 0.6)),
-                                const Icon(Icons.chevron_right_rounded,
-                                    size: 20, color: Colors.white24),
+                                  Icon(
+                                    Icons.favorite_rounded,
+                                    size: 16,
+                                    color: Colors.redAccent.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                  ),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 20,
+                                  color: Colors.white24,
+                                ),
                               ],
                             ),
                           ),
@@ -1236,7 +1292,11 @@ class _AffirmationsTab extends ConsumerWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: AppColors.accentBlue.withValues(alpha: 0.5)),
+        Icon(
+          icon,
+          size: 16,
+          color: AppColors.accentBlue.withValues(alpha: 0.5),
+        ),
         const SizedBox(height: 4),
         Text(
           value,
@@ -1293,9 +1353,7 @@ class _ProfileTab extends ConsumerWidget {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: BoxDecoration(
-        color: context.colors.bg2,
-      ),
+      decoration: BoxDecoration(color: context.colors.bg2),
       child: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -1363,14 +1421,22 @@ class _ProfileTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildProfileStatRow(BuildContext context, String label, String value, IconData icon, Color color) {
+  Widget _buildProfileStatRow(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: context.colors.textPrimary.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.04)),
+        border: Border.all(
+          color: context.colors.textPrimary.withValues(alpha: 0.04),
+        ),
       ),
       child: Row(
         children: [
@@ -1428,7 +1494,9 @@ class _ProfileTab extends ConsumerWidget {
         decoration: BoxDecoration(
           color: context.colors.textPrimary.withValues(alpha: 0.02),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.04)),
+          border: Border.all(
+            color: context.colors.textPrimary.withValues(alpha: 0.04),
+          ),
         ),
         child: Row(
           children: [
@@ -1447,13 +1515,19 @@ class _ProfileTab extends ConsumerWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  color: color == Colors.redAccent ? Colors.redAccent : context.colors.textSecondary,
+                  color: color == Colors.redAccent
+                      ? Colors.redAccent
+                      : context.colors.textSecondary,
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            Icon(Icons.chevron_right_rounded, size: 20, color: context.colors.textPrimary.withValues(alpha: 0.2)),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: context.colors.textPrimary.withValues(alpha: 0.2),
+            ),
           ],
         ),
       ),
@@ -1520,7 +1594,9 @@ class _RoadmapTab extends ConsumerWidget {
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.12)),
+                  border: Border.all(
+                    color: AppColors.accentBlue.withValues(alpha: 0.12),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1553,15 +1629,21 @@ class _RoadmapTab extends ConsumerWidget {
                       child: LinearProgressIndicator(
                         value: (state.xp % 1000) / 1000,
                         minHeight: 8,
-                        backgroundColor: context.colors.textPrimary.withValues(alpha: 0.05),
-                        valueColor: AlwaysStoppedAnimation(AppColors.accentBlue),
+                        backgroundColor: context.colors.textPrimary.withValues(
+                          alpha: 0.05,
+                        ),
+                        valueColor: AlwaysStoppedAnimation(
+                          AppColors.accentBlue,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       '${1000 - (state.xp % 1000)} XP to next level',
                       style: TextStyle(
-                        color: context.colors.textPrimary.withValues(alpha: 0.35),
+                        color: context.colors.textPrimary.withValues(
+                          alpha: 0.35,
+                        ),
                         fontSize: 11,
                       ),
                     ),
@@ -1584,7 +1666,9 @@ class _RoadmapTab extends ConsumerWidget {
               _buildMilestone(
                 context,
                 '7-Day Streak',
-                state.bestStreak >= 7 ? 'Achieved' : '${7 - state.currentStreak} days left',
+                state.bestStreak >= 7
+                    ? 'Achieved'
+                    : '${7 - state.currentStreak} days left',
                 Icons.local_fire_department_rounded,
                 Colors.orange,
                 state.bestStreak >= 7,
@@ -1592,7 +1676,9 @@ class _RoadmapTab extends ConsumerWidget {
               _buildMilestone(
                 context,
                 '30-Day Streak',
-                state.bestStreak >= 30 ? 'Achieved' : '${30 - state.currentStreak} days left',
+                state.bestStreak >= 30
+                    ? 'Achieved'
+                    : '${30 - state.currentStreak} days left',
                 Icons.whatshot_rounded,
                 Colors.deepOrange,
                 state.bestStreak >= 30,
@@ -1600,7 +1686,9 @@ class _RoadmapTab extends ConsumerWidget {
               _buildMilestone(
                 context,
                 'First 1000 XP',
-                state.xp >= 1000 ? 'Achieved' : '${1000 - state.xp} XP remaining',
+                state.xp >= 1000
+                    ? 'Achieved'
+                    : '${1000 - state.xp} XP remaining',
                 Icons.stars_rounded,
                 Colors.amber,
                 state.xp >= 1000,
@@ -1608,7 +1696,9 @@ class _RoadmapTab extends ConsumerWidget {
               _buildMilestone(
                 context,
                 'Level 5 Mastery',
-                state.level >= 5 ? 'Achieved' : 'Currently Level ${state.level}',
+                state.level >= 5
+                    ? 'Achieved'
+                    : 'Currently Level ${state.level}',
                 Icons.workspace_premium_rounded,
                 AppColors.accentBlue,
                 state.level >= 5,
@@ -1616,7 +1706,9 @@ class _RoadmapTab extends ConsumerWidget {
               _buildMilestone(
                 context,
                 'All Habits Done',
-                state.disciplineScore >= 100 ? 'Achieved today!' : '${state.disciplineScore.toInt()}% complete',
+                state.disciplineScore >= 100
+                    ? 'Achieved today!'
+                    : '${state.disciplineScore.toInt()}% complete',
                 Icons.check_circle_rounded,
                 AppColors.accentEmerald,
                 state.disciplineScore >= 100,
@@ -1638,7 +1730,8 @@ class _RoadmapTab extends ConsumerWidget {
                 ...selectedGoals.map((goal) {
                   final title = goal['title'] as String? ?? 'Goal';
                   final category = goal['category'] as String? ?? 'General';
-                  final current = (goal['currentProgress'] as num?)?.toDouble() ?? 30.0;
+                  final current =
+                      (goal['currentProgress'] as num?)?.toDouble() ?? 30.0;
                   final target = (goal['target'] as num?)?.toDouble() ?? 100.0;
                   final progress = (current / target).clamp(0.0, 1.0);
 
@@ -1648,7 +1741,11 @@ class _RoadmapTab extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: context.colors.textPrimary.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.04)),
+                      border: Border.all(
+                        color: context.colors.textPrimary.withValues(
+                          alpha: 0.04,
+                        ),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1659,11 +1756,17 @@ class _RoadmapTab extends ConsumerWidget {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: AppColors.accentBlue.withValues(alpha: 0.1),
+                                color: AppColors.accentBlue.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               alignment: Alignment.center,
-                              child: Icon(Icons.flag_rounded, size: 18, color: AppColors.accentBlue),
+                              child: Icon(
+                                Icons.flag_rounded,
+                                size: 18,
+                                color: AppColors.accentBlue,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -1683,7 +1786,8 @@ class _RoadmapTab extends ConsumerWidget {
                                   Text(
                                     category,
                                     style: TextStyle(
-                                      color: context.colors.textPrimary.withValues(alpha: 0.35),
+                                      color: context.colors.textPrimary
+                                          .withValues(alpha: 0.35),
                                       fontSize: 11,
                                     ),
                                   ),
@@ -1706,8 +1810,11 @@ class _RoadmapTab extends ConsumerWidget {
                           child: LinearProgressIndicator(
                             value: progress,
                             minHeight: 6,
-                            backgroundColor: context.colors.textPrimary.withValues(alpha: 0.04),
-                            valueColor: AlwaysStoppedAnimation(AppColors.accentBlue),
+                            backgroundColor: context.colors.textPrimary
+                                .withValues(alpha: 0.04),
+                            valueColor: AlwaysStoppedAnimation(
+                              AppColors.accentBlue,
+                            ),
                           ),
                         ),
                       ],
@@ -1747,7 +1854,9 @@ class _RoadmapTab extends ConsumerWidget {
                       : context.colors.textPrimary.withValues(alpha: 0.03),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: achieved ? color : context.colors.textPrimary.withValues(alpha: 0.1),
+                    color: achieved
+                        ? color
+                        : context.colors.textPrimary.withValues(alpha: 0.1),
                     width: 1.5,
                   ),
                 ),
@@ -1784,7 +1893,9 @@ class _RoadmapTab extends ConsumerWidget {
                         Text(
                           title,
                           style: GoogleFonts.outfit(
-                            color: achieved ? context.colors.textPrimary : context.colors.textSecondary,
+                            color: achieved
+                                ? context.colors.textPrimary
+                                : context.colors.textSecondary,
                             fontSize: 13.5,
                             fontWeight: FontWeight.w600,
                           ),
@@ -1795,7 +1906,9 @@ class _RoadmapTab extends ConsumerWidget {
                           style: TextStyle(
                             color: achieved
                                 ? color.withValues(alpha: 0.7)
-                                : context.colors.textPrimary.withValues(alpha: 0.35),
+                                : context.colors.textPrimary.withValues(
+                                    alpha: 0.35,
+                                  ),
                             fontSize: 11,
                           ),
                         ),
@@ -1804,7 +1917,10 @@ class _RoadmapTab extends ConsumerWidget {
                   ),
                   if (achieved)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -1844,7 +1960,20 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
 
   String _formatTargetDate(DateTime? date) {
     if (date == null) return 'Continuous';
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return '${months[date.month - 1]} ${date.year}';
   }
 
@@ -1854,16 +1983,22 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
     if (metadata['status'] != null) {
       return metadata['status'] as String;
     }
-    
+
     // Dynamically calculate status if not specified
     if (progress == 100) return 'Completed';
     if (progress == 0) return 'Not Started';
-    
-    final title = (goal.content.isNotEmpty ? goal.content : (metadata['title'] as String? ?? '')).toLowerCase();
+
+    final title =
+        (goal.content.isNotEmpty
+                ? goal.content
+                : (metadata['title'] as String? ?? ''))
+            .toLowerCase();
     if (title.contains('hold') || title.contains('creative')) return 'On Hold';
-    if (title.contains('travel') || title.contains('fitness')) return 'Not Started';
-    if (title.contains('financial') || title.contains('freedom')) return 'In Progress';
-    
+    if (title.contains('travel') || title.contains('fitness'))
+      return 'Not Started';
+    if (title.contains('financial') || title.contains('freedom'))
+      return 'In Progress';
+
     return 'On Track';
   }
 
@@ -1885,37 +2020,72 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
 
   IconData _getGoalIcon(String title, Map metadata) {
     final lowercaseTitle = title.toLowerCase();
-    if (lowercaseTitle.contains('launch') || lowercaseTitle.contains('rocket') || lowercaseTitle.contains('getzio')) {
+    if (lowercaseTitle.contains('launch') ||
+        lowercaseTitle.contains('rocket') ||
+        lowercaseTitle.contains('getzio')) {
       return Icons.rocket_launch_rounded;
-    } else if (lowercaseTitle.contains('financial') || lowercaseTitle.contains('freedom') || lowercaseTitle.contains('money') || lowercaseTitle.contains('wealth') || lowercaseTitle.contains('save') || lowercaseTitle.contains('finance') || lowercaseTitle.contains('freedom')) {
+    } else if (lowercaseTitle.contains('financial') ||
+        lowercaseTitle.contains('freedom') ||
+        lowercaseTitle.contains('money') ||
+        lowercaseTitle.contains('wealth') ||
+        lowercaseTitle.contains('save') ||
+        lowercaseTitle.contains('finance') ||
+        lowercaseTitle.contains('freedom')) {
       return Icons.savings_rounded;
-    } else if (lowercaseTitle.contains('book') || lowercaseTitle.contains('read') || lowercaseTitle.contains('study') || lowercaseTitle.contains('learn')) {
+    } else if (lowercaseTitle.contains('book') ||
+        lowercaseTitle.contains('read') ||
+        lowercaseTitle.contains('study') ||
+        lowercaseTitle.contains('learn')) {
       return Icons.menu_book_rounded;
-    } else if (lowercaseTitle.contains('fitness') || lowercaseTitle.contains('gym') || lowercaseTitle.contains('workout') || lowercaseTitle.contains('health') || lowercaseTitle.contains('transform')) {
+    } else if (lowercaseTitle.contains('fitness') ||
+        lowercaseTitle.contains('gym') ||
+        lowercaseTitle.contains('workout') ||
+        lowercaseTitle.contains('health') ||
+        lowercaseTitle.contains('transform')) {
       return Icons.fitness_center_rounded;
-    } else if (lowercaseTitle.contains('flutter') || lowercaseTitle.contains('code') || lowercaseTitle.contains('master') || lowercaseTitle.contains('program') || lowercaseTitle.contains('develop')) {
+    } else if (lowercaseTitle.contains('flutter') ||
+        lowercaseTitle.contains('code') ||
+        lowercaseTitle.contains('master') ||
+        lowercaseTitle.contains('program') ||
+        lowercaseTitle.contains('develop')) {
       return Icons.code_rounded;
-    } else if (lowercaseTitle.contains('habit') || lowercaseTitle.contains('grow') || lowercaseTitle.contains('daily') || lowercaseTitle.contains('leaf') || lowercaseTitle.contains('plant')) {
+    } else if (lowercaseTitle.contains('habit') ||
+        lowercaseTitle.contains('grow') ||
+        lowercaseTitle.contains('daily') ||
+        lowercaseTitle.contains('leaf') ||
+        lowercaseTitle.contains('plant')) {
       return Icons.eco_rounded;
-    } else if (lowercaseTitle.contains('travel') || lowercaseTitle.contains('world') || lowercaseTitle.contains('trip') || lowercaseTitle.contains('flight') || lowercaseTitle.contains('plane')) {
+    } else if (lowercaseTitle.contains('travel') ||
+        lowercaseTitle.contains('world') ||
+        lowercaseTitle.contains('trip') ||
+        lowercaseTitle.contains('flight') ||
+        lowercaseTitle.contains('plane')) {
       return Icons.flight_rounded;
-    } else if (lowercaseTitle.contains('creative') || lowercaseTitle.contains('mastery') || lowercaseTitle.contains('paint') || lowercaseTitle.contains('art') || lowercaseTitle.contains('palette')) {
+    } else if (lowercaseTitle.contains('creative') ||
+        lowercaseTitle.contains('mastery') ||
+        lowercaseTitle.contains('paint') ||
+        lowercaseTitle.contains('art') ||
+        lowercaseTitle.contains('palette')) {
       return Icons.palette_rounded;
     }
-    
+
     final category = (metadata['category'] as String? ?? '').toLowerCase();
     if (category.contains('health')) return Icons.fitness_center_rounded;
     if (category.contains('finance')) return Icons.savings_rounded;
-    if (category.contains('career') || category.contains('work')) return Icons.work_rounded;
-    if (category.contains('education') || category.contains('learn')) return Icons.school_rounded;
-    
+    if (category.contains('career') || category.contains('work'))
+      return Icons.work_rounded;
+    if (category.contains('education') || category.contains('learn'))
+      return Icons.school_rounded;
+
     return Icons.flag_rounded;
   }
 
   bool _matchesFilter(String status, String filter) {
     if (filter == 'All') return true;
     if (filter == 'Active') {
-      return status == 'On Track' || status == 'In Progress' || status == 'Not Started';
+      return status == 'On Track' ||
+          status == 'In Progress' ||
+          status == 'Not Started';
     }
     return status.toLowerCase() == filter.toLowerCase();
   }
@@ -1933,10 +2103,14 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
         width: 82,
         padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? context.colors.accentBlue.withValues(alpha: 0.15) : context.colors.bg2,
+          color: isSelected
+              ? context.colors.accentBlue.withValues(alpha: 0.15)
+              : context.colors.bg2,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? context.colors.accentBlue.withValues(alpha: 0.5) : context.colors.glassBorder,
+            color: isSelected
+                ? context.colors.accentBlue.withValues(alpha: 0.5)
+                : context.colors.glassBorder,
             width: 1,
           ),
         ),
@@ -1952,17 +2126,21 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
                   width: 4,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: isSelected ? context.colors.accentBlue : Colors.transparent,
+                    color: isSelected
+                        ? context.colors.accentBlue
+                        : Colors.transparent,
                     shape: BoxShape.circle,
                   ),
-                )
+                ),
               ],
             ),
             SizedBox(height: 6),
             Text(
               label,
               style: GoogleFonts.outfit(
-                color: isSelected ? context.colors.textPrimary : context.colors.textSecondary,
+                color: isSelected
+                    ? context.colors.textPrimary
+                    : context.colors.textSecondary,
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
               ),
@@ -1986,13 +2164,16 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
 
   Widget _buildGoalCard(BuildContext context, VisionItem goal) {
     final metadata = goal.metadata ?? {};
-    final title = goal.content.isNotEmpty ? goal.content : (metadata['title'] as String? ?? 'My Goal');
+    final title = goal.content.isNotEmpty
+        ? goal.content
+        : (metadata['title'] as String? ?? 'My Goal');
     final description = metadata['description'] as String? ?? 'No description';
     final progressPercent = goal.smartProgressPercent;
-    
-    final colorValue = metadata['color'] as int? ?? Colors.blueAccent.toARGB32();
+
+    final colorValue =
+        metadata['color'] as int? ?? Colors.blueAccent.toARGB32();
     final themeColor = Color(colorValue);
-    
+
     final status = _getGoalStatus(goal);
     final statusColor = _getStatusColor(status);
     final formattedDate = _formatTargetDate(goal.countdownDate);
@@ -2027,14 +2208,10 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
                   width: 1,
                 ),
               ),
-              child: Icon(
-                goalIcon,
-                color: themeColor,
-                size: 16,
-              ),
+              child: Icon(goalIcon, color: themeColor, size: 16),
             ),
             SizedBox(width: 12),
-            
+
             // Title, description and target info
             Expanded(
               child: Column(
@@ -2108,7 +2285,7 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
               ),
             ),
             SizedBox(width: 8),
-            
+
             // Circular Progress on the right
             Stack(
               alignment: Alignment.center,
@@ -2118,7 +2295,9 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
                   height: 32,
                   child: CircularProgressIndicator(
                     value: progressPercent / 100.0,
-                    backgroundColor: context.colors.textPrimary.withOpacity(0.05),
+                    backgroundColor: context.colors.textPrimary.withOpacity(
+                      0.05,
+                    ),
                     valueColor: AlwaysStoppedAnimation<Color>(themeColor),
                     strokeWidth: 3,
                   ),
@@ -2134,7 +2313,7 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
               ],
             ),
             SizedBox(width: 8),
-            
+
             // Right chevron
             Icon(
               Icons.chevron_right_rounded,
@@ -2159,9 +2338,15 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
       final s = _getGoalStatus(g);
       return s == 'On Track' || s == 'In Progress' || s == 'Not Started';
     }).length;
-    final inProgressCount = goals.where((g) => _getGoalStatus(g) == 'In Progress').length;
-    final completedCount = goals.where((g) => _getGoalStatus(g) == 'Completed').length;
-    final onHoldCount = goals.where((g) => _getGoalStatus(g) == 'On Hold').length;
+    final inProgressCount = goals
+        .where((g) => _getGoalStatus(g) == 'In Progress')
+        .length;
+    final completedCount = goals
+        .where((g) => _getGoalStatus(g) == 'Completed')
+        .length;
+    final onHoldCount = goals
+        .where((g) => _getGoalStatus(g) == 'On Hold')
+        .length;
 
     final filteredGoals = goals.where((g) {
       final status = _getGoalStatus(g);
@@ -2194,7 +2379,9 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
                           Text(
                             'MY GOALS',
                             style: GoogleFonts.outfit(
-                              color: context.colors.textPrimary.withOpacity(0.4),
+                              color: context.colors.textPrimary.withOpacity(
+                                0.4,
+                              ),
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.5,
@@ -2228,10 +2415,16 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
                         icon: Container(
                           padding: EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: context.colors.accentBlue.withValues(alpha: 0.3),
+                            color: context.colors.accentBlue.withValues(
+                              alpha: 0.3,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Icon(Icons.grid_view_rounded, size: 14, color: context.colors.textPrimary),
+                          child: Icon(
+                            Icons.grid_view_rounded,
+                            size: 14,
+                            color: context.colors.textPrimary,
+                          ),
                         ),
                         isSelected: _selectedFilter == 'All',
                         onTap: () => setState(() => _selectedFilter = 'All'),
@@ -2240,7 +2433,11 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
                       _buildFilterTab(
                         label: 'Active',
                         count: activeCount,
-                        icon: Icon(Icons.play_circle_fill_rounded, color: Color(0xFF10B981), size: 15),
+                        icon: Icon(
+                          Icons.play_circle_fill_rounded,
+                          color: Color(0xFF10B981),
+                          size: 15,
+                        ),
                         isSelected: _selectedFilter == 'Active',
                         onTap: () => setState(() => _selectedFilter = 'Active'),
                       ),
@@ -2248,25 +2445,40 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
                       _buildFilterTab(
                         label: 'In Progress',
                         count: inProgressCount,
-                        icon: Icon(Icons.timelapse_rounded, color: Color(0xFFF59E0B), size: 15),
+                        icon: Icon(
+                          Icons.timelapse_rounded,
+                          color: Color(0xFFF59E0B),
+                          size: 15,
+                        ),
                         isSelected: _selectedFilter == 'In Progress',
-                        onTap: () => setState(() => _selectedFilter = 'In Progress'),
+                        onTap: () =>
+                            setState(() => _selectedFilter = 'In Progress'),
                       ),
                       SizedBox(width: 10),
                       _buildFilterTab(
                         label: 'Completed',
                         count: completedCount,
-                        icon: Icon(Icons.check_circle_rounded, color: Color(0xFF8B5CF6), size: 15),
+                        icon: Icon(
+                          Icons.check_circle_rounded,
+                          color: Color(0xFF8B5CF6),
+                          size: 15,
+                        ),
                         isSelected: _selectedFilter == 'Completed',
-                        onTap: () => setState(() => _selectedFilter = 'Completed'),
+                        onTap: () =>
+                            setState(() => _selectedFilter = 'Completed'),
                       ),
                       SizedBox(width: 10),
                       _buildFilterTab(
                         label: 'On Hold',
                         count: onHoldCount,
-                        icon: Icon(Icons.pause_circle_filled_rounded, color: Color(0xFF3B82F6), size: 15),
+                        icon: Icon(
+                          Icons.pause_circle_filled_rounded,
+                          color: Color(0xFF3B82F6),
+                          size: 15,
+                        ),
                         isSelected: _selectedFilter == 'On Hold',
-                        onTap: () => setState(() => _selectedFilter = 'On Hold'),
+                        onTap: () =>
+                            setState(() => _selectedFilter = 'On Hold'),
                       ),
                     ],
                   ),
@@ -2282,7 +2494,9 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
                               Icon(
                                 Icons.flag_rounded,
                                 size: 48,
-                                color: context.colors.textMuted.withValues(alpha: 0.4),
+                                color: context.colors.textMuted.withValues(
+                                  alpha: 0.4,
+                                ),
                               ),
                               SizedBox(height: 16),
                               Text(
@@ -2297,7 +2511,9 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
                               Text(
                                 'Go to the Room tab to place your first goal',
                                 style: TextStyle(
-                                  color: context.colors.textPrimary.withOpacity(0.3),
+                                  color: context.colors.textPrimary.withOpacity(
+                                    0.3,
+                                  ),
                                   fontSize: 13,
                                 ),
                               ),
@@ -2305,11 +2521,19 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
                           ),
                         )
                       : ListView.builder(
-                          padding: EdgeInsets.fromLTRB(20, 8, 20, 120), // Padding bottom for banner
+                          padding: EdgeInsets.fromLTRB(
+                            20,
+                            8,
+                            20,
+                            120,
+                          ), // Padding bottom for banner
                           physics: const BouncingScrollPhysics(),
                           itemCount: filteredGoals.length,
                           itemBuilder: (context, index) {
-                            return _buildGoalCard(context, filteredGoals[index]);
+                            return _buildGoalCard(
+                              context,
+                              filteredGoals[index],
+                            );
                           },
                         ),
                 ),
@@ -2317,7 +2541,6 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
             ),
           ),
         ),
-
       ],
     );
   }
