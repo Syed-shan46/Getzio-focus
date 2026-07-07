@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:getzio_todo_app/core/theme/app_theme.dart';
 
 class DueDateAndProgressSelector extends StatelessWidget {
   final DateTime? selectedDate;
@@ -26,9 +27,9 @@ class DueDateAndProgressSelector extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: context.colors.textPrimary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,11 +45,11 @@ class DueDateAndProgressSelector extends StatelessWidget {
                     Icon(Icons.calendar_month_rounded,
                         color: accentColor, size: 16),
                     const SizedBox(width: 6),
-                    const Flexible(
+                    Flexible(
                       child: Text('DUE DATE',
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                              color: Colors.white70,
+                              color: context.colors.textSecondary,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.8)),
@@ -98,11 +99,11 @@ class DueDateAndProgressSelector extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Flexible(
+              Flexible(
                 child: Text('INITIAL PROGRESS',
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                        color: Colors.white70,
+                        color: context.colors.textSecondary,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.8)),
@@ -134,15 +135,15 @@ class DueDateAndProgressSelector extends StatelessWidget {
               Container(
                 height: 8,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
+                  color: context.colors.textPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
               SliderTheme(
                 data: SliderThemeData(
                   activeTrackColor: accentColor,
-                  inactiveTrackColor: Colors.white.withValues(alpha: 0.08),
-                  thumbColor: Colors.white,
+                  inactiveTrackColor: context.colors.textPrimary.withValues(alpha: 0.08),
+                  thumbColor: context.colors.textPrimary,
                   overlayColor: accentColor.withValues(alpha: 0.3),
                   trackHeight: 6.0,
                   thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9.0),
