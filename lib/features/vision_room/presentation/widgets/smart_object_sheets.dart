@@ -756,10 +756,10 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
             width: 180,
             child: ShaderMask(
               shaderCallback: (rect) {
-                return const LinearGradient(
+                return LinearGradient(
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
-                  colors: [Colors.transparent, Colors.black],
+                  colors: [Colors.transparent, context.colors.bg2],
                 ).createShader(rect);
               },
               blendMode: BlendMode.dstIn,
@@ -1205,10 +1205,10 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
                                               begin: Alignment.centerLeft,
                                               end: Alignment.centerRight,
                                               colors: [
-                                                Colors.black.withValues(
+                                                context.colors.bg2.withValues(
                                                   alpha: 0.90,
                                                 ),
-                                                Colors.black.withValues(
+                                                context.colors.bg2.withValues(
                                                   alpha: 0.40,
                                                 ),
                                               ],
