@@ -1453,7 +1453,7 @@ class QuoteSmartSheet extends ConsumerWidget {
     return Container(
       height: MediaQuery.of(context).size.height * 0.65,
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1B4B).withValues(alpha: 0.95),
+        color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: ClipRRect(
