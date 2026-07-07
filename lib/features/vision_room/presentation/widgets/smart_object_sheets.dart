@@ -1451,7 +1451,7 @@ class QuoteSmartSheet extends ConsumerWidget {
     final author = metadata['author'] as String? ?? 'Anonymous';
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.65,
+      height: MediaQuery.of(context).size.height * 0.38,
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
