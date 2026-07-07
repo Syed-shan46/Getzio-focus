@@ -96,7 +96,7 @@ class _UniversalSmartObjectSheetState
     final progressRatio = currentItem.smartProgress;
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
+      height: MediaQuery.of(context).size.height * 0.40,
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.88),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),

@@ -374,7 +374,7 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
     final accentColor = const Color(0xFFEF4444); // Red/coral task accent
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: MediaQuery.of(context).size.height * 0.40,
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -755,7 +755,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
     final goldColor = const Color(0xFFD4AF37);
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
+      height: MediaQuery.of(context).size.height * 0.40,
       decoration: BoxDecoration(
         color: context.colors.bg2,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -1472,7 +1472,7 @@ class QuoteSmartSheet extends ConsumerWidget {
     final author = metadata['author'] as String? ?? 'Anonymous';
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.38,
+      height: MediaQuery.of(context).size.height * 0.40,
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -1656,7 +1656,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
     final caption = item.metadata?['caption'] as String? ?? '';
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.82,
+      height: MediaQuery.of(context).size.height * 0.40,
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
