@@ -743,7 +743,7 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
-        color: const Color(0xFF0A0A0A),
+        color: context.colors.bg2,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.05)),
       ),
