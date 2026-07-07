@@ -101,12 +101,17 @@ class _UniversalSmartObjectSheetState
         color: context.colors.bg2.withValues(alpha: 0.88),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: context.colors.glassBorder,
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.6),
+            color: context.colors.textPrimary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+          BoxShadow(
+            color: context.colors.textPrimary.withValues(alpha: 0.15),
             blurRadius: 30,
             spreadRadius: 10,
           ),

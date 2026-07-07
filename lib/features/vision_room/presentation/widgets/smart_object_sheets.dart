@@ -82,6 +82,13 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
         color: context.colors.bg2.withValues(alpha: 0.92),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.12), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: context.colors.textPrimary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -372,6 +379,13 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
         color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(color: context.colors.glassBorder, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: context.colors.textPrimary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -746,6 +760,13 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
         color: context.colors.bg2,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: context.colors.textPrimary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: Stack(
         children: [
@@ -1455,6 +1476,13 @@ class QuoteSmartSheet extends ConsumerWidget {
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: context.colors.textPrimary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -1633,6 +1661,13 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
         color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(color: context.colors.glassBorder, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: context.colors.textPrimary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
