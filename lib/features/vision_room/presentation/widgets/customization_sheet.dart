@@ -37,6 +37,7 @@ class _CustomizationSheetContentState
     _SectionInfo('Sticky Notes', Icons.sticky_note_2_rounded),
     _SectionInfo('Quotes', Icons.format_quote_rounded),
     _SectionInfo('Frames', Icons.image_rounded),
+    _SectionInfo('Window', Icons.window_rounded),
     _SectionInfo('Decorations', Icons.auto_awesome_rounded),
     _SectionInfo('Layout', Icons.dashboard_rounded),
   ];
@@ -103,6 +104,7 @@ class _CustomizationSheetContentState
                             _buildStickyNotesPage(),
                             _buildQuotesPage(),
                             _buildFramesPage(),
+                            _buildWindowPage(),
                             _buildDecorationsPage(),
                             _buildLayoutPage(),
                           ],
@@ -875,6 +877,87 @@ class _CustomizationSheetContentState
               style: TextStyle(color: Colors.white54, fontSize: 13),
             ),
           ),
+          const SizedBox(height: 12),
+          // Live preview of the selected scene
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  width: 1,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(11),
+                child: Stack(
+                  children: [
+                    // Sky gradient background
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: _windowSkyGradient(currentScene),
+                      ),
+                    ),
+                    // Celestial body
+                    Positioned(
+                      top: 8,
+                      right: 16,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: currentScene == VisionWindowScene.nightSky
+                              ? const Color(0xFFF0F0F0)
+                              : const Color(0xFFFFF8E1),
+                          boxShadow: [
+                            BoxShadow(
+                              color: currentScene == VisionWindowScene.nightSky
+                                  ? const Color(0xFFE0E0FF).withValues(alpha: 0.4)
+                                  : const Color(0xFFFFD700).withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Ground/treeline silhouette
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 30,
+                      child: CustomPaint(
+                        painter: _PreviewGroundPainter(scene: currentScene),
+                      ),
+                    ),
+                    // Glass reflection
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white.withValues(alpha: 0.12),
+                                Colors.transparent,
+                                Colors.white.withValues(alpha: 0.06),
+                              ],
+                              stops: const [0.0, 0.4, 0.7],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -926,19 +1009,108 @@ class _CustomizationSheetContentState
     );
   }
 
+  LinearGradient _windowSkyGradient(VisionWindowScene scene) {
+    return switch (scene) {
+      VisionWindowScene.ocean => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF1E90FF), Color(0xFF006994)],
+      ),
+      VisionWindowScene.forest => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF228B22), Color(0xFF006400)],
+      ),
+      VisionWindowScene.mountains => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF4A90D9), Color(0xFF6B8E23), Color(0xFF556B2F)],
+      ),
+      VisionWindowScene.rain => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF4A5568), Color(0xFF6B7280), Color(0xFF374151)],
+      ),
+      VisionWindowScene.snow => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFFE8F0F8), Color(0xFFD6E4F0), Color(0xFFB0C4DE)],
+      ),
+      VisionWindowScene.city => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF2C3E50), Color(0xFF34495E), Color(0xFF1A252F)],
+      ),
+      VisionWindowScene.garden => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF98FB98), Color(0xFF3CB371)],
+      ),
+      VisionWindowScene.lake => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF89CFF0), Color(0xFF2E86C1), Color(0xFF1B4F72)],
+      ),
+      VisionWindowScene.sunrise => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFFFF8C42), Color(0xFFFFB347), Color(0xFFFFD699)],
+      ),
+      VisionWindowScene.sunset => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFFFF4500), Color(0xFFFF6B6B), Color(0xFF8B0000)],
+      ),
+      VisionWindowScene.nightSky => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF0F0F2E), Color(0xFF1A1A4E), Color(0xFF0B0B1A)],
+      ),
+      VisionWindowScene.desert => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFFFF8C42), Color(0xFFE8B85A), Color(0xFFD4A050)],
+      ),
+      VisionWindowScene.aurora => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF0A0A2E), Color(0xFF1A3A4A), Color(0xFF0B2E1A)],
+      ),
+      VisionWindowScene.waterfall => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF6BB8E8), Color(0xFF3A9AD9), Color(0xFF1A6B3A)],
+      ),
+      VisionWindowScene.meadow => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF89CFF0), Color(0xFF7DD17D), Color(0xFF4A9A4A)],
+      ),
+      VisionWindowScene.canyon => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFFE07040), Color(0xFFC08050), Color(0xFF8B5A2B)],
+      ),
+      VisionWindowScene.village => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF98D8C8), Color(0xFF6B8E6B)],
+      ),
+      VisionWindowScene.space => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF000011), Color(0xFF0B0B2E), Color(0xFF1A0B2E)],
+      ),
+      VisionWindowScene.tropical => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF4FC3F7), Color(0xFF29B6F6), Color(0xFF0288D1)],
+      ),
+    };
+  }
+
   String _windowSceneLabel(VisionWindowScene scene) {
     return switch (scene) {
-      VisionWindowScene.ocean => 'Ocean',
+      VisionWindowScene.ocean => 'Ocean View',
       VisionWindowScene.forest => 'Forest',
       VisionWindowScene.mountains => 'Mountains',
-      VisionWindowScene.rain => 'Rain',
-      VisionWindowScene.snow => 'Snow',
-      VisionWindowScene.city => 'City',
+      VisionWindowScene.rain => 'Rainy Day',
+      VisionWindowScene.snow => 'Snowfall',
+      VisionWindowScene.city => 'City Skyline',
       VisionWindowScene.garden => 'Garden',
-      VisionWindowScene.lake => 'Lake',
+      VisionWindowScene.lake => 'Mountain Lake',
       VisionWindowScene.sunrise => 'Sunrise',
       VisionWindowScene.sunset => 'Sunset',
       VisionWindowScene.nightSky => 'Night Sky',
+      VisionWindowScene.desert => 'Desert Dunes',
+      VisionWindowScene.aurora => 'Northern Lights',
+      VisionWindowScene.waterfall => 'Waterfall',
+      VisionWindowScene.meadow => 'Green Meadow',
+      VisionWindowScene.canyon => 'Grand Canyon',
+      VisionWindowScene.village => 'Cozy Village',
+      VisionWindowScene.space => 'Outer Space',
+      VisionWindowScene.tropical => 'Tropical Beach',
     };
   }
 
@@ -1776,4 +1948,174 @@ class _SectionInfo {
   final IconData icon;
 
   const _SectionInfo(this.label, this.icon);
+}
+
+class _PreviewGroundPainter extends CustomPainter {
+  final VisionWindowScene scene;
+
+  _PreviewGroundPainter({required this.scene});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill;
+
+    switch (scene) {
+      case VisionWindowScene.city:
+      case VisionWindowScene.nightSky:
+        paint.color = const Color(0xFF1A252F).withValues(alpha: 0.7);
+        final buildings = [0.0, 0.12, 0.28, 0.45, 0.6, 0.78, 0.88];
+        for (final bx in buildings) {
+          final bh = 10.0 + (bx * 17) % 15;
+          canvas.drawRect(Rect.fromLTWH(bx * size.width, size.height - bh, 12, bh), paint);
+        }
+        break;
+      case VisionWindowScene.space:
+        paint.color = const Color(0xFF1A1A3A).withValues(alpha: 0.8);
+        final path = Path()
+          ..moveTo(0, size.height)
+          ..lineTo(0, size.height - 4)
+          ..lineTo(size.width * 0.2, size.height - 6)
+          ..lineTo(size.width * 0.4, size.height - 3)
+          ..lineTo(size.width * 0.6, size.height - 7)
+          ..lineTo(size.width * 0.8, size.height - 4)
+          ..lineTo(size.width, size.height - 5)
+          ..lineTo(size.width, size.height)
+          ..close();
+        canvas.drawPath(path, paint);
+        paint.color = Colors.white.withValues(alpha: 0.15);
+        for (int i = 0; i < 3; i++) {
+          canvas.drawCircle(Offset(size.width * (0.15 + i * 0.3), size.height * (0.2 + i * 0.15)), 1, paint);
+        }
+        break;
+      case VisionWindowScene.desert:
+        paint.color = const Color(0xFFD4A050).withValues(alpha: 0.6);
+        final dPath = Path()
+          ..moveTo(0, size.height)
+          ..lineTo(0, size.height - 8)
+          ..quadraticBezierTo(size.width * 0.2, size.height - 18, size.width * 0.35, size.height - 6)
+          ..quadraticBezierTo(size.width * 0.5, size.height - 2, size.width * 0.65, size.height - 10)
+          ..quadraticBezierTo(size.width * 0.8, size.height - 20, size.width, size.height - 5)
+          ..lineTo(size.width, size.height)
+          ..close();
+        canvas.drawPath(dPath, paint);
+        paint.color = const Color(0xFF2D5A1E).withValues(alpha: 0.4);
+        canvas.drawCircle(Offset(size.width * 0.2, size.height - 10), 3, paint);
+        canvas.drawCircle(Offset(size.width * 0.75, size.height - 12), 2.5, paint);
+        break;
+      case VisionWindowScene.aurora:
+        paint.color = const Color(0xFF0A2E1A).withValues(alpha: 0.7);
+        final aPath = Path()
+          ..moveTo(0, size.height)
+          ..lineTo(0, size.height - 6)
+          ..lineTo(size.width * 0.3, size.height - 8)
+          ..lineTo(size.width * 0.5, size.height - 4)
+          ..lineTo(size.width * 0.7, size.height - 9)
+          ..lineTo(size.width, size.height - 5)
+          ..lineTo(size.width, size.height)
+          ..close();
+        canvas.drawPath(aPath, paint);
+        break;
+      case VisionWindowScene.waterfall:
+        paint.color = const Color(0xFF1A5A3A).withValues(alpha: 0.7);
+        final wPath = Path()
+          ..moveTo(0, size.height)
+          ..lineTo(0, size.height - 5)
+          ..lineTo(size.width * 0.25, size.height - 7)
+          ..lineTo(size.width * 0.35, size.height - 20)
+          ..lineTo(size.width * 0.4, size.height - 22)
+          ..lineTo(size.width * 0.45, size.height - 20)
+          ..lineTo(size.width * 0.55, size.height - 8)
+          ..lineTo(size.width * 0.7, size.height - 6)
+          ..lineTo(size.width, size.height - 4)
+          ..lineTo(size.width, size.height)
+          ..close();
+        canvas.drawPath(wPath, paint);
+        paint.color = Colors.white.withValues(alpha: 0.3);
+        canvas.drawRect(Rect.fromLTWH(size.width * 0.38, size.height * 0.3, 4, size.height * 0.7), paint);
+        break;
+      case VisionWindowScene.canyon:
+        paint.color = const Color(0xFF8B5A2B).withValues(alpha: 0.7);
+        final cPath = Path()
+          ..moveTo(0, size.height)
+          ..lineTo(0, size.height - 12)
+          ..lineTo(size.width * 0.15, size.height - 18)
+          ..lineTo(size.width * 0.25, size.height - 8)
+          ..lineTo(size.width * 0.4, size.height - 25)
+          ..lineTo(size.width * 0.5, size.height - 22)
+          ..lineTo(size.width * 0.6, size.height - 26)
+          ..lineTo(size.width * 0.75, size.height - 10)
+          ..lineTo(size.width * 0.85, size.height - 16)
+          ..lineTo(size.width, size.height - 8)
+          ..lineTo(size.width, size.height)
+          ..close();
+        canvas.drawPath(cPath, paint);
+        break;
+      case VisionWindowScene.village:
+        paint.color = const Color(0xFF4A7A4A).withValues(alpha: 0.7);
+        final vPath = Path()
+          ..moveTo(0, size.height)
+          ..lineTo(0, size.height - 8)
+          ..lineTo(size.width * 0.2, size.height - 10)
+          ..lineTo(size.width * 0.28, size.height - 18)
+          ..lineTo(size.width * 0.36, size.height - 10)
+          ..lineTo(size.width * 0.5, size.height - 12)
+          ..lineTo(size.width * 0.58, size.height - 16)
+          ..lineTo(size.width * 0.66, size.height - 10)
+          ..lineTo(size.width * 0.8, size.height - 8)
+          ..lineTo(size.width, size.height - 6)
+          ..lineTo(size.width, size.height)
+          ..close();
+        canvas.drawPath(vPath, paint);
+        paint.color = const Color(0xFFFFD700).withValues(alpha: 0.3);
+        canvas.drawCircle(Offset(size.width * 0.3, size.height - 16), 1.5, paint);
+        canvas.drawCircle(Offset(size.width * 0.55, size.height - 14), 1.5, paint);
+        break;
+      case VisionWindowScene.tropical:
+        paint.color = const Color(0xFF1A6B3A).withValues(alpha: 0.7);
+        final tPath = Path()
+          ..moveTo(0, size.height)
+          ..lineTo(0, size.height - 8)
+          ..lineTo(size.width * 0.2, size.height - 12)
+          ..lineTo(size.width * 0.3, size.height - 6)
+          ..lineTo(size.width * 0.5, size.height - 14)
+          ..lineTo(size.width * 0.65, size.height - 5)
+          ..lineTo(size.width * 0.8, size.height - 10)
+          ..lineTo(size.width, size.height - 6)
+          ..lineTo(size.width, size.height)
+          ..close();
+        canvas.drawPath(tPath, paint);
+        paint.color = const Color(0xFF2D8A4E).withValues(alpha: 0.5);
+        canvas.drawCircle(Offset(size.width * 0.25, size.height - 10), 4, paint);
+        canvas.drawCircle(Offset(size.width * 0.7, size.height - 8), 3.5, paint);
+        break;
+      case VisionWindowScene.meadow:
+        paint.color = const Color(0xFF3A8A3A).withValues(alpha: 0.7);
+        final mPath = Path()
+          ..moveTo(0, size.height)
+          ..lineTo(0, size.height - 6)
+          ..quadraticBezierTo(size.width * 0.2, size.height - 14, size.width * 0.35, size.height - 5)
+          ..quadraticBezierTo(size.width * 0.5, size.height - 3, size.width * 0.65, size.height - 8)
+          ..quadraticBezierTo(size.width * 0.8, size.height - 16, size.width, size.height - 4)
+          ..lineTo(size.width, size.height)
+          ..close();
+        canvas.drawPath(mPath, paint);
+        break;
+      default:
+        paint.color = const Color(0xFF2D5A1E).withValues(alpha: 0.6);
+        final defPath = Path()
+          ..moveTo(0, size.height)
+          ..lineTo(0, size.height - 6)
+          ..lineTo(size.width * 0.3, size.height - 8)
+          ..lineTo(size.width * 0.5, size.height - 4)
+          ..lineTo(size.width * 0.7, size.height - 9)
+          ..lineTo(size.width, size.height - 5)
+          ..lineTo(size.width, size.height)
+          ..close();
+        canvas.drawPath(defPath, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PreviewGroundPainter old) => old.scene != scene;
 }

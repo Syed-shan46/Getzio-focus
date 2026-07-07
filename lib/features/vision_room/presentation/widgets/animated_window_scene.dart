@@ -6,11 +6,13 @@ import '../../domain/models/vision_customization.dart';
 class AnimatedWindowScene extends StatefulWidget {
   final VisionWindowScene scene;
   final double brightness;
+  final double borderRadius;
 
   const AnimatedWindowScene({
     super.key,
     required this.scene,
     this.brightness = 0.7,
+    this.borderRadius = 40,
   });
 
   @override
@@ -51,10 +53,12 @@ class _AnimatedWindowSceneState extends State<AnimatedWindowScene>
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        bottomLeft: Radius.circular(40),
-        bottomRight: Radius.circular(40),
-      ),
+      borderRadius: widget.borderRadius > 0
+          ? BorderRadius.only(
+              bottomLeft: Radius.circular(widget.borderRadius),
+              bottomRight: Radius.circular(widget.borderRadius),
+            )
+          : BorderRadius.zero,
       child: Stack(
         children: [
           // Sky gradient
@@ -204,6 +208,46 @@ class _SkyGradient extends StatelessWidget {
         end: Alignment.bottomCenter,
         colors: [Color(0xFF0F0F2E), Color(0xFF1A1A4E), Color(0xFF0B0B1A)],
       ),
+      VisionWindowScene.desert => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFFF8C42), Color(0xFFE8B85A), Color(0xFFD4A050)],
+      ),
+      VisionWindowScene.aurora => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF0A0A2E), Color(0xFF1A3A4A), Color(0xFF0B2E1A)],
+      ),
+      VisionWindowScene.waterfall => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF6BB8E8), Color(0xFF3A9AD9), Color(0xFF1A6B3A)],
+      ),
+      VisionWindowScene.meadow => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF89CFF0), Color(0xFF7DD17D), Color(0xFF4A9A4A)],
+      ),
+      VisionWindowScene.canyon => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFE07040), Color(0xFFC08050), Color(0xFF8B5A2B)],
+      ),
+      VisionWindowScene.village => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF98D8C8), Color(0xFF6B8E6B)],
+      ),
+      VisionWindowScene.space => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF000011), Color(0xFF0B0B2E), Color(0xFF1A0B2E)],
+      ),
+      VisionWindowScene.tropical => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF4FC3F7), Color(0xFF29B6F6), Color(0xFF0288D1)],
+      ),
     };
   }
 }
@@ -218,9 +262,13 @@ class _CloudPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Don't draw clouds for night/rain scenes
+    // Don't draw clouds for night, rain, space, aurora, desert, or canyon scenes
     if (scene == VisionWindowScene.nightSky ||
-        scene == VisionWindowScene.rain) {
+        scene == VisionWindowScene.rain ||
+        scene == VisionWindowScene.space ||
+        scene == VisionWindowScene.aurora ||
+        scene == VisionWindowScene.desert ||
+        scene == VisionWindowScene.canyon) {
       return;
     }
 
@@ -284,12 +332,40 @@ class _TreePainter extends CustomPainter {
       return;
     }
 
+    if (scene == VisionWindowScene.space) {
+      _drawSpaceView(canvas, size);
+      return;
+    }
+
+    if (scene == VisionWindowScene.desert) {
+      _drawDesert(canvas, size);
+      return;
+    }
+
+    if (scene == VisionWindowScene.aurora) {
+      _drawAuroraLandscape(canvas, size);
+      return;
+    }
+
+    if (scene == VisionWindowScene.canyon) {
+      _drawCanyon(canvas, size);
+      return;
+    }
+
+    if (scene == VisionWindowScene.village) {
+      _drawVillage(canvas, size);
+      return;
+    }
+
     final treeColor = switch (scene) {
       VisionWindowScene.forest => const Color(0xFF1B4332),
       VisionWindowScene.garden => const Color(0xFF2D6A4F),
       VisionWindowScene.mountains => const Color(0xFF2D5016),
       VisionWindowScene.ocean => const Color(0xFF1A5276),
       VisionWindowScene.lake => const Color(0xFF1A5276),
+      VisionWindowScene.waterfall => const Color(0xFF1A4A2E),
+      VisionWindowScene.meadow => const Color(0xFF2D5A1E),
+      VisionWindowScene.tropical => const Color(0xFF0D3B1E),
       _ => const Color(0xFF2D6A4F),
     };
 
@@ -326,6 +402,156 @@ class _TreePainter extends CustomPainter {
       ),
       paint,
     );
+  }
+
+  void _drawDesert(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFFC08040).withValues(alpha: 0.5);
+
+    // Sand dune silhouette
+    final dune = Path()
+      ..moveTo(0, size.height)
+      ..lineTo(0, size.height * 0.85)
+      ..quadraticBezierTo(size.width * 0.2, size.height * 0.75, size.width * 0.35, size.height * 0.88)
+      ..quadraticBezierTo(size.width * 0.55, size.height * 0.78, size.width * 0.7, size.height * 0.85)
+      ..quadraticBezierTo(size.width * 0.85, size.height * 0.80, size.width, size.height * 0.88)
+      ..lineTo(size.width, size.height)
+      ..close();
+    canvas.drawPath(dune, paint);
+
+    // Cacti
+    paint.color = const Color(0xFF2D5A1E).withValues(alpha: 0.5);
+    _drawCactus(canvas, size.width * 0.25, size.height * 0.84, 20, paint);
+    _drawCactus(canvas, size.width * 0.7, size.height * 0.82, 16, paint);
+  }
+
+  void _drawCactus(Canvas canvas, double x, double y, double h, Paint paint) {
+    canvas.drawRect(Rect.fromLTWH(x - 2, y - h, 4, h), paint);
+    canvas.drawRect(Rect.fromLTWH(x - 6, y - h * 0.6, 4, h * 0.3), paint);
+    canvas.drawRect(Rect.fromLTWH(x + 2, y - h * 0.7, 4, h * 0.25), paint);
+  }
+
+  void _drawAuroraLandscape(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFF0A2E1A).withValues(alpha: 0.7);
+    final mountains = Path()
+      ..moveTo(0, size.height)
+      ..lineTo(0, size.height * 0.8)
+      ..lineTo(size.width * 0.1, size.height * 0.72)
+      ..lineTo(size.width * 0.2, size.height * 0.78)
+      ..lineTo(size.width * 0.3, size.height * 0.65)
+      ..lineTo(size.width * 0.4, size.height * 0.70)
+      ..lineTo(size.width * 0.5, size.height * 0.62)
+      ..lineTo(size.width * 0.6, size.height * 0.68)
+      ..lineTo(size.width * 0.7, size.height * 0.64)
+      ..lineTo(size.width * 0.8, size.height * 0.72)
+      ..lineTo(size.width * 0.9, size.height * 0.66)
+      ..lineTo(size.width, size.height * 0.74)
+      ..lineTo(size.width, size.height)
+      ..close();
+    canvas.drawPath(mountains, paint);
+  }
+
+  void _drawCanyon(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFF8B5A2B).withValues(alpha: 0.6);
+    final canyon = Path()
+      ..moveTo(0, size.height)
+      ..lineTo(0, size.height * 0.7)
+      ..lineTo(size.width * 0.12, size.height * 0.65)
+      ..lineTo(size.width * 0.2, size.height * 0.75)
+      ..lineTo(size.width * 0.3, size.height * 0.58)
+      ..lineTo(size.width * 0.38, size.height * 0.80)
+      ..lineTo(size.width * 0.45, size.height * 0.55)
+      ..lineTo(size.width * 0.52, size.height * 0.82)
+      ..lineTo(size.width * 0.6, size.height * 0.60)
+      ..lineTo(size.width * 0.7, size.height * 0.72)
+      ..lineTo(size.width * 0.8, size.height * 0.62)
+      ..lineTo(size.width * 0.9, size.height * 0.78)
+      ..lineTo(size.width, size.height * 0.68)
+      ..lineTo(size.width, size.height)
+      ..close();
+    canvas.drawPath(canyon, paint);
+  }
+
+  void _drawVillage(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFF3A5A3A).withValues(alpha: 0.6);
+    // Rolling hills
+    final hills = Path()
+      ..moveTo(0, size.height)
+      ..lineTo(0, size.height * 0.82)
+      ..quadraticBezierTo(size.width * 0.2, size.height * 0.78, size.width * 0.3, size.height * 0.85)
+      ..quadraticBezierTo(size.width * 0.5, size.height * 0.80, size.width * 0.6, size.height * 0.86)
+      ..quadraticBezierTo(size.width * 0.8, size.height * 0.82, size.width, size.height * 0.84)
+      ..lineTo(size.width, size.height)
+      ..close();
+    canvas.drawPath(hills, paint);
+
+    // Houses
+    paint.color = const Color(0xFF4A3A2A).withValues(alpha: 0.6);
+    _drawHouse(canvas, size.width * 0.15, size.height * 0.80, 14, paint);
+    _drawHouse(canvas, size.width * 0.35, size.height * 0.82, 12, paint);
+    _drawHouse(canvas, size.width * 0.65, size.height * 0.83, 13, paint);
+    _drawHouse(canvas, size.width * 0.82, size.height * 0.81, 11, paint);
+
+    // Warm lit windows
+    paint.color = const Color(0xFFFFD700).withValues(alpha: 0.3);
+    canvas.drawCircle(Offset(size.width * 0.16, size.height * 0.78), 1.5, paint);
+    canvas.drawCircle(Offset(size.width * 0.36, size.height * 0.80), 1.5, paint);
+    canvas.drawCircle(Offset(size.width * 0.66, size.height * 0.81), 1.5, paint);
+  }
+
+  void _drawHouse(Canvas canvas, double x, double y, double size_, Paint paint) {
+    // House body
+    canvas.drawRect(Rect.fromLTWH(x - size_ / 2, y - size_, size_, size_), paint);
+    // Roof (triangle)
+    final roof = Path()
+      ..moveTo(x - size_ / 2 - 2, y - size_)
+      ..lineTo(x, y - size_ * 1.4)
+      ..lineTo(x + size_ / 2 + 2, y - size_)
+      ..close();
+    canvas.drawPath(roof, paint);
+  }
+
+  void _drawSpaceView(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFF1A1A3A).withValues(alpha: 0.6);
+    // Earth curve at bottom
+    final earth = Path()
+      ..moveTo(0, size.height)
+      ..lineTo(0, size.height * 0.7)
+      ..quadraticBezierTo(size.width * 0.5, size.height * 0.6, size.width, size.height * 0.7)
+      ..lineTo(size.width, size.height)
+      ..close();
+    canvas.drawPath(earth, paint);
+
+    paint.color = const Color(0xFF2A5A3A).withValues(alpha: 0.4);
+    final continent = Path()
+      ..moveTo(size.width * 0.2, size.height * 0.72)
+      ..lineTo(size.width * 0.25, size.height * 0.68)
+      ..lineTo(size.width * 0.35, size.height * 0.70)
+      ..lineTo(size.width * 0.3, size.height * 0.74)
+      ..close();
+    canvas.drawPath(continent, paint);
+
+    // Stars
+    paint.color = Colors.white.withValues(alpha: 0.6);
+    for (int i = 0; i < 8; i++) {
+      canvas.drawCircle(
+        Offset(
+          size.width * (0.05 + i * 0.12 + (i * 0.03)),
+          size.height * (0.1 + (i % 3) * 0.12),
+        ),
+        0.8 + (i % 3) * 0.3,
+        paint,
+      );
+    }
   }
 
   void _drawTree(
@@ -489,6 +715,10 @@ class _SunlightPainter extends CustomPainter {
       VisionWindowScene.sunset => const Color(0xFFFF6B6B),
       VisionWindowScene.nightSky => const Color(0xFF4A5568),
       VisionWindowScene.rain => const Color(0xFF6B7280),
+      VisionWindowScene.space => const Color(0xFF2A2A4A),
+      VisionWindowScene.aurora => const Color(0xFF3A5A8A),
+      VisionWindowScene.desert => const Color(0xFFFFD699),
+      VisionWindowScene.canyon => const Color(0xFFFF8C42),
       _ => const Color(0xFFFFF8E1),
     };
 

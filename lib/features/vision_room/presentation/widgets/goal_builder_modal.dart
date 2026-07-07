@@ -1,9 +1,11 @@
 import 'package:getzio_todo_app/core/theme/app_theme.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getzio_todo_app/features/auth/presentation/providers/auth_providers.dart';
 import 'due_date_progress_selector.dart';
 
-class GoalBuilderModal extends StatefulWidget {
+class GoalBuilderModal extends ConsumerStatefulWidget {
   final Function(Map<String, dynamic> metadata) onSubmit;
 
   const GoalBuilderModal({super.key, required this.onSubmit});
@@ -18,19 +20,32 @@ class GoalBuilderModal extends StatefulWidget {
   }
 
   @override
-  State<GoalBuilderModal> createState() => _GoalBuilderModalState();
+  ConsumerState<GoalBuilderModal> createState() => _GoalBuilderModalState();
 }
 
-class _GoalBuilderModalState extends State<GoalBuilderModal> {
+class _GoalBuilderModalState extends ConsumerState<GoalBuilderModal> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   double _progress = 0;
   DateTime? _dueDate;
   String _priority = 'Medium';
   Color _selectedColor = Colors.blueAccent;
-  final List<TextEditingController> _milestoneControllers = [
-    TextEditingController(),
-  ];
+  final List<TextEditingController> _milestoneControllers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    final isGuest = ref.read(authProvider).value == null;
+    if (isGuest) {
+      _milestoneControllers.addAll([
+        TextEditingController(text: 'Research and define goal scope'),
+        TextEditingController(text: 'Design first draft/prototype'),
+        TextEditingController(text: 'Review progress & make final adjustments'),
+      ]);
+    } else {
+      _milestoneControllers.add(TextEditingController());
+    }
+  }
 
   final List<Color> _themeColors = [
     Colors.blueAccent,

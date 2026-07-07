@@ -59,7 +59,7 @@ class PremiumCreationHub extends StatelessWidget {
       child: Container(
         height: MediaQuery.of(context).size.height * 0.85,
         decoration: BoxDecoration(
-          color: const Color(0xFF0F172A).withValues(alpha: 0.8),
+          color: context.colors.bg2.withValues(alpha: 0.8),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
         ),

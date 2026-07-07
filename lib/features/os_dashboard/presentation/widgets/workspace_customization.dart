@@ -6,6 +6,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../providers/os_providers.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/screens/phone_login_screen.dart';
+import '../../../vision_room/domain/models/vision_customization.dart';
+import '../../../vision_room/presentation/providers/customization_provider.dart';
 
 class WorkspaceCustomizationSheet extends ConsumerWidget {
   const WorkspaceCustomizationSheet({super.key});
@@ -25,6 +27,7 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
     final notifier = ref.read(osStateProvider.notifier);
     final authState = ref.watch(authProvider);
     final user = authState.value;
+    final visionCust = ref.watch(visionCustomizationProvider);
 
     // Lists of options
     final woodStyles = ['Walnut', 'Oak', 'Mahogany'];
@@ -76,11 +79,12 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                     children: [
                       Text(
                         'Workspace Settings',
-                        style: AppTypography.displayMedium(color: Colors.white).copyWith(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
+                        style: AppTypography.displayMedium(color: Colors.white)
+                            .copyWith(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
+                            ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -90,7 +94,10 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: Colors.white60),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white60,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -105,7 +112,6 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.all(24),
                 children: [
-
                   // 2. Shelf Wood Type
                   _buildSectionHeader('Wood Plank Craftsmanship'),
                   const SizedBox(height: 10),
@@ -118,7 +124,9 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                           child: InkWell(
                             onTap: () {
                               HapticFeedback.selectionClick();
-                              notifier.updateWorkspaceSettings(woodTexture: val);
+                              notifier.updateWorkspaceSettings(
+                                woodTexture: val,
+                              );
                             },
                             borderRadius: BorderRadius.circular(16),
                             child: Container(
@@ -128,7 +136,9 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                                     ? Colors.white.withValues(alpha: 0.06)
                                     : Colors.transparent,
                                 border: Border.all(
-                                  color: isSelected ? AppColors.accentBlue : Colors.white12,
+                                  color: isSelected
+                                      ? AppColors.accentBlue
+                                      : Colors.white12,
                                   width: 1.5,
                                 ),
                                 borderRadius: BorderRadius.circular(16),
@@ -147,8 +157,12 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                                   Text(
                                     val,
                                     style: TextStyle(
-                                      color: isSelected ? Colors.white : Colors.white60,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.white60,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
                                       fontSize: 13,
                                     ),
                                   ),
@@ -161,7 +175,6 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                     }).toList(),
                   ),
                   const SizedBox(height: 24),
-
 
                   // 4. Ambient Time Mode
                   _buildSectionHeader('Room Lighting (Ambient)'),
@@ -182,20 +195,32 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                             onSelected: (selected) {
                               if (selected) {
                                 HapticFeedback.selectionClick();
-                                notifier.updateWorkspaceSettings(ambientMode: val);
+                                notifier.updateWorkspaceSettings(
+                                  ambientMode: val,
+                                );
                               }
                             },
-                            selectedColor: Colors.amberAccent.withValues(alpha: 0.2),
-                            backgroundColor: Colors.white.withValues(alpha: 0.03),
+                            selectedColor: Colors.amberAccent.withValues(
+                              alpha: 0.2,
+                            ),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.03,
+                            ),
                             labelStyle: TextStyle(
-                              color: isSelected ? Colors.amberAccent : Colors.white70,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected
+                                  ? Colors.amberAccent
+                                  : Colors.white70,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                               fontSize: 12.5,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                               side: BorderSide(
-                                color: isSelected ? Colors.amberAccent.withValues(alpha: 0.5) : Colors.white12,
+                                color: isSelected
+                                    ? Colors.amberAccent.withValues(alpha: 0.5)
+                                    : Colors.white12,
                               ),
                             ),
                             showCheckmark: false,
@@ -206,7 +231,7 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
 
-
+                  const SizedBox(height: 24),
 
                   // 6. Cloud Sync & Backup
                   _buildSectionHeader('Cloud Sync & Backup'),
@@ -226,18 +251,25 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                user == null ? 'Cloud Backup & Sync' : 'Cloud Sync Connected',
-                                style: AppTypography.bodyLarge(color: Colors.white).copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
+                                user == null
+                                    ? 'Cloud Backup & Sync'
+                                    : 'Cloud Sync Connected',
+                                style:
+                                    AppTypography.bodyLarge(
+                                      color: Colors.white,
+                                    ).copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 user == null
                                     ? 'Back up your habits, goals & settings online.'
                                     : 'Your workspace is secured to ${user.mobile}',
-                                style: AppTypography.caption(color: Colors.white30),
+                                style: AppTypography.caption(
+                                  color: Colors.white30,
+                                ),
                               ),
                             ],
                           ),
@@ -251,20 +283,27 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                               Navigator.pop(context);
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const PhoneLoginScreen(),
+                                ),
                               );
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.accentBlue,
                               foregroundColor: Colors.black,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                             child: Text(
                               'Sign In',
-                              style: AppTypography.captionSmall(color: Colors.black).copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: AppTypography.captionSmall(
+                                color: Colors.black,
+                              ).copyWith(fontWeight: FontWeight.bold),
                             ),
                           )
                         else
@@ -310,12 +349,142 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
   LinearGradient _getWoodPreviewGradient(String style) {
     switch (style) {
       case 'Oak':
-        return const LinearGradient(colors: [Color(0xFFD7CCC8), Color(0xFF8D6E63)]);
+        return const LinearGradient(
+          colors: [Color(0xFFD7CCC8), Color(0xFF8D6E63)],
+        );
       case 'Mahogany':
-        return const LinearGradient(colors: [Color(0xFF8D6E63), Color(0xFF3E2723)]);
+        return const LinearGradient(
+          colors: [Color(0xFF8D6E63), Color(0xFF3E2723)],
+        );
       case 'Walnut':
       default:
-        return const LinearGradient(colors: [Color(0xFF5D4037), Color(0xFF2D1510)]);
+        return const LinearGradient(
+          colors: [Color(0xFF5D4037), Color(0xFF2D1510)],
+        );
     }
+  }
+
+  LinearGradient _sceneMiniGradient(VisionWindowScene scene) {
+    return switch (scene) {
+      VisionWindowScene.ocean => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF1E90FF), Color(0xFF006994)],
+      ),
+      VisionWindowScene.forest => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF228B22), Color(0xFF006400)],
+      ),
+      VisionWindowScene.mountains => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF4A90D9), Color(0xFF6B8E23), Color(0xFF556B2F)],
+      ),
+      VisionWindowScene.rain => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF4A5568), Color(0xFF6B7280), Color(0xFF374151)],
+      ),
+      VisionWindowScene.snow => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFE8F0F8), Color(0xFFD6E4F0), Color(0xFFB0C4DE)],
+      ),
+      VisionWindowScene.city => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF2C3E50), Color(0xFF34495E), Color(0xFF1A252F)],
+      ),
+      VisionWindowScene.garden => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF98FB98), Color(0xFF3CB371)],
+      ),
+      VisionWindowScene.lake => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF89CFF0), Color(0xFF2E86C1), Color(0xFF1B4F72)],
+      ),
+      VisionWindowScene.sunrise => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFFF8C42), Color(0xFFFFB347), Color(0xFFFFD699)],
+      ),
+      VisionWindowScene.sunset => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFFF4500), Color(0xFFFF6B6B), Color(0xFF8B0000)],
+      ),
+      VisionWindowScene.nightSky => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF0F0F2E), Color(0xFF1A1A4E), Color(0xFF0B0B1A)],
+      ),
+      VisionWindowScene.desert => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFFF8C42), Color(0xFFE8B85A), Color(0xFFD4A050)],
+      ),
+      VisionWindowScene.aurora => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF0A0A2E), Color(0xFF1A3A4A), Color(0xFF0B2E1A)],
+      ),
+      VisionWindowScene.waterfall => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF6BB8E8), Color(0xFF3A9AD9), Color(0xFF1A6B3A)],
+      ),
+      VisionWindowScene.meadow => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF89CFF0), Color(0xFF7DD17D), Color(0xFF4A9A4A)],
+      ),
+      VisionWindowScene.canyon => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFE07040), Color(0xFFC08050), Color(0xFF8B5A2B)],
+      ),
+      VisionWindowScene.village => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF98D8C8), Color(0xFF6B8E6B)],
+      ),
+      VisionWindowScene.space => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF000011), Color(0xFF0B0B2E), Color(0xFF1A0B2E)],
+      ),
+      VisionWindowScene.tropical => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF4FC3F7), Color(0xFF29B6F6), Color(0xFF0288D1)],
+      ),
+    };
+  }
+
+  String _sceneLabel(VisionWindowScene scene) {
+    return switch (scene) {
+      VisionWindowScene.ocean => 'Ocean View',
+      VisionWindowScene.forest => 'Forest',
+      VisionWindowScene.mountains => 'Mountains',
+      VisionWindowScene.rain => 'Rainy Day',
+      VisionWindowScene.snow => 'Snowfall',
+      VisionWindowScene.city => 'City Skyline',
+      VisionWindowScene.garden => 'Garden',
+      VisionWindowScene.lake => 'Mountain Lake',
+      VisionWindowScene.sunrise => 'Sunrise',
+      VisionWindowScene.sunset => 'Sunset',
+      VisionWindowScene.nightSky => 'Night Sky',
+      VisionWindowScene.desert => 'Desert Dunes',
+      VisionWindowScene.aurora => 'Northern Lights',
+      VisionWindowScene.waterfall => 'Waterfall',
+      VisionWindowScene.meadow => 'Green Meadow',
+      VisionWindowScene.canyon => 'Grand Canyon',
+      VisionWindowScene.village => 'Cozy Village',
+      VisionWindowScene.space => 'Outer Space',
+      VisionWindowScene.tropical => 'Tropical Beach',
+    };
   }
 }

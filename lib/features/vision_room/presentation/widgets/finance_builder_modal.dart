@@ -116,7 +116,7 @@ class _FinanceBuilderModalState extends ConsumerState<FinanceBuilderModal> {
         padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
         decoration: BoxDecoration(
-          color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+          color: context.colors.bg2.withValues(alpha: 0.95),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
         ),

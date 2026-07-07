@@ -450,20 +450,6 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<AuthUserModel?>>(authProvider, (previous, next) {
-      if (next.hasValue &&
-          next.value != null &&
-          (previous == null || !previous.hasValue || previous.value == null)) {
-        final hiveDb = ref.read(hiveDatabaseProvider);
-        final habits = hiveDb.getSelectedHabits();
-        final goals = hiveDb.getSelectedGoals();
-        if (habits.isEmpty && goals.isEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            SetupAssistantSheet.show(context);
-          });
-        }
-      }
-    });
 
     final state = ref.watch(osStateProvider);
     final authState = ref.watch(authProvider);
@@ -755,12 +741,6 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                         ),
                       ),
 
-                      // 8. CUSTOMIZATION MINI PAINTING (right of the vision door)
-                      Positioned(
-                        left: 106,
-                        bottom: 178,
-                        child: const ThreeDCustomizeSwitch(),
-                      ),
                     ],
                   ),
                 ),
@@ -862,18 +842,6 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
             ),
           ),
 
-          // Waving linen curtain hanging on the right side
-          Positioned(
-            top: 2,
-            right: -8,
-            bottom: 2,
-            width: 56,
-            child: CustomPaint(
-              painter: CurtainPainter(
-                time: _currentTime.millisecondsSinceEpoch * 0.001,
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -962,17 +930,6 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                     resolvedMode: mode,
                     animationValue: _ambientController.value,
                     isTopWindow: false,
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  bottom: 0,
-                  right: -8,
-                  width: 56,
-                  child: CustomPaint(
-                    painter: CurtainPainter(
-                      time: _currentTime.millisecondsSinceEpoch * 0.001,
-                    ),
                   ),
                 ),
               ],
@@ -5867,7 +5824,7 @@ class _ShelfItemData {
   _ShelfItemData(this.id, this.label, this.painter);
 }
 
-// 🧊 Transparent Glass Die-Cast Display Case for individual cars
+// 🧊 3D Transparent Glass Display Case with realistic depth and reflections
 class GlassDisplayCase extends StatelessWidget {
   final Widget child;
   final String label;
@@ -5882,132 +5839,42 @@ class GlassDisplayCase extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color glassBorderColor;
-
-    // Tint glass container borders to reflect the dashboard theme highlights
-    switch (wallColor) {
-      case 'Classic Navy':
-        glassBorderColor = const Color(
-          0xFF38BDF8,
-        ).withOpacity(0.18); // Blue tint
-        break;
-      case 'Emerald':
-        glassBorderColor = const Color(
-          0xFF34D399,
-        ).withOpacity(0.18); // Emerald tint
-        break;
-      case 'Warm Terracotta':
-        glassBorderColor = const Color(
-          0xFFF87171,
-        ).withOpacity(0.18); // Terracotta tint
-        break;
-      case 'Charcoal':
-        glassBorderColor = const Color(
-          0xFF94A3B8,
-        ).withOpacity(0.18); // Slate grey tint
-        break;
-      case 'Deep Indigo':
-      default:
-        glassBorderColor = const Color(
-          0xFF818CF8,
-        ).withOpacity(0.18); // Indigo tint
-        break;
-    }
-
-    return Container(
+    return SizedBox(
       width: 96,
       height: 60,
-      margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
-      decoration: BoxDecoration(
-        color: context.colors.textPrimary.withValues(alpha: 0.025),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: context.colors.glassBorder, width: 0.8),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(5),
-        child: Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-            // 1. Black Display Stand Base at the bottom of the case
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 8,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [context.colors.bg2, context.colors.bg1],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          // 1. Bottom beige stand line
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 2,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFD4C5A9).withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+          ),
+          // 2. Spotlight / lightning beam from top
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 2,
+            child: IgnorePointer(
+              child: CustomPaint(
+                painter: SpotlightBeamPainter(
+                  color: _getSpotlightColor(wallColor),
                 ),
               ),
             ),
-            // 1.5. Spotlight Source & Cone Beam (painted behind the car)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 8,
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: SpotlightBeamPainter(
-                    color: _getSpotlightColor(wallColor),
-                  ),
-                ),
-              ),
-            ),
-            // 2. The car itself
-            Positioned(bottom: 8, child: child),
-            // 3. Diagonal glass reflection highlights
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        context.colors.textPrimary.withValues(alpha: 0.16),
-                        context.colors.textPrimary.withValues(alpha: 0.04),
-                        Colors.transparent,
-                        context.colors.textPrimary.withValues(alpha: 0.02),
-                        context.colors.textPrimary.withValues(alpha: 0.12),
-                      ],
-                      stops: const [0.0, 0.15, 0.45, 0.55, 0.75],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // 4. Metallic screw mounts
-            Positioned(
-              top: 2.5,
-              left: 2.5,
-              child: Container(
-                width: 2,
-                height: 2,
-                decoration: BoxDecoration(
-                  color: context.colors.textMuted,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Positioned(
-              top: 2.5,
-              right: 2.5,
-              child: Container(
-                width: 2,
-                height: 2,
-                decoration: BoxDecoration(
-                  color: context.colors.textMuted,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+          // 3. The car itself
+          Positioned(bottom: 2, child: child),
+        ],
       ),
     );
   }
@@ -6027,6 +5894,92 @@ class GlassDisplayCase extends StatelessWidget {
         return const Color(0xFFC084FC);
     }
   }
+}
+
+class _GlassBoxPainter extends CustomPainter {
+  final Color tint;
+
+  _GlassBoxPainter({required this.tint});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+
+    // Glass body fill with subtle tint
+    final glassPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.white.withValues(alpha: 0.04),
+          tint.withValues(alpha: 0.06),
+          Colors.white.withValues(alpha: 0.02),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(rect);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(5)),
+      glassPaint,
+    );
+
+    // Top edge highlight (3D bevel)
+    final topEdge = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Colors.white.withValues(alpha: 0.25),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.6],
+      ).createShader(rect);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(5)),
+      topEdge,
+    );
+
+    // Left edge highlight
+    final leftEdge = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          Colors.white.withValues(alpha: 0.15),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.5],
+      ).createShader(rect);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(5)),
+      leftEdge,
+    );
+
+    // Subtle glass glow on bottom edge
+    final bottomGlow = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+        colors: [
+          tint.withValues(alpha: 0.1),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.5],
+      ).createShader(rect);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(5)),
+      bottomGlow,
+    );
+
+    // Corner specular highlights
+    final specPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.2);
+
+    canvas.drawCircle(const Offset(4, 4), 2.5, specPaint);
+    canvas.drawCircle(Offset(size.width - 4, size.height - 4), 2, specPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _GlassBoxPainter old) => old.tint != tint;
 }
 
 // 🎨 Spotlight Light Cone Beam Custom Painter
@@ -6172,8 +6125,8 @@ class _MiniatureCarWidgetState extends State<MiniatureCarWidget>
           return Transform(
             transform: Matrix4.identity()
               ..setEntry(3, 2, 0.002) // perspective depth
-              ..rotateX(0.06) // tilt forward to see the hood/roof
-              ..rotateY(-0.12) // rotate slightly in Y to see 3D side profile
+              ..rotateX(0.08) // tilt forward to see the hood/roof
+              ..rotateY(0.18) // rotate left side to front for 3D showroom feel
               ..rotateZ(bobAngle) // Animate tilt (front side down and up)
               ..translate(0.0, translateY, 0.0), // add bounce translation
             alignment: Alignment.bottomCenter, // anchor to base stand

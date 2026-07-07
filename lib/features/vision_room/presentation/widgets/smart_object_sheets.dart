@@ -79,7 +79,7 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.40,
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withValues(alpha: 0.92),
+        color: context.colors.bg2.withValues(alpha: 0.92),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.12), width: 1.5),
       ),
@@ -369,7 +369,7 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+        color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(color: context.colors.glassBorder, width: 1.5),
       ),
@@ -1545,7 +1545,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
       builder: (context) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: AlertDialog(
-          backgroundColor: const Color(0xFF0F172A).withValues(alpha: 0.95),
+          backgroundColor: context.colors.bg2.withValues(alpha: 0.95),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
             side: BorderSide(color: context.colors.glassBorder, width: 1.5),
@@ -1630,7 +1630,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.82,
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+        color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(color: context.colors.glassBorder, width: 1.5),
       ),

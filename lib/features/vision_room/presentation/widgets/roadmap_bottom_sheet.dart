@@ -63,7 +63,7 @@ class _RoadmapBottomSheetState extends ConsumerState<RoadmapBottomSheet> {
       child: Container(
         height: screenHeight * 0.9,
         decoration: BoxDecoration(
-          color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+          color: context.colors.bg2.withValues(alpha: 0.95),
           borderRadius:
               const BorderRadius.vertical(top: Radius.circular(32)),
           border: Border.all(

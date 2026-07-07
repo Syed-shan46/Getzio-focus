@@ -18,13 +18,11 @@ import '../widgets/finance_builder_modal.dart';
 import '../widgets/countdown_builder_modal.dart';
 import '../widgets/customization_sheet.dart';
 import '../widgets/smart_object_sheets.dart';
-import '../widgets/sticky_note_bottom_sheet.dart';
 import '../widgets/roadmap_bottom_sheet.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 import 'widgets/canvas_item_widget.dart';
-import 'painters/paper_texture_painter.dart';
 import '../../data/services/vision_upload_service.dart';
 import '../../../../shared/providers/app_providers.dart';
 
@@ -789,19 +787,22 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1F150C),
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // Paper texture canvas background
+          // Window scene background (realistic view outside)
           Positioned.fill(
-            child: RepaintBoundary(
-              child: CustomPaint(
-                painter: PaperTexturePainter(
-                  baseColor: const Color(0xFF1F150C),
-                  accentColor: const Color(0xFF100A05),
-                ),
-                size: Size.infinite,
+            key: ValueKey('ws_bg_${cust.windowScene.name}'),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: _sceneGradient(cust.windowScene),
               ),
+            ),
+          ),
+          // Dark overlay so canvas items remain visible
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.35),
             ),
           ),
 
@@ -1732,6 +1733,87 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
         ),
       ],
     );
+  }
+
+  LinearGradient _sceneGradient(VisionWindowScene scene) {
+    return switch (scene) {
+      VisionWindowScene.ocean => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF1E90FF), Color(0xFF006994)],
+      ),
+      VisionWindowScene.forest => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF228B22), Color(0xFF006400)],
+      ),
+      VisionWindowScene.mountains => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF4A90D9), Color(0xFF6B8E23), Color(0xFF556B2F)],
+      ),
+      VisionWindowScene.rain => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF4A5568), Color(0xFF6B7280), Color(0xFF374151)],
+      ),
+      VisionWindowScene.snow => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFFE8F0F8), Color(0xFFD6E4F0), Color(0xFFB0C4DE)],
+      ),
+      VisionWindowScene.city => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF2C3E50), Color(0xFF34495E), Color(0xFF1A252F)],
+      ),
+      VisionWindowScene.garden => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF98FB98), Color(0xFF3CB371)],
+      ),
+      VisionWindowScene.lake => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF89CFF0), Color(0xFF2E86C1), Color(0xFF1B4F72)],
+      ),
+      VisionWindowScene.sunrise => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFFFF8C42), Color(0xFFFFB347), Color(0xFFFFD699)],
+      ),
+      VisionWindowScene.sunset => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFFFF4500), Color(0xFFFF6B6B), Color(0xFF8B0000)],
+      ),
+      VisionWindowScene.nightSky => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF0F0F2E), Color(0xFF1A1A4E), Color(0xFF0B0B1A)],
+      ),
+      VisionWindowScene.desert => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFFFF8C42), Color(0xFFE8B85A), Color(0xFFD4A050)],
+      ),
+      VisionWindowScene.aurora => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF0A0A2E), Color(0xFF1A3A4A), Color(0xFF0B2E1A)],
+      ),
+      VisionWindowScene.waterfall => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF6BB8E8), Color(0xFF3A9AD9), Color(0xFF1A6B3A)],
+      ),
+      VisionWindowScene.meadow => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF89CFF0), Color(0xFF7DD17D), Color(0xFF4A9A4A)],
+      ),
+      VisionWindowScene.canyon => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFFE07040), Color(0xFFC08050), Color(0xFF8B5A2B)],
+      ),
+      VisionWindowScene.village => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF87CEEB), Color(0xFF98D8C8), Color(0xFF6B8E6B)],
+      ),
+      VisionWindowScene.space => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF000011), Color(0xFF0B0B2E), Color(0xFF1A0B2E)],
+      ),
+      VisionWindowScene.tropical => const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF4FC3F7), Color(0xFF29B6F6), Color(0xFF0288D1)],
+      ),
+    };
   }
 }
 

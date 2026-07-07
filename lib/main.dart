@@ -11,6 +11,8 @@ import 'features/onboarding/presentation/screens/premium_mvp_onboarding_screen.d
 import 'features/onboarding/presentation/screens/video_splash_screen.dart';
 import 'features/daily_motivation/presentation/screens/daily_motivation_screen.dart';
 import 'shared/providers/theme_provider.dart';
+import 'core/services/notification_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 final onboardingCompletedProvider = StateProvider<bool>((ref) {
   throw UnimplementedError();
@@ -39,6 +41,11 @@ void main() async {
   try {
     await FirebaseService.initialize();
     log('[Init] Firebase initialized');
+    
+    // Retrieve and print FCM token
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    log('[FCM] Token: $fcmToken');
+    print("FCM Token: $fcmToken");
   } catch (e) {
     log('[Init] Firebase error: $e');
   }
@@ -50,6 +57,15 @@ void main() async {
     await _seedGuestSessionIfNeeded(hiveDb);
   } catch (e) {
     log('[Init] Hive error: $e');
+  }
+
+  // Initialize Notifications & send test
+  try {
+    await NotificationService().init();
+    await NotificationService().showTestNotification();
+    log('[Init] Notifications initialized and test sent');
+  } catch (e) {
+    log('[Init] Notifications error: $e');
   }
 
   final onboardingCompleted = hiveDb.isOnboardingCompleted();

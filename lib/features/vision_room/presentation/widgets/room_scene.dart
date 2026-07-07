@@ -813,20 +813,6 @@ class RoomBackgroundPainter extends CustomPainter {
       canvas.drawLine(Offset(x0, y), Offset(x0 + len, y), scratchPaint);
     }
 
-    // 6. Edge vignette (corners and sides fade to near-black)
-    final vignette = Paint()
-      ..shader = RadialGradient(
-        center: Alignment.center,
-        radius: 1.12,
-        colors: [
-          Colors.transparent,
-          const Color(0xFF180808).withValues(alpha: 0.52),
-          const Color(0xFF0D0303).withValues(alpha: 0.80),
-        ],
-        stops: const [0.38, 0.74, 1.0],
-      ).createShader(Rect.fromLTWH(0, 0, w, wallH));
-    canvas.drawRect(Rect.fromLTWH(0, 0, w, wallH), vignette);
-
     if (floorHeight > 0.0) {
       final Rect floorRect = Rect.fromLTRB(0, wallH, w, h);
 

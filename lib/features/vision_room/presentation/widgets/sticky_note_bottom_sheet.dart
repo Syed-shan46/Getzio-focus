@@ -11,6 +11,7 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/preview_mode_provider.dart';
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 import '../../../auth/presentation/widgets/start_workspace_sheet.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class StickyNoteBottomSheet extends ConsumerStatefulWidget {
   final StickyNote? existingNote;
@@ -154,7 +155,7 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withValues(alpha: 0.96),
+        color: context.colors.bg2.withValues(alpha: 0.96),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.08),

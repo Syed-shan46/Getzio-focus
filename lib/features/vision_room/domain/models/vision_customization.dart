@@ -49,6 +49,14 @@ enum VisionWindowScene {
   sunrise,
   sunset,
   nightSky,
+  desert,
+  aurora,
+  waterfall,
+  meadow,
+  canyon,
+  village,
+  space,
+  tropical,
 }
 
 enum VisionLayoutMode {
