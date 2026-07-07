@@ -99,10 +99,11 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
             backgroundColor: Colors.transparent,
             body: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 12),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
                   Center(
                     child: Container(
                       width: 44,
@@ -299,6 +300,7 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
           ),
         ),
       ),
+      ),
     );
   }
 }
@@ -396,9 +398,10 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
             backgroundColor: Colors.transparent,
             body: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   const SizedBox(height: 12),
                   Center(
                     child: Container(
@@ -603,9 +606,10 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                   ),
                   const SizedBox(height: 16),
 
-                  Expanded(
-                    child: subtasks.isEmpty
-                        ? Center(
+                  subtasks.isEmpty
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
                             child: Text(
                               'No subtasks yet',
                               style: TextStyle(
@@ -613,56 +617,59 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
                                 fontSize: 13,
                               ),
                             ),
-                          )
-                        : ListView.builder(
-                            itemCount: subtasks.length,
-                            itemBuilder: (context, idx) {
-                              final st = subtasks[idx];
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                decoration: BoxDecoration(
-                                  color: context.colors.textPrimary.withValues(alpha: 0.02),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.04)),
-                                ),
-                                child: ListTile(
-                                  dense: true,
-                                  leading: Checkbox(
-                                    value: st.isCompleted,
-                                    activeColor: accentColor,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                                    onChanged: (val) {
-                                      final list = currentItem.smartChecklist;
-                                      list[idx] = list[idx].copyWith(
-                                        isCompleted: val ?? false,
-                                      );
-                                      ref.read(canvasStateProvider.notifier).updateItemDetails(
-                                        currentItem.id,
-                                        metadata: {
-                                          'checklist': list.map((l) => l.toJson()).toList(),
-                                        },
-                                      );
-                                    },
-                                  ),
-                                  title: Text(
-                                    st.title,
-                                    style: TextStyle(
-                                      color: st.isCompleted ? context.colors.textMuted : context.colors.textPrimary,
-                                      fontSize: 14,
-                                      decoration: st.isCompleted ? TextDecoration.lineThrough : null,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
                           ),
-                  ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: subtasks.length,
+                          itemBuilder: (context, idx) {
+                            final st = subtasks[idx];
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              decoration: BoxDecoration(
+                                color: context.colors.textPrimary.withValues(alpha: 0.02),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.04)),
+                              ),
+                              child: ListTile(
+                                dense: true,
+                                leading: Checkbox(
+                                  value: st.isCompleted,
+                                  activeColor: accentColor,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                  onChanged: (val) {
+                                    final list = currentItem.smartChecklist;
+                                    list[idx] = list[idx].copyWith(
+                                      isCompleted: val ?? false,
+                                    );
+                                    ref.read(canvasStateProvider.notifier).updateItemDetails(
+                                      currentItem.id,
+                                      metadata: {
+                                        'checklist': list.map((l) => l.toJson()).toList(),
+                                      },
+                                    );
+                                  },
+                                ),
+                                title: Text(
+                                  st.title,
+                                  style: TextStyle(
+                                    color: st.isCompleted ? context.colors.textMuted : context.colors.textPrimary,
+                                    fontSize: 14,
+                                    decoration: st.isCompleted ? TextDecoration.lineThrough : null,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                   const SizedBox(height: 12),
                 ],
               ),
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -1678,9 +1685,10 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
             backgroundColor: Colors.transparent,
             body: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                   const SizedBox(height: 12),
                   Center(
                     child: Container(
@@ -2018,6 +2026,7 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
             ),
           ),
         ),
+      ),
       ),
     );
   }
