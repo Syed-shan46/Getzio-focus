@@ -1402,7 +1402,7 @@ class _ProfileTab extends ConsumerWidget {
                     PremiumAuthSheet.show(context);
                   },
                 ),
-              if (isLoggedIn)
+              if (isLoggedIn) ...[
                 _buildSettingsTile(
                   context,
                   'Sign Out',
@@ -1413,11 +1413,106 @@ class _ProfileTab extends ConsumerWidget {
                     ref.read(authProvider.notifier).logout();
                   },
                 ),
+                const SizedBox(height: 8),
+                _buildSettingsTile(
+                  context,
+                  'Delete Account',
+                  Icons.delete_forever_rounded,
+                  context.colors.error,
+                  () {
+                    HapticFeedback.mediumImpact();
+                    _confirmAccountDeletion(context);
+                  },
+                ),
+              ],
               const SizedBox(height: 30),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _confirmAccountDeletion(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: context.colors.bg2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: context.colors.glassBorder, width: 0.5),
+          ),
+          title: Text(
+            'Delete Account',
+            style: TextStyle(
+              color: context.colors.error,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to permanently delete your account and all associated tasks? This action is immediate and cannot be undone.',
+            style: TextStyle(
+              color: context.colors.textPrimary,
+              fontSize: 14,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: context.colors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext); // Close dialog
+                try {
+                  await ref.read(authProvider.notifier).deleteAccount();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text(
+                          'Your account has been deleted.',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: context.colors.error,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Failed to delete account: ${e.toString().replaceFirst('Exception: ', '')}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: context.colors.error,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: Text(
+                'Delete',
+                style: TextStyle(
+                  color: context.colors.error,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
