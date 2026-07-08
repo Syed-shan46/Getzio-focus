@@ -104,19 +104,19 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
 
     switch (_colorTheme) {
       case 'Minimal White':
-        cardBg = context.colors.textPrimary.withValues(alpha: 0.95);
+        cardBg = const Color(0xFFFFFFFF);
         textCol = const Color(0xFF1F2937);
-        borderCol = Colors.black12;
+        borderCol = const Color(0xFFE5E7EB);
         break;
       case 'Dark Glass':
         cardBg = const Color(0xFF1F2937).withValues(alpha: 0.75);
-        textCol = context.colors.textPrimary;
-        borderCol = context.colors.textPrimary.withValues(alpha: 0.10);
+        textCol = const Color(0xFFF3F4F6);
+        borderCol = const Color(0xFFF3F4F6).withValues(alpha: 0.10);
         break;
       case 'Midnight Black':
         cardBg = const Color(0xFF030712);
         textCol = const Color(0xFFF9FAFB);
-        borderCol = context.colors.textPrimary.withValues(alpha: 0.10);
+        borderCol = const Color(0xFFF9FAFB).withValues(alpha: 0.10);
         break;
       case 'Sunrise Orange':
         cardBg = const Color(0xFFFFF7ED);
@@ -214,9 +214,17 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF131722),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: context.colors.bg2,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border.all(color: context.colors.glassBorder, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: context.colors.textPrimary.withValues(alpha: 0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
         ),
         padding: const EdgeInsets.all(24),
         child: SingleChildScrollView(
@@ -444,7 +452,7 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
                   child: Text(
                     'Save to Workspace',
                     style: GoogleFonts.outfit(
-                      color: _text.trim().isEmpty ? context.colors.textPrimary.withValues(alpha: 0.24) : context.colors.textPrimary,
+                      color: _text.trim().isEmpty ? Colors.white.withValues(alpha: 0.35) : Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
