@@ -7,6 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../providers/auth_providers.dart';
 import '../../../vision_room/presentation/providers/sticky_note_provider.dart';
 import '../providers/preview_mode_provider.dart';
+import 'workspace_sync_screen.dart';
 
 class OtpVerificationScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
@@ -111,7 +112,10 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       }
 
       if (!mounted) return;
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const WorkspaceSyncScreen()),
+      );
     } catch (e) {
       if (mounted) {
         setState(() => _error = e.toString().replaceFirst('Exception: ', ''));

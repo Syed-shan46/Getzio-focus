@@ -10,6 +10,9 @@ import '../../domain/models/task_model.dart';
 import 'package:getzio_todo_app/core/theme/app_theme.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
+import '../../../auth/presentation/screens/phone_login_screen.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../../core/storage/sync_manager.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
   const TasksScreen({super.key});
@@ -26,6 +29,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   bool _isSearchActive = false;
   final Set<String> _expandedTaskIds = {};
   final TextEditingController _searchController = TextEditingController();
+  bool _showCloudBannerLocal = true;
 
   // Bottom Sheet Filter & Sort state
   String _selectedPriority = 'All';
@@ -586,6 +590,42 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     final targetsList = _getFilteredTargets(state.allTasks, state.activeFilter);
     final stats = _getStats(state.allTasks);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    final isGuest = ref.watch(authProvider).valueOrNull == null;
+    final settings = ref.watch(hiveDatabaseProvider).getWorkspaceSettings();
+    final dismissed = settings['home_cloud_banner_dismissed'] == true;
+    final showBanner = isGuest && !dismissed && _showCloudBannerLocal;
+    final hasToken = ref.watch(hiveDatabaseProvider).getAuthToken() != null;
+    final pendingCount = ref.watch(pendingSyncCountProvider);
+
+    ref.listen<int>(pendingSyncCountProvider, (previous, next) {
+      final loggedIn = ref.read(hiveDatabaseProvider).getAuthToken() != null;
+      if (loggedIn && previous != null && previous > 0 && next == 0) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Everything synced',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    });
 
     final screenWidth = MediaQuery.of(context).size.width;
     final horizontalPadding = screenWidth > 600 ? 32.0 : 16.0;
@@ -712,6 +752,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                 )
                               : const SizedBox.shrink(),
                         ),
+                        if (showBanner) _buildCloudBanner(context),
+                        if (pendingCount > 0) _buildSyncStatusIndicator(pendingCount),
                       ],
                     ),
                   ),
@@ -1755,16 +1797,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        final hasToken = ref.read(hiveDatabaseProvider).getAuthToken() != null;
-        if (!hasToken) {
-          PremiumAuthSheet.show(
-            context,
-            customTitle: 'Create & Manage Tasks',
-            customDescription:
-                'Sign in to create tasks, set reminders, and sync progress.',
-          );
-          return;
-        }
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
@@ -1828,12 +1860,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: () {
-                final hasToken =
-                    ref.read(hiveDatabaseProvider).getAuthToken() != null;
-                if (!hasToken) {
-                  PremiumAuthSheet.show(context);
-                  return;
-                }
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
@@ -2073,6 +2099,189 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
           },
         );
       },
+    );
+  }
+
+  Widget _buildCloudBanner(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      margin: const EdgeInsets.only(top: 14, bottom: 6),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark 
+              ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+              : [const Color(0xFFEFF6FF), Colors.white],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark 
+              ? Colors.white.withValues(alpha: 0.08)
+              : const Color(0xFF3B82F6).withValues(alpha: 0.15),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.cloud_queue_rounded,
+                  color: Color(0xFF3B82F6),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Your workspace is stored on this device',
+                      style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Back it up securely to sync across all your devices and never lose your progress.',
+                      style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white70 : const Color(0xFF475569),
+                        fontSize: 12.5,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: _dismissCloudBanner,
+                child: Icon(
+                  Icons.close_rounded,
+                  color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: _dismissCloudBanner,
+                style: TextButton.styleFrom(
+                  foregroundColor: isDark ? Colors.white60 : const Color(0xFF64748B),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+                child: Text(
+                  'Maybe Later',
+                  style: GoogleFonts.outfit(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton(
+                onPressed: _navigateToLogin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF97316),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Save to Cloud',
+                  style: GoogleFonts.outfit(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSyncStatusIndicator(int count) {
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.25),
+          width: 0.8,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(
+            width: 10,
+            height: 10,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF59E0B)),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Pending Sync: $count change${count > 1 ? "s" : ""} waiting...',
+            style: GoogleFonts.outfit(
+              color: const Color(0xFFD97706),
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _dismissCloudBanner() {
+    setState(() {
+      _showCloudBannerLocal = false;
+    });
+    final settings = Map<String, dynamic>.from(
+      ref.read(hiveDatabaseProvider).getWorkspaceSettings(),
+    );
+    settings['home_cloud_banner_dismissed'] = true;
+    ref.read(hiveDatabaseProvider).saveWorkspaceSettings(settings);
+  }
+
+  void _navigateToLogin() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
     );
   }
 }

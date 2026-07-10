@@ -1,13 +1,11 @@
 import 'dart:convert';
 import 'dart:developer' as dev;
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:hive/hive.dart';
 import '../../../../core/storage/hive_database.dart';
 import '../../../../shared/providers/app_providers.dart';
-import '../../../os_dashboard/presentation/providers/os_providers.dart';
-import '../../../os_dashboard/presentation/providers/daily_motivation_provider.dart';
 import '../../../vision_room/domain/models/vision_item.dart';
+import '../../../vision_room/domain/models/sticky_note.dart';
 import '../../../vision_room/data/repositories/vision_room_repository.dart';
 import '../../../tasks/presentation/providers/tasks_provider.dart';
 
@@ -21,14 +19,22 @@ class GuestDataMigrationService {
     final identity = hiveDb.getSelectedIdentity();
     final areas = hiveDb.getSelectedLifeAreas();
     final vision = hiveDb.getVisionItems();
+    final tasks = hiveDb.getTasks();
+    final stickyNotes = Hive.box<StickyNote>('sticky_notes').values.toList();
 
-    final exists = habits.isNotEmpty || goals.isNotEmpty || identity != null || areas.isNotEmpty || vision.isNotEmpty;
-    dev.log('$_logTag Check Guest Data: $exists (Habits: ${habits.length}, Goals: ${goals.length}, Identity: $identity)');
+    final exists = habits.isNotEmpty ||
+        goals.isNotEmpty ||
+        identity != null ||
+        areas.isNotEmpty ||
+        vision.isNotEmpty ||
+        tasks.isNotEmpty ||
+        stickyNotes.isNotEmpty;
+    dev.log('$_logTag Check Guest Data: $exists (Habits: ${habits.length}, Goals: ${goals.length}, Tasks: ${tasks.length}, StickyNotes: ${stickyNotes.length})');
     return exists;
   }
 
   /// Run the Guest -> Account Migration POST request
-  static Future<bool> migrate(Ref ref) async {
+  static Future<bool> migrate(dynamic ref) async {
     final hiveDb = ref.read(hiveDatabaseProvider);
     final dio = ref.read(dioClientProvider);
 
@@ -43,10 +49,8 @@ class GuestDataMigrationService {
     final identity = hiveDb.getSelectedIdentity();
     final lifeAreas = hiveDb.getSelectedLifeAreas();
     final selectedGoals = hiveDb.getSelectedGoals();
-    final wakeUpTime = hiveDb.getWakeUpTime() ?? '6:00 AM';
     final selectedHabits = hiveDb.getSelectedHabits();
     final selectedAffirmations = hiveDb.getSelectedAffirmations();
-    final userStatistics = hiveDb.getUserStatistics() ?? {};
     final habitLogs = hiveDb.getHabitLogs();
     final workspaceSettings = hiveDb.getWorkspaceSettings();
     final readingPrefs = hiveDb.getReadingPreferences() ?? {};
@@ -57,6 +61,36 @@ class GuestDataMigrationService {
     dev.log('$_logTag Profile Loaded');
     dev.log('$_logTag Habits Loaded (count: ${selectedHabits.length})');
     dev.log('$_logTag Goals Loaded (count: ${selectedGoals.length})');
+
+    // Migrate tasks first
+    final localTasks = hiveDb.getTasks();
+    if (localTasks.isNotEmpty) {
+      dev.log('$_logTag Uploading ${localTasks.length} guest tasks to server...');
+      try {
+        final tasksPayload = {
+          'modifications': localTasks.map((t) => Map<String, dynamic>.from(t)).toList(),
+          'deletedIds': [],
+        };
+        await dio.post('/tasks/sync', data: tasksPayload);
+        dev.log('$_logTag Guest tasks uploaded successfully.');
+      } catch (e) {
+        dev.log('$_logTag Failed to upload guest tasks: $e');
+      }
+    }
+
+    // Migrate sticky notes
+    final stickyNotesBox = Hive.box<StickyNote>('sticky_notes');
+    final localStickyNotes = stickyNotesBox.values.toList();
+    if (localStickyNotes.isNotEmpty) {
+      dev.log('$_logTag Uploading ${localStickyNotes.length} guest sticky notes to server...');
+      for (var note in localStickyNotes) {
+        try {
+          await dio.post('/sticky-notes', data: note.toJson());
+        } catch (e) {
+          dev.log('$_logTag Failed to upload sticky note ${note.id}: $e');
+        }
+      }
+    }
 
     // 1. Structure habitLogs map into array for backend format
     final List<Map<String, dynamic>> logsList = [];
@@ -211,22 +245,24 @@ class GuestDataMigrationService {
           // Step 6: Reload everything from backend
           await reloadFromBackend(ref);
           return true;
+        } else {
+          final msg = data['message'] ?? 'Migration returned success=false';
+          dev.log('$_logTag Migration Failed: $msg');
+          throw Exception(msg);
         }
+      } else {
+        dev.log('$_logTag Migration Failed with status ${response.statusCode}');
+        throw Exception('Migration failed with status code ${response.statusCode}');
       }
-      
-      // Fallback if success flag is false
-      await hiveDb.setMigrationPending(true);
-      dev.log('$_logTag Migration Failed (Server returned non-success)');
-      return false;
     } catch (e) {
       await hiveDb.setMigrationPending(true);
       dev.log('$_logTag Migration Failed: $e (Queued for background retry)');
-      return false; // Safely queued
+      rethrow;
     }
   }
 
   /// Reload everything from the backend database to ensure local sync correctness
-  static Future<void> reloadFromBackend(Ref ref) async {
+  static Future<void> reloadFromBackend(dynamic ref) async {
     final hiveDb = ref.read(hiveDatabaseProvider);
     final dio = ref.read(dioClientProvider);
 
@@ -452,6 +488,31 @@ class GuestDataMigrationService {
             }
           }
           await hiveDb.saveSelectedAffirmations(mapped);
+        }
+      }
+
+      dev.log('$_logTag Reloading Sticky Notes from backend...');
+      final userId = hiveDb.getUserId();
+      if (userId != null && userId.isNotEmpty) {
+        try {
+          final stickyNotesRes = await dio.get('/sticky-notes', queryParameters: {'userId': userId});
+          if (stickyNotesRes.statusCode == 200 && stickyNotesRes.data != null) {
+            final notesData = stickyNotesRes.data['data'] as List?;
+            if (notesData != null) {
+              final List<StickyNote> notes = notesData.map((noteJson) {
+                return StickyNote.fromJson(Map<String, dynamic>.from(noteJson));
+              }).toList();
+              
+              final stickyNotesBox = Hive.box<StickyNote>('sticky_notes');
+              await stickyNotesBox.clear();
+              for (var note in notes) {
+                await stickyNotesBox.put(note.id, note);
+              }
+              dev.log('$_logTag Mapped and reloaded ${notes.length} sticky notes successfully.');
+            }
+          }
+        } catch (noteErr) {
+          dev.log('$_logTag Failed to reload sticky notes: $noteErr');
         }
       }
 

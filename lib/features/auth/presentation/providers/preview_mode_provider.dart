@@ -5,11 +5,11 @@ import '../../../../shared/providers/app_providers.dart';
 class PreviewModeNotifier extends StateNotifier<bool> {
   final HiveDatabase _hiveDb;
 
-  PreviewModeNotifier(this._hiveDb) : super(_hiveDb.getIsPreviewMode() ?? false);
+  PreviewModeNotifier(this._hiveDb) : super(false); // Force false always
 
   Future<void> setPreviewMode(bool isPreview) async {
-    await _hiveDb.saveIsPreviewMode(isPreview);
-    state = isPreview;
+    await _hiveDb.saveIsPreviewMode(false);
+    state = false;
   }
 }
 

@@ -1,12 +1,24 @@
+import 'dart:async';
 import 'dart:developer';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'hive_database.dart';
 import '../../shared/providers/app_providers.dart';
 
+final pendingSyncCountProvider = StateProvider<int>((ref) {
+  // Try to initialize with current count if database is open
+  try {
+    final hiveDb = ref.watch(hiveDatabaseProvider);
+    return hiveDb.getPendingSyncQueue().length;
+  } catch (_) {
+    return 0;
+  }
+});
+
 class PendingSyncAction {
   final String id;
-  final String operation; // 'create' | 'update' | 'delete'
-  final String collection; // 'vision_room' | 'tasks' | 'affirmations'
+  final String operation; // 'create' | 'update' | 'delete' | 'create_milestone' | 'update_milestone' | 'delete_milestone' | 'create_subtask' | 'update_subtask' | 'delete_subtask'
+  final String collection; // 'vision_room' | 'tasks' | 'affirmations' | 'sticky_notes' | 'settings' | 'goals'
   final String documentId;
   final Map<String, dynamic>? payload;
   final int retryCount;
@@ -49,12 +61,75 @@ class PendingSyncAction {
   };
 }
 
-class SyncManager {
+class SyncQueueService {
   final HiveDatabase _hiveDb;
   final Ref _ref;
   bool _isProcessing = false;
+  Timer? _retryTimer;
 
-  SyncManager(this._hiveDb, this._ref);
+  SyncQueueService(this._hiveDb, this._ref) {
+    _startRetryTimer();
+  }
+
+  void _startRetryTimer() {
+    _retryTimer?.cancel();
+    _retryTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
+      final token = _hiveDb.getAuthToken();
+      if (token != null && token.isNotEmpty) {
+        final count = _hiveDb.getPendingSyncQueue().length;
+        if (count > 0) {
+          log('[SyncQueue] Periodic retry: processing $count pending actions...');
+          await processQueue();
+        }
+      }
+    });
+  }
+
+  void dispose() {
+    _retryTimer?.cancel();
+  }
+
+  int getPendingSyncCount() {
+    return _hiveDb.getPendingSyncQueue().length;
+  }
+
+  Future<void> queueAction({
+    required String collection,
+    required String operation,
+    required String documentId,
+    Map<String, dynamic>? payload,
+  }) async {
+    final hasToken = _hiveDb.getAuthToken() != null;
+    
+    // Always store locally first
+    final action = PendingSyncAction(
+      id: '${collection}_${documentId}_${DateTime.now().millisecondsSinceEpoch}',
+      operation: operation,
+      collection: collection,
+      documentId: documentId,
+      payload: payload,
+      createdAt: DateTime.now(),
+    );
+
+    await _hiveDb.addToPendingSync(action.toMap());
+    _updateCountState();
+
+    if (hasToken) {
+      // Trigger background process immediately if online
+      triggerSync();
+    }
+  }
+
+  void triggerSync() {
+    Future.microtask(() => processQueue());
+  }
+
+  void _updateCountState() {
+    try {
+      final count = getPendingSyncCount();
+      _ref.read(pendingSyncCountProvider.notifier).state = count;
+    } catch (_) {}
+  }
 
   Future<void> processQueue() async {
     if (_isProcessing) return;
@@ -64,12 +139,14 @@ class SyncManager {
       final queue = _hiveDb.getPendingSyncQueue();
       if (queue.isEmpty) {
         _isProcessing = false;
+        _updateCountState();
         return;
       }
 
       final hasToken = _hiveDb.getAuthToken() != null;
       if (!hasToken) {
         _isProcessing = false;
+        _updateCountState();
         return;
       }
 
@@ -78,7 +155,8 @@ class SyncManager {
       for (var actionMap in queue) {
         final action = PendingSyncAction.fromMap(actionMap);
         bool success = false;
-        
+        bool shouldDrop = false; // drop action if it's invalid (e.g. 404 or conflict resolution drop)
+
         try {
           if (action.collection == 'tasks') {
             if (action.operation == 'create' || action.operation == 'update') {
@@ -147,15 +225,34 @@ class SyncManager {
               final response = await dio.delete('/focus/vision-room/item/${action.documentId}');
               if (response.statusCode == 200) success = true;
             }
+          } else if (action.collection == 'sticky_notes') {
+            if (action.operation == 'create') {
+              final response = await dio.post('/sticky-notes', data: action.payload);
+              if (response.statusCode == 200 || response.statusCode == 201) success = true;
+            } else if (action.operation == 'update') {
+              final response = await dio.patch('/sticky-notes/${action.documentId}', data: action.payload);
+              if (response.statusCode == 200) success = true;
+            } else if (action.operation == 'delete') {
+              final response = await dio.delete('/sticky-notes/${action.documentId}');
+              if (response.statusCode == 200 || response.statusCode == 204) success = true;
+            }
+          } else if (action.collection == 'settings') {
+            final response = await dio.post('/focus/onboarding', data: action.payload);
+            if (response.statusCode == 200 || response.statusCode == 201) success = true;
           }
         } catch (e) {
-          log('[SyncManager] Failed to sync action ${action.id}: $e');
+          log('[SyncQueue] Failed to sync action ${action.id}: $e');
+          // If server reports 404 or invalid payload (400), don't retry infinitely
+          if (e.toString().contains('404') || e.toString().contains('400')) {
+            shouldDrop = true;
+          }
         }
 
-        if (success) {
+        if (success || shouldDrop) {
           await _hiveDb.removeFromPendingSync(action.id);
-          log('[SyncManager] Action ${action.id} synced successfully and removed from queue');
+          log('[SyncQueue] Action ${action.id} processed (success: $success, dropped: $shouldDrop) and removed from queue');
         } else {
+          // If we failed due to connection issues, stop loop processing to preserve order and retry later
           final updated = PendingSyncAction(
             id: action.id,
             operation: action.operation,
@@ -167,17 +264,26 @@ class SyncManager {
             lastAttempt: DateTime.now(),
           );
           await _hiveDb.addToPendingSync(updated.toMap());
+          break; // break processing loop to retry in next timer tick
         }
       }
     } catch (e) {
-      log('[SyncManager] Error processing queue: $e');
+      log('[SyncQueue] Error processing queue: $e');
     } finally {
       _isProcessing = false;
+      _updateCountState();
     }
   }
 }
 
-final syncManagerProvider = Provider<SyncManager>((ref) {
+// Retain alias for backward compatibility
+typedef SyncManager = SyncQueueService;
+
+final syncQueueServiceProvider = Provider<SyncQueueService>((ref) {
   final hiveDb = ref.watch(hiveDatabaseProvider);
-  return SyncManager(hiveDb, ref);
+  return SyncQueueService(hiveDb, ref);
+});
+
+final syncManagerProvider = Provider<SyncManager>((ref) {
+  return ref.watch(syncQueueServiceProvider);
 });

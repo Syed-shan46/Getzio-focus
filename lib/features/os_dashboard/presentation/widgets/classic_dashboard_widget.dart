@@ -11,6 +11,9 @@ import '../providers/os_providers.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/widgets/save_workspace_sheet.dart';
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
+import '../../../auth/presentation/screens/phone_login_screen.dart';
+import '../../../auth/domain/services/guest_migration_service.dart';
+import '../../../../core/storage/sync_manager.dart';
 import '../../../vision_room/presentation/screens/vision_room_screen.dart';
 import '../../../affirmations/presentation/providers/affirmations_provider.dart';
 import '../../../affirmations/presentation/widgets/affirmation_bottom_sheet.dart';
@@ -1372,6 +1375,8 @@ class _ProfileTab extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 24),
+              _buildCloudSyncCard(context, ref, isLoggedIn),
+              const SizedBox(height: 24),
 
               // Settings Section
               Text(
@@ -1410,7 +1415,7 @@ class _ProfileTab extends ConsumerWidget {
                   Colors.redAccent,
                   () {
                     HapticFeedback.mediumImpact();
-                    ref.read(authProvider.notifier).logout();
+                    _showSignOutDialog(context, ref);
                   },
                 ),
                 const SizedBox(height: 8),
@@ -1421,7 +1426,7 @@ class _ProfileTab extends ConsumerWidget {
                   context.colors.error,
                   () {
                     HapticFeedback.mediumImpact();
-                    _confirmAccountDeletion(context);
+                    _confirmAccountDeletion(context, ref);
                   },
                 ),
               ],
@@ -1433,7 +1438,7 @@ class _ProfileTab extends ConsumerWidget {
     );
   }
 
-  void _confirmAccountDeletion(BuildContext context) {
+  void _confirmAccountDeletion(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -2053,6 +2058,170 @@ class _GoalsTab extends ConsumerStatefulWidget {
 class _GoalsTabState extends ConsumerState<_GoalsTab> {
   String _selectedFilter = 'All';
 
+  static final List<VisionItem> _sampleGoals = [
+    VisionItem(
+      id: 'sample_goal_1',
+      type: VisionItemType.goal.name,
+      content: 'Master Mobile Development',
+      colorValue: const Color(0xFF3B82F6).toARGB32(),
+      countdownDate: DateTime.now().add(const Duration(days: 150)),
+      secondaryContent: 'Career & Skills',
+      metadata: {
+        'title': 'Master Mobile Development',
+        'description': 'Become a senior developer by mastering Flutter, Riverpod, and clean architecture.',
+        'status': 'In Progress',
+        'category': 'Career',
+        'milestones': [
+          {
+            'id': 'sm_1',
+            'title': 'Learn Advanced State Management',
+            'description': 'Master Riverpod providers, ref.watch, family, and notifier patterns.',
+            'isCompleted': true,
+            'order': 0,
+          },
+          {
+            'id': 'sm_2',
+            'title': 'Build Production Quality App',
+            'description': 'Release a complete App on App Store with local storage and syncing.',
+            'isCompleted': false,
+            'order': 1,
+          },
+        ],
+      },
+    ),
+    VisionItem(
+      id: 'sample_goal_2',
+      type: VisionItemType.goal.name,
+      content: 'Financial Independence',
+      colorValue: const Color(0xFF10B981).toARGB32(),
+      countdownDate: DateTime.now().add(const Duration(days: 300)),
+      secondaryContent: 'Personal Finance',
+      metadata: {
+        'title': 'Financial Independence',
+        'description': 'Build a diverse portfolio and save emergency funds.',
+        'status': 'Completed',
+        'category': 'Finance',
+        'milestones': [
+          {
+            'id': 'sf_1',
+            'title': 'Save 6-Month Emergency Fund',
+            'description': 'Keep emergency funds in a high-yield savings account.',
+            'isCompleted': true,
+            'order': 0,
+          },
+        ],
+      },
+    ),
+    VisionItem(
+      id: 'sample_goal_3',
+      type: VisionItemType.goal.name,
+      content: 'Run a Half Marathon',
+      colorValue: const Color(0xFFEF4444).toARGB32(),
+      countdownDate: DateTime.now().add(const Duration(days: 90)),
+      secondaryContent: 'Health & Fitness',
+      metadata: {
+        'title': 'Run a Half Marathon',
+        'description': 'Train consistently to finish the local 21km race under 2 hours.',
+        'status': 'On Hold',
+        'category': 'Health',
+        'milestones': [
+          {
+            'id': 'sh_1',
+            'title': 'Weekly 15km Runs',
+            'description': 'Build endurance and steady pace during weekend long runs.',
+            'isCompleted': false,
+            'order': 0,
+          },
+        ],
+      },
+    ),
+    VisionItem(
+      id: 'sample_goal_4',
+      type: VisionItemType.goal.name,
+      content: 'Learn French Language',
+      colorValue: const Color(0xFF8B5CF6).toARGB32(),
+      countdownDate: DateTime.now().add(const Duration(days: 200)),
+      secondaryContent: 'Education & Culture',
+      metadata: {
+        'title': 'Learn French Language',
+        'description': 'Practice daily vocabulary and conversation to reach B2 level.',
+        'status': 'Not Started',
+        'category': 'Education',
+        'milestones': [
+          {
+            'id': 'sl_1',
+            'title': 'Complete A1 Grammar course',
+            'description': 'Study verbs, nouns, and core sentence structures.',
+            'isCompleted': false,
+            'order': 0,
+          },
+        ],
+      },
+    ),
+  ];
+
+  Widget _buildFeatureCard(
+    BuildContext context,
+    String title,
+    String description,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      width: 200,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.colors.bg2,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: context.colors.textPrimary.withValues(alpha: 0.04),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 14),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    color: context.colors.textPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            description,
+            style: GoogleFonts.outfit(
+              color: context.colors.textPrimary.withValues(alpha: 0.5),
+              fontSize: 10,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
   String _formatTargetDate(DateTime? date) {
     if (date == null) return 'Continuous';
     final months = [
@@ -2312,15 +2481,43 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.outfit(
-                      color: context.colors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: GoogleFonts.outfit(
+                            color: context.colors.textPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (goal.id.startsWith('sample_goal_')) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'SAMPLE',
+                            style: TextStyle(
+                              color: Colors.amber,
+                              fontSize: 7.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   SizedBox(height: 2),
                   Text(
@@ -2424,9 +2621,12 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
   @override
   Widget build(BuildContext context) {
     final canvasState = ref.watch(canvasStateProvider);
-    final goals = canvasState.items
+    final realGoals = canvasState.items
         .where((item) => item.type == VisionItemType.goal.name)
         .toList();
+
+    final isUsingSamples = realGoals.isEmpty;
+    final goals = [...realGoals, ..._sampleGoals];
 
     final allCount = goals.length;
     final activeCount = goals.where((g) {
@@ -2623,12 +2823,126 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
                             120,
                           ), // Padding bottom for banner
                           physics: const BouncingScrollPhysics(),
-                          itemCount: filteredGoals.length,
+                          itemCount: isUsingSamples
+                              ? filteredGoals.length + 3
+                              : filteredGoals.length,
                           itemBuilder: (context, index) {
-                            return _buildGoalCard(
-                              context,
-                              filteredGoals[index],
-                            );
+                            if (isUsingSamples) {
+                              if (index == 0) {
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: context.colors.accentBlue
+                                        .withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: context.colors.accentBlue
+                                          .withValues(alpha: 0.2),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.info_outline_rounded,
+                                        color: context.colors.accentBlue,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          'Preview Mode: Explore sample goals. Go to the Room tab to place your first goal.',
+                                          style: GoogleFonts.outfit(
+                                            color: context.colors.textPrimary
+                                                .withValues(alpha: 0.8),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else if (index == 1) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'WHAT YOU CAN DO',
+                                      style: GoogleFonts.outfit(
+                                        color: context.colors.textPrimary
+                                            .withValues(alpha: 0.4),
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    SizedBox(
+                                      height: 110,
+                                      child: SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        physics: const BouncingScrollPhysics(),
+                                        child: Row(
+                                          children: [
+                                            _buildFeatureCard(
+                                              context,
+                                              'Milestone Tracking',
+                                              'Break down big dreams into actionable checkpoints.',
+                                              Icons.playlist_add_check_rounded,
+                                              const Color(0xFFF59E0B),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            _buildFeatureCard(
+                                              context,
+                                              'Interactive Room',
+                                              'Place goal widgets in your Room space to stay motivated.',
+                                              Icons.door_sliding_rounded,
+                                              const Color(0xFF3B82F6),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            _buildFeatureCard(
+                                              context,
+                                              'Progress Analytics',
+                                              'See completion progress update automatically.',
+                                              Icons.donut_large_rounded,
+                                              const Color(0xFF10B981),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                  ],
+                                );
+                              } else if (index == 2) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: Text(
+                                    'SAMPLE GOALS',
+                                    style: GoogleFonts.outfit(
+                                      color: context.colors.textPrimary
+                                          .withValues(alpha: 0.4),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                return _buildGoalCard(
+                                  context,
+                                  filteredGoals[index - 3],
+                                );
+                              }
+                            } else {
+                              return _buildGoalCard(
+                                context,
+                                filteredGoals[index],
+                              );
+                            }
                           },
                         ),
                 ),
@@ -2637,6 +2951,436 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
           ),
         ),
       ],
+    );
+  }
+}
+
+extension on _ProfileTab {
+  Widget _buildCloudSyncCard(BuildContext context, WidgetRef ref, bool isLoggedIn) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final pendingCount = ref.watch(pendingSyncCountProvider);
+    final hiveDb = ref.read(hiveDatabaseProvider);
+    final lastSync = hiveDb.getWorkspaceSettings()['last_sync_time'] as String?;
+    
+    String formattedSyncTime = 'Never';
+    if (lastSync != null) {
+      try {
+        final dt = DateTime.parse(lastSync);
+        final format = DateFormat('MMM d, h:mm a');
+        formattedSyncTime = format.format(dt);
+      } catch (_) {}
+    }
+
+    String timeAgo(String? isoString) {
+      if (isoString == null) return 'Never';
+      try {
+        final dt = DateTime.parse(isoString);
+        final diff = DateTime.now().difference(dt);
+        if (diff.inSeconds < 30) {
+          return 'Just now';
+        } else if (diff.inMinutes < 1) {
+          return 'Less than a minute ago';
+        } else if (diff.inMinutes < 60) {
+          final mins = diff.inMinutes;
+          return '$mins minute${mins > 1 ? "s" : ""} ago';
+        } else if (diff.inHours < 24) {
+          final hrs = diff.inHours;
+          return '$hrs hour${hrs > 1 ? "s" : ""} ago';
+        } else {
+          final format = DateFormat('MMM d, h:mm a');
+          return format.format(dt);
+        }
+      } catch (_) {
+        return 'Never';
+      }
+    }
+
+    final String title = isLoggedIn ? 'Cloud Sync Enabled' : 'Local Workspace';
+    final String description = isLoggedIn
+        ? 'Last synced: ${timeAgo(lastSync)}'
+        : 'Your data is safely stored on this device.';
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark 
+            ? const Color(0xFF1E293B)
+            : const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark 
+              ? Colors.white.withValues(alpha: 0.08)
+              : const Color(0xFF3B82F6).withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.outfit(
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isLoggedIn 
+                      ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                      : const Color(0xFF64748B).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: isLoggedIn ? const Color(0xFF10B981) : const Color(0xFF64748B),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isLoggedIn ? 'Connected' : 'Offline',
+                      style: GoogleFonts.outfit(
+                        color: isLoggedIn ? const Color(0xFF10B981) : const Color(0xFF64748B),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            description,
+            style: GoogleFonts.outfit(
+              color: isLoggedIn
+                  ? (isDark ? Colors.white70 : const Color(0xFF475569))
+                  : (isDark ? Colors.white70 : const Color(0xFF475569)),
+              fontSize: isLoggedIn ? 12.5 : 13,
+              fontWeight: isLoggedIn ? FontWeight.w500 : FontWeight.w400,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (isLoggedIn) ...[
+            _buildSyncDetailRow('Last Sync', formattedSyncTime, isDark),
+            const SizedBox(height: 6),
+            _buildSyncDetailRow('Pending Changes', '$pendingCount', isDark),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      ref.read(syncQueueServiceProvider).processQueue();
+                    },
+                    icon: const Icon(Icons.sync_rounded, size: 14),
+                    label: const Text('Sync Now'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3B82F6),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      _restoreData(context, ref);
+                    },
+                    icon: const Icon(Icons.cloud_download_rounded, size: 14),
+                    label: const Text('Restore Data'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF3B82F6),
+                      side: const BorderSide(color: Color(0xFF3B82F6)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            const SizedBox(height: 4),
+            ElevatedButton(
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF97316),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: Text(
+                'Save to Cloud',
+                style: GoogleFonts.outfit(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSyncDetailRow(String label, String value, bool isDark) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            color: isDark ? Colors.white60 : const Color(0xFF64748B),
+            fontSize: 12,
+          ),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.outfit(
+            color: isDark ? Colors.white : const Color(0xFF1E293B),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showSignOutDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
+        
+        return Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(
+                  Icons.logout_rounded,
+                  color: Colors.redAccent,
+                  size: 40,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Sign Out',
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Would you like to keep a copy of your workspace data on this device?',
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    color: isDark ? Colors.white70 : const Color(0xFF475569),
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(dialogContext);
+                    await ref.read(authProvider.notifier).logout(keepLocalData: true);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3B82F6),
+                    foregroundColor: Colors.white,
+                    fixedSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Keep Local Copy',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton(
+                  onPressed: () async {
+                    Navigator.pop(dialogContext);
+                    await ref.read(authProvider.notifier).logout(keepLocalData: false);
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.redAccent,
+                    side: const BorderSide(color: Colors.redAccent, width: 1),
+                    fixedSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: Text(
+                    'Delete All Data',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  style: TextButton.styleFrom(
+                    foregroundColor: isDark ? Colors.white54 : const Color(0xFF94A3B8),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _restoreData(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
+        
+        return Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: FutureBuilder(
+              future: GuestDataMigrationService.reloadFromBackend(ref),
+              builder: (futureContext, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Restoring Workspace...',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Downloading your data from the cloud...',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  );
+                } else if (snapshot.hasError) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 40),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Restore Failed',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        snapshot.error.toString(),
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(futureContext),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3B82F6),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  );
+                } else {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 40),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Workspace Restored',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'All your backup data has been successfully restored to this device.',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(futureContext);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3B82F6),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Continue'),
+                      ),
+                    ],
+                  );
+                }
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }

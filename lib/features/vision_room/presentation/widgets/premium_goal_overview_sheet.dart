@@ -19,6 +19,7 @@ class PremiumGoalOverviewSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       barrierColor: context.colors.bg1.withValues(alpha: 0.6),
       builder: (context) => PremiumGoalOverviewSheet(item: item),
     );
@@ -76,13 +77,6 @@ class _PremiumGoalOverviewSheetState
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.92),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.bg1.withValues(alpha: 0.7),
-            blurRadius: 36,
-            spreadRadius: 12,
-          ),
-        ],
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
@@ -190,7 +184,31 @@ class _PremiumGoalOverviewSheetState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildStatusPill(status),
+                Row(
+                  children: [
+                    _buildStatusPill(status),
+                    if (item.id.startsWith('sample_goal_')) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.amber.withValues(alpha: 0.4), width: 1),
+                        ),
+                        child: const Text(
+                          'SAMPLE GOAL',
+                          style: TextStyle(
+                            color: Colors.amber,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
                 SizedBox(height: 4),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -388,7 +406,7 @@ class _PremiumGoalOverviewSheetState
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+      padding: EdgeInsets.fromLTRB(4, 12, 4, 12 + MediaQuery.of(context).padding.bottom),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1303,7 +1321,7 @@ class _PremiumGoalOverviewSheetState
                                       tapTargetSize:
                                           MaterialTapTargetSize.shrinkWrap,
                                     ),
-                                    color: const Color(0xFF1E293B),
+                                    color: context.colors.bg2,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -1574,7 +1592,7 @@ class _PremiumGoalOverviewSheetState
                 children: [
                   Text(
                     'Overall Progress',
-                    style: TextStyle(color: Colors.white38, fontSize: 9),
+                    style: TextStyle(color: context.colors.textMuted, fontSize: 9),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -1592,7 +1610,7 @@ class _PremiumGoalOverviewSheetState
                 children: [
                   Text(
                     'Estimated Finish',
-                    style: TextStyle(color: Colors.white38, fontSize: 9),
+                    style: TextStyle(color: context.colors.textMuted, fontSize: 9),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -1625,7 +1643,7 @@ class _PremiumGoalOverviewSheetState
           ),
         ),
         SizedBox(height: 2),
-        Text(title, style: TextStyle(color: Colors.white38, fontSize: 9)),
+        Text(title, style: TextStyle(color: context.colors.textMuted, fontSize: 9)),
       ],
     );
   }
@@ -1740,6 +1758,7 @@ class _PremiumGoalOverviewSheetState
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           final bottomInset = MediaQuery.of(context).viewInsets.bottom;
@@ -1931,7 +1950,7 @@ class _PremiumGoalOverviewSheetState
   Widget _buildJourneyTab(VisionItem item) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+      padding: EdgeInsets.fromLTRB(4, 12, 4, 12 + MediaQuery.of(context).padding.bottom),
       child: Column(
         children: [
           _buildJourneyTimeline(item),
@@ -1953,13 +1972,13 @@ class _PremiumGoalOverviewSheetState
               color: const Color(0xFF10B981).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.explore_rounded,
               color: Color(0xFF10B981),
               size: 48,
             ),
           ),
-          SizedBox(height: 18),
+          const SizedBox(height: 18),
           Text(
             'Begin Your Journey',
             style: TextStyle(
@@ -1968,11 +1987,31 @@ class _PremiumGoalOverviewSheetState
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Break down your goal into premium milestones\nand execute step-by-step subtasks.',
             textAlign: TextAlign.center,
             style: TextStyle(color: context.colors.textMuted, fontSize: 12, height: 1.4),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => _showAddMilestoneSheet(item),
+            icon: const Icon(Icons.add_rounded, color: Colors.white),
+            label: const Text(
+              'Add Milestone',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 0,
+            ),
           ),
         ],
       ),
@@ -2090,7 +2129,14 @@ class _PremiumGoalOverviewSheetState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: context.colors.bg2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: context.colors.textPrimary.withValues(alpha: 0.08),
+            width: 1,
+          ),
+        ),
         title: Text(
           'Edit Goal Details',
           style: TextStyle(
@@ -2143,14 +2189,22 @@ class _PremiumGoalOverviewSheetState
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: TextStyle(color: context.colors.textMuted),
+              style: TextStyle(color: context.colors.textSecondary),
             ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF38BDF8),
+              backgroundColor: context.colors.accentBlue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
             ),
             onPressed: () {
+              if (_checkIfSample(context, item.id)) {
+                Navigator.pop(context);
+                return;
+              }
               ref
                   .read(canvasStateProvider.notifier)
                   .updateItemDetails(
@@ -2161,7 +2215,7 @@ class _PremiumGoalOverviewSheetState
                   );
               Navigator.pop(context);
             },
-            child: Text('Save', style: TextStyle(color: context.colors.bg1)),
+            child: const Text('Save', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -2425,6 +2479,7 @@ class _PremiumGoalOverviewSheetState
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           final bottomInset = MediaQuery.of(context).viewInsets.bottom;
@@ -2599,6 +2654,7 @@ class _PremiumGoalOverviewSheetState
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           final bottomInset = MediaQuery.of(context).viewInsets.bottom;
@@ -2769,6 +2825,7 @@ class _PremiumGoalOverviewSheetState
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           final bottomInset = MediaQuery.of(context).viewInsets.bottom;
@@ -2887,7 +2944,25 @@ class _PremiumGoalOverviewSheetState
     );
   }
 
+  bool _checkIfSample(BuildContext context, String itemId) {
+    if (itemId.startsWith('sample_goal_')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'This is a sample goal. Go to the Room tab to place your first goal!',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: context.colors.accentBlue,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return true;
+    }
+    return false;
+  }
+
   void _saveMilestones(VisionItem item, List<SmartMilestone> list) {
+    if (_checkIfSample(context, item.id)) return;
     final filtered = list.where((m) => m.id != 'general_tasks_migration').toList();
     ref
         .read(canvasStateProvider.notifier)
@@ -2898,6 +2973,7 @@ class _PremiumGoalOverviewSheetState
   }
 
   void _saveChecklist(VisionItem item, List<SmartChecklistItem> list) {
+    if (_checkIfSample(context, item.id)) return;
     ref
         .read(canvasStateProvider.notifier)
         .updateItemDetails(

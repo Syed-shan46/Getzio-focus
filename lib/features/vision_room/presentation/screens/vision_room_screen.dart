@@ -106,16 +106,7 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
       return false;
     }
 
-    final isGuest = ref.read(authProvider).value == null;
-    if (!isGuest) return true;
-
-    if (itemType == 'sticky_note') {
-      _showPremiumAuthSheet(context);
-      return false;
-    }
-
-    _showPremiumAuthSheet(context);
-    return false;
+    return true;
   }
 
   Future<void> _pickImage() async {

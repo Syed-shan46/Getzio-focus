@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../screens/dedicated_editor_screen.dart';
+import '../../domain/models/affirmation_model.dart';
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 
 class GuestAffirmationsView extends StatelessWidget {
@@ -123,10 +125,21 @@ class GuestAffirmationsView extends StatelessWidget {
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: GestureDetector(
                   onTap: () {
-                    PremiumAuthSheet.show(
+                    final emptyAff = DailyAffirmation(
+                      id: 'new_${DateTime.now().millisecondsSinceEpoch}',
+                      title: 'My Intention',
+                      text: 'I choose to grow and adapt every day.',
+                      author: 'Me',
+                      category: 'Mindset',
+                      colorTheme: 'Minimal White',
+                      emoji: '✨',
+                      createdAt: DateTime.now(),
+                    );
+                    Navigator.push(
                       context,
-                      customTitle: 'Create Your Personal Affirmations',
-                      customDescription: 'Sign in to create, save and synchronize your own affirmations across all your devices.',
+                      MaterialPageRoute(
+                        builder: (_) => DedicatedEditorScreen(affirmation: emptyAff),
+                      ),
                     );
                   },
                   child: Container(

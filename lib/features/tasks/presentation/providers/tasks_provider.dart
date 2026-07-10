@@ -174,6 +174,14 @@ class TasksNotifier extends StateNotifier<TasksState> {
     }
     
     // Background sync
+    final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
+    if (!hasToken) {
+      final syncedList = state.allTasks.map((t) => t.id == task.id ? t.copyWith(syncStatus: SyncStatus.synced) : t).toList();
+      state = state.copyWith(allTasks: syncedList);
+      await _repository.saveLocalTasks(syncedList);
+      return;
+    }
+    
     final dio = _ref.read(dioClientProvider);
     dio.post('/tasks/sync', data: {
       'modifications': [pendingTask.toMap()],
@@ -256,6 +264,14 @@ class TasksNotifier extends StateNotifier<TasksState> {
     }
 
     // Background sync
+    final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
+    if (!hasToken) {
+      final syncedList = state.allTasks.map((t) => t.id == task.id ? t.copyWith(syncStatus: SyncStatus.synced) : t).toList();
+      state = state.copyWith(allTasks: syncedList);
+      await _repository.saveLocalTasks(syncedList);
+      return;
+    }
+
     final dio = _ref.read(dioClientProvider);
     dio.post('/tasks/sync', data: {
       'modifications': [updatedTask.toMap()],
@@ -281,6 +297,9 @@ class TasksNotifier extends StateNotifier<TasksState> {
     NotificationService().cancelReminders(id);
 
     // Background sync
+    final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
+    if (!hasToken) return;
+
     final dio = _ref.read(dioClientProvider);
     dio.post('/tasks/sync', data: {
       'modifications': [],

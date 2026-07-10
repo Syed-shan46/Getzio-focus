@@ -133,15 +133,6 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
   }
 
   Future<void> _pickImage() async {
-    final isGuest = ref.read(authProvider).value == null;
-    final items = ref.read(canvasStateProvider).items;
-    final count = items
-        .where((i) => i.type == VisionItemType.image.name)
-        .length;
-    if (isGuest && count >= 2) {
-      _showPremiumAuthSheet(context);
-      return;
-    }
     final size = MediaQuery.of(context).size;
     final transform = ref.read(canvasStateProvider).viewportTransform;
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
@@ -283,18 +274,6 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
                   onPressed: () {
                     final text = textController.text.trim();
                     if (text.isNotEmpty) {
-                      final isGuest = ref.read(authProvider).value == null;
-                      final items = ref.read(canvasStateProvider).items;
-                      final count = items
-                          .where(
-                            (i) => i.type == VisionItemType.stickyNote.name,
-                          )
-                          .length;
-                      if (isGuest && count >= 3) {
-                        Navigator.pop(dialogContext);
-                        _showPremiumAuthSheet(context);
-                        return;
-                      }
                       Navigator.pop(dialogContext);
                       _addStickyNote(text, selectedColorValue);
                       _setSaving();
@@ -336,15 +315,6 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
   }
 
   void _addQuote(Map<String, dynamic> metadata) {
-    final isGuest = ref.read(authProvider).value == null;
-    final items = ref.read(canvasStateProvider).items;
-    final count = items
-        .where((i) => i.type == VisionItemType.quote.name)
-        .length;
-    if (isGuest && count >= 2) {
-      _showPremiumAuthSheet(context);
-      return;
-    }
     final transform = ref.read(canvasStateProvider).viewportTransform;
     final size = MediaQuery.of(context).size;
     final canvasCenter = _toCanvasCoordinates(

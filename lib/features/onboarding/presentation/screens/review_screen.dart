@@ -165,7 +165,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen>
                         children: [
                           Icon(
                             Icons.auto_awesome_rounded,
-                            color: context.colors.accentBlue,
+                            color: AppColors.accentBlue,
                             size: 20,
                           ),
                           const SizedBox(width: 12),

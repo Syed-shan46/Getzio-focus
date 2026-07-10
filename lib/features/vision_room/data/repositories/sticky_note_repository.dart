@@ -1,27 +1,21 @@
-import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/sticky_note.dart';
 import '../datasources/sticky_note_remote_datasource.dart';
+import '../../../../core/storage/sync_manager.dart';
 
 class StickyNoteRepository {
   final StickyNoteRemoteDataSource remoteDataSource;
+  final Ref? _ref;
   
-  StickyNoteRepository({required this.remoteDataSource});
+  StickyNoteRepository({required this.remoteDataSource, Ref? ref}) : _ref = ref;
 
   // Determines which box to use based on authentication
   Future<Box<StickyNote>> _getBox(String? userId) async {
-    if (userId == null || userId.isEmpty) {
-      if (!Hive.isBoxOpen('guest_sticky_notes')) {
-        await Hive.openBox<StickyNote>('guest_sticky_notes');
-      }
-      return Hive.box<StickyNote>('guest_sticky_notes');
-    } else {
-      final boxName = 'sticky_notes_$userId';
-      if (!Hive.isBoxOpen(boxName)) {
-        await Hive.openBox<StickyNote>(boxName);
-      }
-      return Hive.box<StickyNote>(boxName);
+    if (!Hive.isBoxOpen('sticky_notes')) {
+      await Hive.openBox<StickyNote>('sticky_notes');
     }
+    return Hive.box<StickyNote>('sticky_notes');
   }
 
   Future<void> _queueSyncAction(String action, StickyNote note) async {
@@ -175,7 +169,14 @@ class StickyNoteRepository {
         // Queue for offline sync
         note.pendingSync = true;
         await box.put(note.id, note);
-        await _queueSyncAction('CREATE', note);
+        if (_ref != null) {
+          await _ref!.read(syncQueueServiceProvider).queueAction(
+            collection: 'sticky_notes',
+            operation: 'create',
+            documentId: note.id,
+            payload: note.toJson(),
+          );
+        }
       }
     }
   }
@@ -191,7 +192,14 @@ class StickyNoteRepository {
       } catch (e) {
         note.pendingSync = true;
         await box.put(note.id, note);
-        await _queueSyncAction('UPDATE', note);
+        if (_ref != null) {
+          await _ref!.read(syncQueueServiceProvider).queueAction(
+            collection: 'sticky_notes',
+            operation: 'update',
+            documentId: note.id,
+            payload: note.toJson(),
+          );
+        }
       }
     }
   }
@@ -208,8 +216,12 @@ class StickyNoteRepository {
       try {
         await remoteDataSource.deleteStickyNote(id);
       } catch (e) {
-        if (note != null) {
-          await _queueSyncAction('DELETE', note);
+        if (note != null && _ref != null) {
+          await _ref!.read(syncQueueServiceProvider).queueAction(
+            collection: 'sticky_notes',
+            operation: 'delete',
+            documentId: id,
+          );
         }
       }
     }

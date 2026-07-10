@@ -414,14 +414,10 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
       return;
     }
 
-    // Lock all other modules behind "Coming Soon" premium previews
-    PremiumPreviewOverlay.show(
-      context: context,
-      featureId: module,
-      onContinue: () {
-        // Just close and do nothing
-      },
-    );
+    setState(() {
+      _activeModule = module;
+    });
+    _expandController.forward();
   }
 
   void _closeModule() {

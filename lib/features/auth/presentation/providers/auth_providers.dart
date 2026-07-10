@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../../core/storage/hive_database.dart';
 import '../../../../core/services/firebase_service.dart';
+import '../../../../core/storage/sync_manager.dart';
 import '../../../todo/presentation/providers/todo_providers.dart';
 import '../screens/otp_verification_screen.dart';
 import 'preview_mode_provider.dart';
@@ -401,7 +402,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
     }
   }
 
-  Future<void> logout() async {
+  Future<void> logout({bool keepLocalData = true}) async {
     state = const AsyncValue.loading();
     try {
       try {
@@ -414,20 +415,25 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
         await _hiveDb.clearUserAffirmationsCache(userId);
       }
 
-      // Reset the affirmations provider state
-      _ref.read(affirmationsProvider.notifier).clearAll();
+      if (!keepLocalData) {
+        // Reset the affirmations provider state
+        _ref.read(affirmationsProvider.notifier).clearAll();
 
-      // Clear all local Hive databases/boxes
-      await _hiveDb.clearAll();
+        // Clear all local Hive databases/boxes
+        await _hiveDb.clearAll();
 
-      // Clean up temporary files
-      try {
-        final cacheDir = await getTemporaryDirectory();
-        if (cacheDir.existsSync()) {
-          cacheDir.deleteSync(recursive: true);
+        // Clean up temporary files
+        try {
+          final cacheDir = await getTemporaryDirectory();
+          if (cacheDir.existsSync()) {
+            cacheDir.deleteSync(recursive: true);
+          }
+        } catch (e) {
+          log('[Auth] Error clearing temp files: $e');
         }
-      } catch (e) {
-        log('[Auth] Error clearing temp files: $e');
+      } else {
+        // Just clear auth credentials and switch to guest mode, preserving local data
+        await _hiveDb.clearAuth();
       }
 
       // Invalidate/reset all core Riverpod providers in a microtask to avoid modifies during build cycles
@@ -439,6 +445,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
         _ref.invalidate(previewModeProvider);
         _ref.invalidate(dailyMotivationProvider);
         _ref.invalidate(tasksProvider);
+        // Also invalidate sync queue provider
+        _ref.invalidate(syncQueueServiceProvider);
+        _ref.read(pendingSyncCountProvider.notifier).state = 0;
       });
       
       state = const AsyncValue.data(null);

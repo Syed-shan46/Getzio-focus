@@ -18,6 +18,7 @@ class VisionCreationSheet extends StatelessWidget {
   final VoidCallback onAddText;
   final VoidCallback onEnterEditMode;
   final VoidCallback onExitRoom;
+  final ScrollController? scrollController;
 
   const VisionCreationSheet({
     super.key,
@@ -33,6 +34,7 @@ class VisionCreationSheet extends StatelessWidget {
     required this.onAddText,
     required this.onEnterEditMode,
     required this.onExitRoom,
+    this.scrollController,
   });
 
   static void show(
@@ -55,63 +57,60 @@ class VisionCreationSheet extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       barrierColor: Colors.black.withValues(alpha: 0.4),
-      transitionAnimationController: AnimationController(
-        vsync: Navigator.of(context),
-        duration: const Duration(milliseconds: 500),
-      )..drive(CurveTween(curve: Curves.easeOutBack)),
-      builder: (context) => VisionCreationSheet(
-        onAddImage: onAddImage,
-        onAddStickyNote: onAddStickyNote,
-        onAddQuote: onAddQuote,
-        onAddGoal: onAddGoal,
-        onAddPlan: onAddPlan,
-        onAddTask: onAddTask,
-        onAddCountdown: onAddCountdown,
-        onAddFinance: onAddFinance,
-        onAddFrame: onAddFrame,
-        onAddText: onAddText,
-        onEnterEditMode: onEnterEditMode,
-        onExitRoom: onExitRoom,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.76,
+        minChildSize: 0.60,
+        maxChildSize: 0.95,
+        expand: true,
+        builder: (context, scrollController) => VisionCreationSheet(
+          onAddImage: onAddImage,
+          onAddStickyNote: onAddStickyNote,
+          onAddQuote: onAddQuote,
+          onAddGoal: onAddGoal,
+          onAddPlan: onAddPlan,
+          onAddTask: onAddTask,
+          onAddCountdown: onAddCountdown,
+          onAddFinance: onAddFinance,
+          onAddFrame: onAddFrame,
+          onAddText: onAddText,
+          onEnterEditMode: onEnterEditMode,
+          onExitRoom: onExitRoom,
+          scrollController: scrollController,
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
       child: Container(
-        height: screenHeight * 0.76,
         decoration: const BoxDecoration(
           color: Color(0xFF0F172A),
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
-        child: Column(
+        child: ListView(
+          controller: scrollController,
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
           children: [
-            // Handle bar
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 16, bottom: 8),
-                width: 48,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(10),
+              // Handle bar
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 16, bottom: 16),
+                  width: 48,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
-            ),
-
-            // Content
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
                     // Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -224,10 +223,6 @@ class VisionCreationSheet extends StatelessWidget {
                     // Exit Room Card
                     _ExitRoomCard(onTap: () => _exitRoom(context)),
                   ],
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

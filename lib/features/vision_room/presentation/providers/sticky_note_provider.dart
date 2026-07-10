@@ -9,7 +9,7 @@ import '../../../../shared/providers/app_providers.dart';
 final stickyNoteRepositoryProvider = Provider<StickyNoteRepository>((ref) {
   final dio = ref.watch(dioClientProvider).dio;
   final remoteDataSource = StickyNoteRemoteDataSource(dio: dio);
-  return StickyNoteRepository(remoteDataSource: remoteDataSource);
+  return StickyNoteRepository(remoteDataSource: remoteDataSource, ref: ref);
 });
 
 // Provides the list of sticky notes based on the current user

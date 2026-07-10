@@ -11,6 +11,7 @@ class VisionCustomizationSheet {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (_) => const _CustomizationSheetContent(),
     );
   }

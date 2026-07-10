@@ -106,7 +106,12 @@ class _GoalBuilderModalState extends ConsumerState<GoalBuilderModal> {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
       child: Container(
-        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          24,
+          24,
+          24 + bottomInset + MediaQuery.of(context).padding.bottom,
+        ),
         decoration: BoxDecoration(
           color: context.colors.bg2.withValues(alpha: 0.95),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),

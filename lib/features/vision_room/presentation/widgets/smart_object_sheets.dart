@@ -47,6 +47,7 @@ class StickyNoteSmartSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) => StickyNoteSmartSheet(item: item),
     );
@@ -77,18 +78,11 @@ class _StickyNoteSmartSheetState extends ConsumerState<StickyNoteSmartSheet> {
         _draggedProgress!.round() != originalProgress.round();
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.40,
+      height: MediaQuery.of(context).size.height * 0.60,
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.92),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.12), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.textPrimary.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -317,6 +311,7 @@ class TaskSmartSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) => TaskSmartSheet(item: item),
     );
@@ -376,18 +371,11 @@ class _TaskSmartSheetState extends ConsumerState<TaskSmartSheet> {
     final accentColor = const Color(0xFFEF4444); // Red/coral task accent
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.40,
+      height: MediaQuery.of(context).size.height * 0.60,
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(color: context.colors.glassBorder, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.textPrimary.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -687,6 +675,7 @@ class FinanceGoalSmartSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       barrierColor: Colors.black.withValues(alpha: 0.8),
       builder: (context) => FinanceGoalSmartSheet(item: item),
     );
@@ -762,18 +751,11 @@ class _FinanceGoalSmartSheetState extends ConsumerState<FinanceGoalSmartSheet> {
     final goldColor = const Color(0xFFD4AF37);
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.40,
+      height: MediaQuery.of(context).size.height * 0.60,
       decoration: BoxDecoration(
         color: context.colors.bg2,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.textPrimary.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
       ),
       child: Stack(
         children: [
@@ -1352,6 +1334,7 @@ class CountdownSmartSheet extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) => CountdownSmartSheet(item: item),
     );
@@ -1463,6 +1446,7 @@ class QuoteSmartSheet extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) => QuoteSmartSheet(item: item),
     );
@@ -1479,17 +1463,10 @@ class QuoteSmartSheet extends ConsumerWidget {
     final author = metadata['author'] as String? ?? 'Anonymous';
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.40,
+      height: MediaQuery.of(context).size.height * 0.30,
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.textPrimary.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -1560,6 +1537,7 @@ class ImageSmartSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) => ImageSmartSheet(item: item),
     );
@@ -1663,18 +1641,11 @@ class _ImageSmartSheetState extends ConsumerState<ImageSmartSheet> {
     final caption = item.metadata?['caption'] as String? ?? '';
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.40,
+      height: MediaQuery.of(context).size.height * 0.60,
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(color: context.colors.glassBorder, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.textPrimary.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),

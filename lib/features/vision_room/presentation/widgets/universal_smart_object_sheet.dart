@@ -18,6 +18,7 @@ class UniversalSmartObjectSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       barrierColor: Colors.black.withValues(alpha: 0.5),
       builder: (context) => UniversalSmartObjectSheet(item: item),
     );
@@ -96,7 +97,7 @@ class _UniversalSmartObjectSheetState
     final progressRatio = currentItem.smartProgress;
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.40,
+      height: MediaQuery.of(context).size.height * 0.60,
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.88),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -104,18 +105,6 @@ class _UniversalSmartObjectSheetState
           color: context.colors.glassBorder,
           width: 1.5,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.textPrimary.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-          BoxShadow(
-            color: context.colors.textPrimary.withValues(alpha: 0.15),
-            blurRadius: 30,
-            spreadRadius: 10,
-          ),
-        ],
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),

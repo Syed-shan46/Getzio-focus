@@ -265,12 +265,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
               right: 20,
               child: GestureDetector(
                 onTap: () {
-                  final isGuest = ref.read(authProvider).valueOrNull == null;
-                  if (isGuest) {
-                    PremiumAuthSheet.show(context);
-                  } else {
-                    AffirmationBottomSheet.show(context);
-                  }
+                  AffirmationBottomSheet.show(context);
                 },
                 child: Container(
                   width: 56,

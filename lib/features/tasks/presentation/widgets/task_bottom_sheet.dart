@@ -38,7 +38,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
   String? _subtaskDueTime;
   bool _subtaskReminder = true;
 
-  bool get _isReadOnly => ref.read(hiveDatabaseProvider).getAuthToken() == null;
+  bool get _isReadOnly => false;
 
   final List<String> _defaultCategories = [
     'Personal',

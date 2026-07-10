@@ -8,9 +8,6 @@ import '../../domain/models/sticky_note.dart';
 import '../providers/sticky_note_provider.dart';
 import '../providers/vision_room_providers.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
-import '../../../auth/presentation/providers/preview_mode_provider.dart';
-import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
-import '../../../auth/presentation/widgets/start_workspace_sheet.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class StickyNoteBottomSheet extends ConsumerStatefulWidget {
@@ -23,6 +20,7 @@ class StickyNoteBottomSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (context) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -84,26 +82,7 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
     if (_titleController.text.trim().isEmpty) return;
 
     final authState = ref.read(authProvider);
-    final isGuest = authState.value == null;
     final userId = authState.value?.id ?? '';
-    final isPreviewMode = ref.read(previewModeProvider);
-
-    if (widget.existingNote == null) {
-      if (isPreviewMode) {
-        Navigator.pop(context);
-        StartWorkspaceSheet.show(context);
-        return;
-      }
-
-      if (isGuest) {
-        final currentNotes = ref.read(stickyNotesProvider);
-        if (currentNotes.length >= 1) {
-          Navigator.pop(context);
-          PremiumAuthSheet.show(context);
-          return;
-        }
-      }
-    }
 
     final savedCategory = _category;
 
@@ -153,12 +132,13 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
     final activeColor = const Color(0xFF6366F1); // Indigo premium accent
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      height: MediaQuery.of(context).size.height * 0.60,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.96),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: context.colors.textPrimary.withValues(alpha: 0.08),
           width: 1.5,
         ),
       ),
@@ -169,15 +149,16 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
           children: [
             Center(
               child: Container(
+                margin: const EdgeInsets.only(top: 4, bottom: 8),
                 width: 44,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.white30,
+                  color: context.colors.textPrimary.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
 
             // Header Title
             Row(
@@ -187,9 +168,9 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                   widget.existingNote == null
                       ? 'CREATE STICKY NOTE'
                       : 'EDIT STICKY NOTE',
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 10,
+                  style: TextStyle(
+                    color: context.colors.textMuted,
+                    fontSize: 9,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.2,
                   ),
@@ -197,81 +178,81 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                 IconButton(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.close,
-                    color: Colors.white38,
-                    size: 18,
+                    color: context.colors.textMuted,
+                    size: 16,
                   ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
             // Title Input
             TextField(
               controller: _titleController,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
+              style: TextStyle(
+                color: context.colors.textPrimary,
+                fontSize: 17,
                 fontWeight: FontWeight.bold,
               ),
               decoration: InputDecoration(
                 hintText: 'Enter note title...',
                 hintStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.25),
+                  color: context.colors.textPrimary.withValues(alpha: 0.25),
                 ),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
 
             // Description Input
             TextField(
               controller: _descController,
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
-              maxLines: 3,
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
+              maxLines: 2,
               decoration: InputDecoration(
                 hintText: 'Add description / checklist items...',
                 hintStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.25),
+                  color: context.colors.textPrimary.withValues(alpha: 0.25),
                 ),
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.02),
-                contentPadding: const EdgeInsets.all(14),
+                fillColor: context.colors.textPrimary.withValues(alpha: 0.02),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: context.colors.textPrimary.withValues(alpha: 0.05),
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: context.colors.textPrimary.withValues(alpha: 0.05),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: activeColor),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
 
             // Color Selector Row
-            const Text(
+            Text(
               'Select Note Color',
               style: TextStyle(
-                color: Colors.white70,
-                fontSize: 13,
+                color: context.colors.textSecondary,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             SizedBox(
-              height: 40,
+              height: 32,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: _noteColors.map((hexColor) {
@@ -282,21 +263,21 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                       setState(() => _selectedColor = hexColor);
                     },
                     child: Container(
-                      width: 38,
-                      height: 38,
+                      width: 30,
+                      height: 30,
                       decoration: BoxDecoration(
                         color: parsedColor,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? Colors.white : Colors.transparent,
-                          width: 2.5,
+                          color: isSelected ? context.colors.textPrimary : Colors.transparent,
+                          width: 2.0,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
                                   color: parsedColor.withValues(alpha: 0.6),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 1),
                                 )
                               ]
                             : null,
@@ -306,7 +287,7 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                               child: Icon(
                                 Icons.check,
                                 color: Colors.black54,
-                                size: 18,
+                                size: 14,
                               ),
                             )
                           : null,
@@ -315,26 +296,26 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                 }).toList(),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
 
             // Progress Slider Block
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.02),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                color: context.colors.textPrimary.withValues(alpha: 0.02),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.05)),
               ),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Progress',
                         style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
+                          color: context.colors.textSecondary,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -342,29 +323,29 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                         '${_progress.toInt()}%',
                         style: TextStyle(
                           color: activeColor,
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   SliderTheme(
                     data: SliderThemeData(
                       activeTrackColor: activeColor,
-                      inactiveTrackColor: Colors.white.withValues(alpha: 0.06),
-                      thumbColor: Colors.white,
+                      inactiveTrackColor: context.colors.textPrimary.withValues(alpha: 0.06),
+                      thumbColor: context.colors.textPrimary,
                       overlayColor: activeColor.withValues(alpha: 0.2),
-                      trackHeight: 4.0,
+                      trackHeight: 3.0,
                       thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 7.0,
+                        enabledThumbRadius: 5.0,
                       ),
                       overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 14.0,
+                        overlayRadius: 10.0,
                       ),
                     ),
                     child: SizedBox(
-                      height: 20,
+                      height: 16,
                       child: Slider(
                         value: _progress,
                         min: 0,
@@ -376,7 +357,7 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
 
             // Priority & Category Dropdowns
             Row(
@@ -384,95 +365,107 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     initialValue: _priority,
-                    dropdownColor: const Color(0xFF0F172A),
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    dropdownColor: context.colors.bg2,
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 12),
                     decoration: InputDecoration(
                       labelText: 'Priority',
-                      labelStyle: const TextStyle(
-                        color: Colors.white38,
-                        fontSize: 12,
+                      labelStyle: TextStyle(
+                        color: context.colors.textMuted,
+                        fontSize: 11,
                       ),
                       filled: true,
-                      fillColor: Colors.white.withValues(alpha: 0.02),
+                      fillColor: context.colors.textPrimary.withValues(alpha: 0.02),
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                        horizontal: 12,
+                        vertical: 8,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: context.colors.textPrimary.withValues(alpha: 0.05),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: context.colors.textPrimary.withValues(alpha: 0.05),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: activeColor),
                       ),
                     ),
                     items: ['Low', 'Medium', 'High']
-                        .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                        .map((p) => DropdownMenuItem(
+                              value: p,
+                              child: Text(
+                                p,
+                                style: TextStyle(color: context.colors.textPrimary),
+                              ),
+                            ))
                         .toList(),
                     onChanged: (val) => setState(() => _priority = val!),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     initialValue: _category,
-                    dropdownColor: const Color(0xFF0F172A),
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    dropdownColor: context.colors.bg2,
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 12),
                     decoration: InputDecoration(
                       labelText: 'Category',
-                      labelStyle: const TextStyle(
-                        color: Colors.white38,
-                        fontSize: 12,
+                      labelStyle: TextStyle(
+                        color: context.colors.textMuted,
+                        fontSize: 11,
                       ),
                       filled: true,
-                      fillColor: Colors.white.withValues(alpha: 0.02),
+                      fillColor: context.colors.textPrimary.withValues(alpha: 0.02),
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                        horizontal: 12,
+                        vertical: 8,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: context.colors.textPrimary.withValues(alpha: 0.05),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: context.colors.textPrimary.withValues(alpha: 0.05),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: activeColor),
                       ),
                     ),
                     items: ['Personal', 'Work', 'Health', 'Study', 'Business']
-                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                        .map((c) => DropdownMenuItem(
+                              value: c,
+                              child: Text(
+                                c,
+                                style: TextStyle(color: context.colors.textPrimary),
+                              ),
+                            ))
                         .toList(),
                     onChanged: (val) => setState(() => _category = val!),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
 
             // Due Date Row
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.02),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                color: context.colors.textPrimary.withValues(alpha: 0.02),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.colors.textPrimary.withValues(alpha: 0.05)),
               ),
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -480,13 +473,13 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                 leading: Icon(
                   Icons.calendar_today_rounded,
                   color: activeColor,
-                  size: 18,
+                  size: 16,
                 ),
-                title: const Text(
+                title: Text(
                   'Due Date',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
+                    color: context.colors.textPrimary,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -494,13 +487,13 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                   _dueDate != null
                       ? '${_dueDate!.toLocal()}'.split(' ')[0]
                       : 'No Due Date Set',
-                  style: const TextStyle(color: Colors.white38, fontSize: 12),
+                  style: TextStyle(color: context.colors.textMuted, fontSize: 11),
                 ),
                 trailing: IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.arrow_forward_ios_rounded,
-                    color: Colors.white24,
-                    size: 14,
+                    color: context.colors.textMuted,
+                    size: 12,
                   ),
                   onPressed: () async {
                     final date = await showDatePicker(
@@ -509,14 +502,22 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                       firstDate: DateTime(2000),
                       lastDate: DateTime(2100),
                       builder: (context, child) {
+                        final isDark = Theme.of(context).brightness == Brightness.dark;
                         return Theme(
                           data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.dark(
-                              primary: activeColor,
-                              onPrimary: Colors.black,
-                              surface: const Color(0xFF0F172A),
-                              onSurface: Colors.white,
-                            ),
+                            colorScheme: isDark
+                                ? ColorScheme.dark(
+                                    primary: activeColor,
+                                    onPrimary: Colors.black,
+                                    surface: context.colors.bg2,
+                                    onSurface: context.colors.textPrimary,
+                                  )
+                                : ColorScheme.light(
+                                    primary: activeColor,
+                                    onPrimary: Colors.white,
+                                    surface: context.colors.bg2,
+                                    onSurface: context.colors.textPrimary,
+                                  ),
                           ),
                           child: child!,
                         );
@@ -527,9 +528,7 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Add to Wooden Shelf Switch Row
+            const SizedBox(height: 12),
 
             // Save Button
             ElevatedButton(
@@ -537,16 +536,16 @@ class _StickyNoteBottomSheetState extends ConsumerState<StickyNoteBottomSheet> {
                 backgroundColor: activeColor,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                minimumSize: const Size.fromHeight(50),
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                minimumSize: const Size.fromHeight(42),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
               onPressed: _save,
               child: const Text(
                 'Save Note',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 8),

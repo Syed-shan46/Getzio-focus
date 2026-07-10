@@ -4,7 +4,7 @@ import '../../core/storage/hive_database.dart';
 
 class SampleDataSeedingService {
   static const String _logTag = '[SampleDataSeeding]';
-  static const int currentVersion = 2;
+  static const int currentVersion = 3;
 
   /// Seeds all premium sample data to Hive database for a beautiful first-time experience.
   static Future<void> seedAll(HiveDatabase hiveDb) async {
@@ -311,163 +311,24 @@ class SampleDataSeedingService {
     };
 
     await hiveDb.saveVisionItems([
-      // Column 1 (Left side)
-      {
-        'id': 'vis_item_1',
-        'type': 'stickyNote',
-        'content': 'Focus on daily consistency. Tiny steps lead to massive gains over time. ✨',
-        'x': -340.0,
-        'y': -220.0,
-        'width': 180.0,
-        'height': 160.0,
-        'rotation': -0.05,
-        'colorValue': 0xFF1D4ED8, // Rich Blue
-        'isPinned': true,
-        'zIndex': 1,
-        'attachmentType': 'pin',
-        'attachmentStyle': 'redPin',
-        'materialStyle': 'default',
-        'metadata': visionMeta,
-      },
-      {
-        'id': 'vis_item_2',
-        'type': 'countdown',
-        'content': 'MVP Product Launch',
-        'x': -340.0,
-        'y': 20.0,
-        'width': 180.0,
-        'height': 110.0,
-        'rotation': 0.02,
-        'colorValue': 0xFF7C2D12, // Warm Terracotta
-        'isPinned': false,
-        'zIndex': 2,
-        'attachmentType': 'pin',
-        'attachmentStyle': 'redPin',
-        'materialStyle': 'default',
-        'countdownDate': now.add(const Duration(days: 30)).toIso8601String(),
-        'metadata': visionMeta,
-      },
-
-      // Column 2 (Center side)
-      {
-        'id': 'vis_item_3',
-        'type': 'image',
-        'content': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=80',
-        'x': -100.0,
-        'y': -240.0,
-        'width': 220.0,
-        'height': 170.0,
-        'rotation': 0.03,
-        'colorValue': 0xFF1E1B4B,
-        'isPinned': false,
-        'zIndex': 3,
-        'attachmentType': 'tape',
-        'attachmentStyle': 'beige',
-        'materialStyle': 'polaroid',
-        'metadata': visionMeta,
-      },
-      {
-        'id': 'vis_item_4',
-        'type': 'quote',
-        'content': '"The secret of your future is hidden in your daily routine."',
-        'x': -100.0,
-        'y': -10.0,
-        'width': 220.0,
-        'height': 130.0,
-        'rotation': -0.02,
-        'colorValue': 0xFF0F172A,
-        'isPinned': true,
-        'zIndex': 4,
-        'attachmentType': 'pin',
-        'attachmentStyle': 'redPin',
-        'materialStyle': 'kraft',
-        'metadata': {
-          ...visionMeta,
-          'author': 'Mike Murdock',
-        },
-      },
-      {
-        'id': 'vis_item_5',
-        'type': 'financeGoal',
-        'content': 'Emergency Fund Goal',
-        'x': -100.0,
-        'y': 170.0,
-        'width': 220.0,
-        'height': 100.0,
-        'rotation': 0.04,
-        'colorValue': 0xFF065F46, // Deep Emerald
-        'isPinned': false,
-        'zIndex': 5,
-        'attachmentType': 'tape',
-        'attachmentStyle': 'beige',
-        'materialStyle': 'default',
-        'metadata': {
-          ...visionMeta,
-          'monthlyAmount': '1500',
-          'targetAmount': '10000',
-        },
-      },
-
-      // Column 3 (Right side)
-      {
-        'id': 'vis_item_6',
-        'type': 'goal',
-        'content': 'Launch Side Hustle MVP',
-        'x': 180.0,
-        'y': -220.0,
-        'width': 200.0,
-        'height': 130.0,
-        'rotation': -0.04,
-        'colorValue': 0xFF0F172A,
-        'isPinned': false,
-        'zIndex': 6,
-        'attachmentType': 'pin',
-        'attachmentStyle': 'redPin',
-        'materialStyle': 'default',
-        'secondaryContent': 'Productivity',
-        'metadata': {
-          ...visionMeta,
-          'targetDate': now.add(const Duration(days: 30)).toIso8601String(),
-          'category': 'Productivity',
-        },
-      },
-      {
-        'id': 'vis_item_7',
-        'type': 'affirmation',
-        'content': 'I build the future I deserve through bold execution today.',
-        'x': 180.0,
-        'y': -40.0,
-        'width': 200.0,
-        'height': 120.0,
-        'rotation': 0.02,
-        'colorValue': 0xFF5B21B6, // Deep Royal Purple
-        'isPinned': false,
-        'zIndex': 7,
-        'attachmentType': 'tape',
-        'attachmentStyle': 'beige',
-        'materialStyle': 'default',
-        'metadata': {
-          ...visionMeta,
-          'category': 'Growth',
-        },
-      },
-      {
-        'id': 'vis_item_8',
-        'type': 'task',
-        'content': 'Write Landing Page Script',
-        'x': 180.0,
-        'y': 130.0,
-        'width': 200.0,
-        'height': 140.0,
-        'rotation': -0.03,
-        'colorValue': 0xFF0F172A,
-        'isPinned': true,
-        'zIndex': 8,
-        'attachmentType': 'pin',
-        'attachmentStyle': 'redPin',
-        'materialStyle': 'default',
-        'metadata': visionMeta,
-      }
+{'id': '14393812-96a0-467f-ac72-715425daa015', 'type': 'quote', 'content': 'Dream boldly, act consistently, and let your progress tell the story', 'x': 15.125000000000036, 'y': 444.4583333333335, 'width': 105.12311336904096, 'height': 60.07035049659484, 'rotation': -0.016384742596967747, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 19, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-05T18:12:25.751856', 'scale': 1.0, 'opacity': 1.0, 'quote': 'Dream boldly, act consistently, and let your progress tell the story', 'author': 'Getzio', 'style': 'Dark Luxury', 'font': '{"isOnShelf":false,"createdAt":"2026-07-05T18:12:25.751856","scale":1.0,"opacity":1.0,"quote":"Dream boldly, act consistently, and let your progress tell the story","author":"Getzio","style":"Dark Luxury","font":"{\\"isOnShelf\\":false,\\"createdAt\\":\\"2026-07-05T18:12:25.751856\\",\\"scale\\":1.0,\\"opacity\\":1.0,\\"quote\\":\\"Dream boldly, act consistently, and let your progress tell the story\\",\\"author\\":\\"Getzio\\",\\"style\\":\\"Dark Luxury\\"}","monthlyAmount":"","description":"","motivation":"","syncStatus":"synced","lastSyncedAt":"2026-07-05T18:55:12.330716"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.217929'}},
+{'id': '3459e2dc-41c2-46c8-b612-cf6d803e27e8', 'type': 'task', 'content': 'Plan My Next Adventure', 'x': 211.6666666666667, 'y': 661.375, 'width': 72.12176994553303, 'height': 93.75830092919294, 'rotation': 0.013641484964018735, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 21, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-05T18:12:25.751918', 'scale': 1.0, 'opacity': 1.0, 'title': 'Plan My Next Adventure', 'priority': 'Medium', 'progress': 10.0, 'dueDate': '2026-07-31T00:00:00.000', 'checklist': [{'id': '1783252653138_0', 'title': 'Choose destination', 'isCompleted': false}, {'id': '1783252653138_1', 'title': 'Estimate budget', 'isCompleted': false}, {'id': '1783252653138_2', 'title': 'Create countdown', 'isCompleted': false}, {'id': '1783252653138_3', 'title': 'Save inspiration photos', 'isCompleted': false}], 'font': '{"isOnShelf":false,"createdAt":"2026-07-05T18:12:25.751918","scale":1.0,"opacity":1.0,"title":"Plan My Next Adventure","priority":"Medium","progress":10.0,"dueDate":"2026-07-31T00:00:00.000","checklist":[{"id":"1783252653138_0","title":"Choose destination","isCompleted":false},{"id":"1783252653138_1","title":"Estimate budget","isCompleted":false},{"id":"1783252653138_2","title":"Create countdown","isCompleted":false},{"id":"1783252653138_3","title":"Save inspiration photos","isCompleted":false}],"font":"{\\"isOnShelf\\":false,\\"createdAt\\":\\"2026-07-05T18:12:25.751918\\",\\"scale\\":1.0,\\"opacity\\":1.0,\\"title\\":\\"Plan My Next Adventure\\",\\"priority\\":\\"Medium\\",\\"progress\\":10.0,\\"dueDate\\":\\"2026-07-31T00:00:00.000\\",\\"checklist\\":[{\\"id\\":\\"1783252653138_0\\",\\"title\\":\\"Choose destination\\",\\"isCompleted\\":false},{\\"id\\":\\"1783252653138_1\\",\\"title\\":\\"Estimate budget\\",\\"isCompleted\\":false},{\\"id\\":\\"1783252653138_2\\",\\"title\\":\\"Create countdown\\",\\"isCompleted\\":false},{\\"id\\":\\"1783252653138_3\\",\\"title\\":\\"Save inspiration photos\\",\\"isCompleted\\":false}]}","monthlyAmount":"","description":"","motivation":"","syncStatus":"synced","lastSyncedAt":"2026-07-05T18:55:12.331022"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.218184'}},
+{'id': '55dbfe5e-b561-4699-bce0-daed4c52dfd5', 'type': 'goal', 'content': 'Turn Dreams Into Goals', 'x': 120.83333333333312, 'y': 45.06250000000064, 'width': 155.72724154240066, 'height': 103.8181610282671, 'rotation': -6.297387864790242, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 7, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-04T15:50:01.643429', 'scale': 1.0, 'opacity': 1.0, 'title': 'Turn Dreams Into Goals', 'description': 'Create meaningful goals with milestones, priorities, due dates, and visual progress—all in one inspiring workspace.', 'progress': 40.0, 'dueDate': '2026-07-31T00:00:00.000', 'priority': 'High', 'color': 4285132974, 'font': '{"isOnShelf":false,"createdAt":"2026-07-04T15:50:01.643429","scale":1.0,"opacity":1.0,"title":"Turn Dreams Into Goals","description":"Create meaningful goals with milestones, priorities, due dates, and visual progress—all in one inspiring workspace.","progress":40.0,"dueDate":"2026-07-31T00:00:00.000","priority":"High","color":4285132974}', 'monthlyAmount': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.214765'}},
+{'id': '55f235b3-23e8-4af1-87ac-16273e5650b5', 'type': 'image', 'content': 'https://res.cloudinary.com/dkiizrpqr/image/upload/v1783158787/focus_vision_board/dnxjsudr1pzfjpnhhz9j.jpg', 'x': 8.354166666666671, 'y': 334.7187499999999, 'width': 100.18467135636304, 'height': 100.18467135636304, 'rotation': -0.0102799161016967, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': '2026-07-31T00:00:00.000Z', 'secondaryContent': null, 'zIndex': 1, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-04T15:50:01.643249', 'scale': 1.0, 'opacity': 1.0, 'progress': 52.0, 'caption': 'Dream House', 'emoji': 'heart', 'font': '{"isOnShelf":false,"createdAt":"2026-07-04T15:50:01.643249","scale":1.0,"opacity":1.0,"progress":52.0,"caption":"Dream House","emoji":"heart"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.213778'}},
+{'id': '632d6e85-e82e-48f4-9701-ad6fdfaa1d02', 'type': 'quote', 'content': 'Every completed task is another promise you\'ve kept to yourself."', 'x': 126.25000000000003, 'y': 569.0625, 'width': 129.39061025139188, 'height': 73.93749157222392, 'rotation': -0.006838806977499057, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 20, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-05T18:12:25.751886', 'scale': 1.0, 'opacity': 1.0, 'quote': 'Every completed task is another promise you\'ve kept to yourself."', 'author': 'Getzio', 'style': 'Neon', 'font': '{"isOnShelf":false,"createdAt":"2026-07-05T18:12:25.751886","scale":1.0,"opacity":1.0,"quote":"Every completed task is another promise you\'ve kept to yourself.\\"","author":"Getzio","style":"Neon"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.217989'}},
+{'id': '8338a5e3-6999-4b2c-98bd-43d9b358b479', 'type': 'task', 'content': 'Build My Vision Room', 'x': 17.416666666666607, 'y': 41.45833333333344, 'width': 83.60374480329399, 'height': 108.6848682442822, 'rotation': -0.027139915851516302, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 17, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-05T18:12:25.751745', 'scale': 1.0, 'opacity': 1.0, 'title': 'Build My Vision Room', 'priority': 'Medium', 'progress': 40.0, 'dueDate': null, 'checklist': [{'id': '1783250139636_0', 'title': 'Add dream house', 'isCompleted': false}, {'id': '1783250139636_1', 'title': 'Pin dream car', 'isCompleted': false}, {'id': '1783250139636_2', 'title': 'Add travel destination', 'isCompleted': false}, {'id': '1783250139636_3', 'title': 'Create motivationalquote', 'isCompleted': false}, {'id': '1783250139636_4', 'title': 'Arrange board layout', 'isCompleted': false}], 'font': '{"isOnShelf":false,"createdAt":"2026-07-05T18:12:25.751745","scale":1.0,"opacity":1.0,"title":"Build My Vision Room","priority":"Medium","progress":40.0,"dueDate":null,"checklist":[{"id":"1783250139636_0","title":"Add dream house","isCompleted":false},{"id":"1783250139636_1","title":"Pin dream car","isCompleted":false},{"id":"1783250139636_2","title":"Add travel destination","isCompleted":false},{"id":"1783250139636_3","title":"Create motivational quote","isCompleted":false},{"id":"1783250139636_4","title":"Arrange board layout","isCompleted":false}]}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.217668'}},
+{'id': '8aff44e5-37b7-443d-9127-b64f6c6a8be2', 'type': 'quote', 'content': 'Thank you for not giving up on the days when progress was invisible. That\'s why I\'m here', 'x': 224.6249999999999, 'y': 161.32291666666643, 'width': 135.78073513858376, 'height': 83.60902093533825, 'rotation': -0.029614621408659947, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 6, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-04T15:50:01.643373', 'scale': 1.0, 'opacity': 1.0, 'quote': 'Thank you for not giving up on the days when progress was invisible. That\'s why I\'m here', 'author': 'Future you', 'style': 'Typewriter', 'font': '{"isOnShelf":false,"createdAt":"2026-07-04T15:50:01.643373","scale":1.0,"opacity":1.0,"quote":"Thank you for not giving up on the days when progress was invisible. That\'s why I\'m here","author":"Future you","style":"Typewriter"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.214084'}},
+{'id': '8d645e44-03bb-414d-a11a-a91681ed12a8', 'type': 'image', 'content': 'https://res.cloudinary.com/dkiizrpqr/image/upload/v1783254589/focus_vision_board/o7mimjbhpfjeaahvo1vy.jpg', 'x': 260.91666666666663, 'y': 510.2499999999998, 'width': 93.13380471269619, 'height': 93.13380471269619, 'rotation': -0.00997683274794714, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 24, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-05T18:12:25.752084', 'scale': 1.0, 'opacity': 1.0, 'progress': 38.0, 'caption': 'Keep growing', 'emoji': 'heart', 'font': '{"isOnShelf":false,"createdAt":"2026-07-05T18:12:25.752084","scale":1.0,"opacity":1.0,"progress":38.0,"caption":"Keep growing","emoji":"heart","font":"{\\"isOnShelf\\":false,\\"createdAt\\":\\"2026-07-05T18:12:25.752084\\",\\"scale\\":1.0,\\"opacity\\":1.0,\\"progress\\":38.0,\\"caption\\":\\"Keep growing\\",\\"emoji\\":\\"heart\\"}","monthlyAmount":"","description":"","motivation":"","syncStatus":"synced","lastSyncedAt":"2026-07-05T18:55:12.331263"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.218471'}},
+{'id': '8f3aa04a-225a-4817-ba66-080e8414a078', 'type': 'countdown', 'content': '🏠 Move Into My Dream Home', 'x': 5.374999999999822, 'y': 339.29166666666646, 'width': 50.0, 'height': 50.0, 'rotation': 6.209836392180381, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': '2027-08-03T00:00:00.000Z', 'secondaryContent': null, 'zIndex': 11, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-04T16:54:18.608130', 'scale': 1.0, 'opacity': 1.0, 'title': '🏠 Move Into My Dream Home', 'days': 395, 'targetDate': '2027-08-03T00:00:00.000', 'font': '{"isOnShelf":false,"createdAt":"2026-07-04T16:54:18.608130","scale":1.0,"opacity":1.0,"title":"🏠 Move Into My Dream Home","days":395,"targetDate":"2027-08-03T00:00:00.000"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.217081'}},
+{'id': '989225ce-2374-4387-b79e-4c0ea1d0b1b0', 'type': 'image', 'content': 'https://res.cloudinary.com/dkiizrpqr/image/upload/v1783247472/focus_vision_board/xofnow3a6mwep0wsuzcw.jpg', 'x': 125.3541666666666, 'y': 163.39583333333297, 'width': 88.38603443114066, 'height': 88.38603443114066, 'rotation': -0.02761907251743506, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': '2027-07-12T00:00:00.000Z', 'secondaryContent': null, 'zIndex': 13, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-05T16:04:17.665222', 'scale': 1.0, 'opacity': 1.0, 'progress': 30.0, 'caption': 'Drive your dream', 'emoji': 'heart', 'font': '{"isOnShelf":false,"createdAt":"2026-07-05T16:04:17.665222","scale":1.0,"opacity":1.0,"progress":30.0,"caption":"Drive your dream","emoji":"heart"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.217258'}},
+{'id': '9f146ed7-c2a2-4409-9d78-c2f2d50cdfe0', 'type': 'image', 'content': 'https://res.cloudinary.com/dkiizrpqr/image/upload/v1783249606/focus_vision_board/eb8u4ojzyctsht4mbphw.jpg', 'x': 19.79166666666664, 'y': 238.53124999999994, 'width': 86.84498545017958, 'height': 86.84498545017958, 'rotation': -0.0258641309669001, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': '2026-09-30T00:00:00.000Z', 'secondaryContent': null, 'zIndex': 15, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-05T18:12:25.751656', 'scale': 1.0, 'opacity': 1.0, 'progress': 18.0, 'caption': 'Explore the word', 'emoji': 'globe', 'font': '{"isOnShelf":false,"createdAt":"2026-07-05T18:12:25.751656","scale":1.0,"opacity":1.0,"progress":18.0,"caption":"Explore the word","emoji":"globe"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.217437'}},
+{'id': 'ae7eb588-3ba3-42cf-a327-49a50884cd42', 'type': 'quote', 'content': 'Create beautiful quote cards with your favorite words, personal reflections, and memorable authors to inspire you every day.', 'x': 8.541666666666615, 'y': 166.00000000000003, 'width': 105.41664140557741, 'height': 60.238080803187096, 'rotation': -0.010914234486148422, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 2, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-04T15:50:01.643334', 'scale': 1.0, 'opacity': 1.0, 'quote': 'Create beautiful quote cards with your favorite words, personal reflections, and memorable authors to inspire you every day.', 'author': 'Getzio', 'style': 'Elegant Minimal', 'font': '{"isOnShelf":false,"createdAt":"2026-07-04T15:50:01.643334","scale":1.0,"opacity":1.0,"quote":"Create beautiful quote cards with your favorite words, personal reflections, and memorable authors to inspire you every day.","author":"Getzio","style":"Elegant Minimal"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.213989'}},
+{'id': 'af2c4b64-e7ca-4c76-8f83-2dd62324d903', 'type': 'image', 'content': 'https://res.cloudinary.com/dkiizrpqr/image/upload/v1783254490/focus_vision_board/nvlq148mgecnafwhfjzm.jpg', 'x': 125.35416666666671, 'y': 358.34374999999994, 'width': 137.65599917169124, 'height': 137.65599917169124, 'rotation': -0.007444767843179739, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 22, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-05T18:12:25.751961', 'scale': 1.0, 'opacity': 1.0, 'progress': 26.0, 'caption': 'Adventures await', 'emoji': 'globe', 'font': '{"isOnShelf":false,"createdAt":"2026-07-05T18:12:25.751961","scale":1.0,"opacity":1.0,"progress":26.0,"caption":"Adventures await","emoji":"globe","font":"{\\"isOnShelf\\":false,\\"createdAt\\":\\"2026-07-05T18:12:25.751961\\",\\"scale\\":1.0,\\"opacity\\":1.0,\\"progress\\":26.0,\\"caption\\":\\"Adventures await\\",\\"emoji\\":\\"globe\\"}","monthlyAmount":"","description":"","motivation":"","syncStatus":"synced","lastSyncedAt":"2026-07-05T18:55:12.331104"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.218285'}},
+{'id': 'c3bdc2cd-a083-4991-8c06-135fd2706855', 'type': 'financeGoal', 'content': 'Buy BMW S1000RR', 'x': 116.04166666666663, 'y': 261.2604166666664, 'width': 153.25278139451999, 'height': 87.5730179397257, 'rotation': -0.01127379734401501, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 16, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-05T18:12:25.751707', 'scale': 1.0, 'opacity': 1.0, 'title': 'Buy BMW S1000RR', 'amount': '2850000', 'targetAmount': 2850000.0, 'currentAmount': 712500.0, 'progress': 25.0, 'description': 'Every small investment today brings me closer to my dream ride', 'motivation': 'Owning the BMW S1000RR is a reward for my years of hard work and consistency. Every rupee I save reminds me that big dreams are achieved through disciplined daily actions.', 'monthlyAmount': '50,000', 'targetDate': '2027-12-31T00:00:00.000', 'font': '{"isOnShelf":false,"createdAt":"2026-07-05T18:12:25.751707","scale":1.0,"opacity":1.0,"title":"Buy BMW S1000RR","amount":"2850000","targetAmount":2850000.0,"currentAmount":712500.0,"progress":25.0,"description":"Every small investment today brings me closer to my dream ride","motivation":"Owning the BMW S1000RR is a reward for my years of hard work and consistency. Every rupee I save reminds me that big dreams are achieved through disciplined daily actions.","monthlyAmount":"50,000","targetDate":"2027-12-31T00:00:00.000"}', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.217554'}},
+{'id': 'c479449a-befe-4dc3-9274-55a6b69e6a55', 'type': 'quote', 'content': 'Your future is quietly built by the choices you make today.', 'x': 137.4375, 'y': 503.6458333333335, 'width': 92.15863205266469, 'height': 52.66207545866554, 'rotation': -0.007537309442717625, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 18, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-05T18:12:25.751820', 'scale': 1.0, 'opacity': 1.0, 'quote': 'Your future is quietly built by the choices you make today.', 'author': 'Future you', 'style': 'Elegant Minimal', 'font': '{"isOnShelf":false,"createdAt":"2026-07-05T18:12:25.751820","scale":1.0,"opacity":1.0,"quote":"Your future is quietly built by the choices you make today.","author":"Future you","style":"Elegant Minimal","font":"{\\"isOnShelf\\":false,\\"createdAt\\":\\"2026-07-05T18:12:25.751820\\",\\"scale\\":1.0,\\"opacity\\":1.0,\\"quote\\":\\"Your future is quietly built by the choices you make today.\\",\\"author\\":\\"Future you\\",\\"style\\":\\"Elegant Minimal\\"}","monthlyAmount":"","description":"","motivation":"","syncStatus":"synced","lastSyncedAt":"2026-07-05T18:55:12.330646"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.217822'}},
+{'id': 'c7c65057-a887-41af-b486-13265e270303', 'type': 'countdown', 'content': 'But A new Car', 'x': 212.08333333333343, 'y': 56.958333333333655, 'width': 50.0, 'height': 50.0, 'rotation': -0.02326271627596968, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': '2027-04-01T00:00:00.000Z', 'secondaryContent': null, 'zIndex': 14, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-05T16:04:17.665276', 'scale': 1.0, 'opacity': 1.0, 'title': 'But A new Car', 'days': 270, 'targetDate': '2027-04-01T00:00:00.000', 'font': '{"isOnShelf":false,"createdAt":"2026-07-05T16:04:17.665276","scale":1.0,"opacity":1.0,"title":"But A new Car","days":270,"targetDate":"2027-04-01T00:00:00.000"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.217358'}},
+{'id': 'c8bef7fa-163b-47eb-80e7-9fceeb4a6a82', 'type': 'image', 'content': 'https://res.cloudinary.com/dkiizrpqr/image/upload/v1783254559/focus_vision_board/c87cunuitcrtqn7ifwmi.jpg', 'x': 80.68749999999997, 'y': 661.2291666666671, 'width': 101.77350182623931, 'height': 101.77350182623931, 'rotation': -0.07485255767957213, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 23, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-05T18:12:25.751991', 'scale': 1.0, 'opacity': 1.0, 'progress': 24.0, 'caption': 'plan, Focus, Succeed', 'emoji': 'camera', 'font': '{"isOnShelf":false,"createdAt":"2026-07-05T18:12:25.751991","scale":1.0,"opacity":1.0,"progress":24.0,"caption":"plan, Focus, Succeed","emoji":"camera","font":"{\\"isOnShelf\\":false,\\"createdAt\\":\\"2026-07-05T18:12:25.751991\\",\\"scale\\":1.0,\\"opacity\\":1.0,\\"progress\\":24.0,\\"caption\\":\\"plan, Focus, Succeed\\",\\"emoji\\":\\"camera\\"}","monthlyAmount":"","description":"","motivation":"","syncStatus":"synced","lastSyncedAt":"2026-07-05T18:55:12.331177"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.218380'}},
+{'id': 'f758e47b-6c8d-44a7-8fa0-d7645e00ea78', 'type': 'task', 'content': 'Get Fit', 'x': 272.93750000000006, 'y': 334.6666666666665, 'width': 70.12787375220138, 'height': 91.1662358778618, 'rotation': -0.01762598472543836, 'colorValue': 4280163147, 'isPinned': false, 'emoji': null, 'countdownDate': null, 'secondaryContent': null, 'zIndex': 8, 'attachmentType': 'tape', 'attachmentStyle': 'beige', 'materialStyle': 'default', 'metadata': {'isOnShelf': false, 'createdAt': '2026-07-04T15:50:01.643481', 'scale': 1.0, 'opacity': 1.0, 'title': 'Get Fit', 'priority': 'High', 'progress': 38.0, 'dueDate': null, 'checklist': [{'id': '1783159822515_0', 'title': '✓ Morning Workout', 'isCompleted': true, 'completionDate': null}, {'id': '1783159822515_1', 'title': '⏳ Healthy Meal Plan', 'isCompleted': true, 'completionDate': null}, {'id': '1783159822515_2', 'title': '☐ Track Weekly Progress', 'isCompleted': false, 'completionDate': null}], 'font': '{"isOnShelf":false,"createdAt":"2026-07-04T15:50:01.643481","scale":1.0,"opacity":1.0,"title":"Get Fit","priority":"High","progress":38.0,"dueDate":null,"checklist":[{"id":"1783159822515_0","title":"✓ Morning Workout","isCompleted":true,"completionDate":null},{"id":"1783159822515_1","title":"⏳ Healthy Meal Plan","isCompleted":true,"completionDate":null},{"id":"1783159822515_2","title":"☐ Track Weekly Progress","isCompleted":false,"completionDate":null}],"font":"{\\"isOnShelf\\":false,\\"createdAt\\":\\"2026-07-04T15:50:01.643481\\",\\"scale\\":1.0,\\"opacity\\":1.0,\\"title\\":\\"Get Fit\\",\\"priority\\":\\"High\\",\\"progress\\":38.0,\\"dueDate\\":null,\\"checklist\\":[{\\"id\\":\\"1783159822515_0\\",\\"title\\":\\"✓ Morning Workout\\",\\"isCompleted\\":true,\\"completionDate\\":null},{\\"id\\":\\"1783159822515_1\\",\\"title\\":\\"⏳ Healthy Meal Plan\\",\\"isCompleted\\":true,\\"completionDate\\":null},{\\"id\\":\\"1783159822515_2\\",\\"title\\":\\"☐ Track Weekly Progress\\",\\"isCompleted\\":false,\\"completionDate\\":null}],\\"font\\":\\"{\\\\\\"isOnShelf\\\\\\":false,\\\\\\"createdAt\\\\\\":\\\\\\"2026-07-04T15:50:01.643481\\\\\\",\\\\\\"scale\\\\\\":1.0,\\\\\\"opacity\\\\\\":1.0,\\\\\\"title\\\\\\":\\\\\\"Get Fit\\\\\\",\\\\\\"priority\\\\\\":\\\\\\"High\\\\\\",\\\\\\"progress\\\\\\":38.0,\\\\\\"dueDate\\\\\\":null,\\\\\\"checklist\\\\\\":[{\\\\\\"id\\\\\\":\\\\\\"1783159822515_0\\\\\\",\\\\\\"title\\\\\\":\\\\\\"✓ Morning Workout\\\\\\",\\\\\\"isCompleted\\\\\\":false},{\\\\\\"id\\\\\\":\\\\\\"1783159822515_1\\\\\\",\\\\\\"title\\\\\\":\\\\\\"⏳ Healthy Meal Plan\\\\\\",\\\\\\"isCompleted\\\\\\":false},{\\\\\\"id\\\\\\":\\\\\\"1783159822515_2\\\\\\",\\\\\\"title\\\\\\":\\\\\\"☐ Track Weekly Progress\\\\\\",\\\\\\"isCompleted\\\\\\":false}]}\\",\\"monthlyAmount\\":\\"\\",\\"description\\":\\"\\",\\"motivation\\":\\"\\",\\"syncStatus\\":\\"synced\\",\\"lastSyncedAt\\":\\"2026-07-04T16:21:45.151816\\"}","monthlyAmount":"","description":"","motivation":"","syncStatus":"synced","lastSyncedAt":"2026-07-05T18:55:12.329695"}', 'monthlyAmount': '', 'description': '', 'motivation': '', 'syncStatus': 'synced', 'lastSyncedAt': '2026-07-05T19:45:03.216895'}},
     ]);
 
     // 10. Premium Demo Tasks — Interactive product tour for guest experience
@@ -991,8 +852,7 @@ class SampleDataSeedingService {
       },
     ]);
 
-    await hiveDb.saveSampleDataSeeded(true);
-    await hiveDb.saveSampleDataVersion(currentVersion);
+    await hiveDb.saveSetupCompleted(true);
     dev.log('$_logTag Seeding completed successfully!');
   }
 }

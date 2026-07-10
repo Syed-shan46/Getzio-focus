@@ -137,17 +137,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _showAddTask() {
     HapticFeedback.mediumImpact();
 
-    final hasToken = ref.read(hiveDatabaseProvider).getAuthToken() != null;
-    if (!hasToken) {
-      PremiumAuthSheet.show(
-        context,
-        customTitle: 'Create & Manage Tasks',
-        customDescription:
-            'Sign in to create tasks, set reminders, and sync your progress across all your devices.',
-      );
-      return;
-    }
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
