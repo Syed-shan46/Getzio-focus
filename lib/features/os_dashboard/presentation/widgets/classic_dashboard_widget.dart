@@ -2625,8 +2625,8 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
         .where((item) => item.type == VisionItemType.goal.name)
         .toList();
 
-    final isUsingSamples = realGoals.isEmpty;
-    final goals = [...realGoals, ..._sampleGoals];
+    final isUsingSamples = false;
+    final goals = realGoals;
 
     final allCount = goals.length;
     final activeCount = goals.where((g) {
