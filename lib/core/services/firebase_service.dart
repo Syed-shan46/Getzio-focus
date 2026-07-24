@@ -83,7 +83,6 @@ class FirebaseService {
         };
       }
     }
-
     try {
       final PhoneAuthCredential credential = PhoneAuthProvider.credential(
         verificationId: verificationId,
