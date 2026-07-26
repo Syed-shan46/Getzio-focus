@@ -16,12 +16,8 @@ class DailyRoutineScreen extends ConsumerStatefulWidget {
   ConsumerState<DailyRoutineScreen> createState() => _DailyRoutineScreenState();
 }
 
-class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with TickerProviderStateMixin {
+class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
-
-  // Ambient glows offset coordinates
-  final Offset _glow1 = const Offset(-100, -50);
-  final Offset _glow2 = const Offset(200, 300);
 
   // Suggested routines categories
   final Map<String, List<Map<String, String>>> _suggestedCategories = {
@@ -115,7 +111,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
               right: 24,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFF12141C).withOpacity(0.9),
+              color: const Color(0xFF12141C).withOpacity(0.95),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               border: Border.all(color: Colors.white.withOpacity(0.08)),
             ),
@@ -288,9 +284,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
                                       margin: const EdgeInsets.symmetric(vertical: 6),
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.02),
+                                        color: Colors.white.withValues(alpha: 0.02),
                                         borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(color: Colors.white.withOpacity(0.05)),
+                                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                                       ),
                                       child: Row(
                                         children: [
@@ -321,7 +317,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
                                           ),
                                           Icon(
                                             Icons.add_circle_outline_rounded,
-                                            color: const Color(0xFFEAD2AC).withOpacity(0.7),
+                                            color: const Color(0xFFEAD2AC).withValues(alpha: 0.7),
                                             size: 22,
                                           ),
                                         ],
@@ -344,12 +340,12 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
                               style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white.withOpacity(0.04),
+                              backgroundColor: Colors.white.withValues(alpha: 0.04),
                               foregroundColor: const Color(0xFFEAD2AC),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
-                                side: BorderSide(color: const Color(0xFFEAD2AC).withOpacity(0.2)),
+                                side: BorderSide(color: const Color(0xFFEAD2AC).withValues(alpha: 0.2)),
                               ),
                             ),
                           ),
@@ -388,7 +384,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: const Color(0xFFEAD2AC).withOpacity(0.2)),
+          side: BorderSide(color: const Color(0xFFEAD2AC).withValues(alpha: 0.2)),
         ),
         duration: const Duration(seconds: 2),
       ),
@@ -405,7 +401,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
             backgroundColor: const Color(0xFF12141C),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
-              side: BorderSide(color: Colors.white.withOpacity(0.08)),
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
             ),
             title: Text(
               'Remove Routine',
@@ -444,6 +440,60 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
     );
   }
 
+  // Helper mapping routine titles to matching icons and theme colors
+  Map<String, dynamic> _getRoutineIconAndColor(String title) {
+    final t = title.toLowerCase();
+    if (t.contains('wake')) {
+      return {
+        'icon': Icons.wb_sunny_rounded,
+        'bg': const Color(0xFFEAB308).withValues(alpha: 0.15),
+        'fg': const Color(0xFFF59E0B),
+      };
+    } else if (t.contains('water') || t.contains('hydration') || t.contains('drink')) {
+      return {
+        'icon': Icons.water_drop_rounded,
+        'bg': const Color(0xFF3B82F6).withValues(alpha: 0.15),
+        'fg': const Color(0xFF60A5FA),
+      };
+    } else if (t.contains('run') || t.contains('walk') || t.contains('exercise') || t.contains('gym') || t.contains('stretch') || t.contains('workout') || t.contains('yoga')) {
+      return {
+        'icon': Icons.directions_run_rounded,
+        'bg': const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+        'fg': const Color(0xFFA78BFA),
+      };
+    } else if (t.contains('word') || t.contains('learn') || t.contains('skill') || t.contains('study') || t.contains('coding') || t.contains('flutter')) {
+      return {
+        'icon': Icons.menu_book_rounded,
+        'bg': const Color(0xFF10B981).withValues(alpha: 0.15),
+        'fg': const Color(0xFF34D399),
+      };
+    } else if (t.contains('speak') || t.contains('practice') || t.contains('talk')) {
+      return {
+        'icon': Icons.mic_rounded,
+        'bg': const Color(0xFFF97316).withValues(alpha: 0.15),
+        'fg': const Color(0xFFFB923C),
+      };
+    } else if (t.contains('sleep') || t.contains('bed') || t.contains('night') || t.contains('detox')) {
+      return {
+        'icon': Icons.dark_mode_rounded,
+        'bg': const Color(0xFF6366F1).withValues(alpha: 0.15),
+        'fg': const Color(0xFF818CF8),
+      };
+    } else if (t.contains('read') || t.contains('book')) {
+      return {
+        'icon': Icons.menu_book_rounded,
+        'bg': const Color(0xFFD97706).withValues(alpha: 0.15),
+        'fg': const Color(0xFFFBBF24),
+      };
+    }
+    // Default fallback
+    return {
+      'icon': Icons.spa_rounded,
+      'bg': const Color(0xFFEAD2AC).withValues(alpha: 0.15),
+      'fg': const Color(0xFFEAD2AC),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final routines = ref.watch(routineProvider);
@@ -451,7 +501,8 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
 
     final completedCount = routines.where((r) => r.completedDates.contains(todayStr)).length;
     final totalCount = routines.length;
-    final progress = totalCount > 0 ? (completedCount / totalCount) : 0.0;
+    final progressVal = totalCount > 0 ? (completedCount / totalCount) : 0.0;
+    final progressPercent = (progressVal * 100).toInt();
 
     // Quick chips routines
     final List<Map<String, String>> quickChips = [
@@ -467,253 +518,413 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
       {'emoji': '🍎', 'title': 'Eat Healthy'},
     ];
 
+    // Theme based checks
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenBgColor = isDark ? const Color(0xFF0F1115) : context.colors.bg1;
+    final cardBgColor = isDark ? const Color(0xFF161A22).withValues(alpha: 0.6) : context.colors.bg2;
+    final headerTextColor = isDark ? const Color(0xFFFBF7F0) : context.colors.textPrimary;
+    final bodyTextColor = isDark ? const Color(0xFFF5EFEB) : context.colors.textPrimary;
+    final labelColor = isDark ? const Color(0xFFEAD2AC) : context.colors.accentBlue;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1115), // Dark Luxury
+      backgroundColor: screenBgColor,
       body: Stack(
         children: [
           // Ambient Glow Light 1
-          Positioned(
-            left: _glow1.dx,
-            top: _glow1.dy,
-            child: Container(
-              width: 350,
-              height: 350,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.transparent,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFEAD2AC).withOpacity(0.03), // Soft Gold
-                    blurRadius: 100,
-                    spreadRadius: 100,
-                  ),
-                ],
+          if (isDark)
+            Positioned(
+              left: -100,
+              top: -50,
+              child: Container(
+                width: 350,
+                height: 350,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.transparent,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFEAD2AC).withValues(alpha: 0.03), // Soft Gold
+                      blurRadius: 100,
+                      spreadRadius: 100,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
           // Ambient Glow Light 2
-          Positioned(
-            right: _glow2.dx,
-            top: _glow2.dy,
-            child: Container(
-              width: 400,
-              height: 400,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.transparent,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFBF7F0).withOpacity(0.02), // Soft Cream
-                    blurRadius: 120,
-                    spreadRadius: 120,
-                  ),
-                ],
+          if (isDark)
+            Positioned(
+              right: 200,
+              top: 300,
+              child: Container(
+                width: 400,
+                height: 400,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.transparent,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFBF7F0).withValues(alpha: 0.02), // Soft Cream
+                      blurRadius: 120,
+                      spreadRadius: 120,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
           // Main Scrollable Area
           SafeArea(
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // Hero Header
+                // Top AppBar Row
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Left Text & Circular Progress
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Good Morning, Syed 👋',
-                                style: GoogleFonts.outfit(
-                                  color: const Color(0xFFFBF7F0).withOpacity(0.6), // Warm Cream opaque
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                "Today's Progress",
-                                style: GoogleFonts.outfit(
-                                  color: const Color(0xFFFBF7F0),
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  // Glowing Circular Progress Ring
-                                  SizedBox(
-                                    width: 52,
-                                    height: 52,
-                                    child: TweenAnimationBuilder<double>(
-                                      tween: Tween<double>(begin: 0, end: progress),
-                                      duration: const Duration(milliseconds: 1000),
-                                      curve: Curves.easeOutCubic,
-                                      builder: (context, val, child) {
-                                        return CustomPaint(
-                                          painter: _ProgressRingPainter(
-                                            progress: val,
-                                            baseColor: Colors.white.withOpacity(0.06),
-                                            progressColor: const Color(0xFFEAD2AC), // Soft Gold
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              '${(val * 100).toInt()}%',
-                                              style: GoogleFonts.outfit(
-                                                color: const Color(0xFFFBF7F0),
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '$completedCount of $totalCount routines',
-                                          style: GoogleFonts.outfit(
-                                            color: const Color(0xFFFBF7F0),
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        Text(
-                                          'completed today',
-                                          style: GoogleFonts.outfit(
-                                            color: Colors.white38,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                        IconButton(
+                          onPressed: () {},
+                          icon: Icon(Icons.menu_rounded, color: headerTextColor, size: 24),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                         ),
-                        const SizedBox(width: 16),
-                        // Right Side Artwork Card (Hero Illustration)
-                        TweenAnimationBuilder<double>(
-                          tween: Tween<double>(begin: 0.95, end: 1.0),
-                          duration: const Duration(seconds: 4),
-                          curve: Curves.easeInOutSine,
-                          builder: (context, val, child) {
-                            return Transform.scale(
-                              scale: val,
+                        Stack(
+                          children: [
+                            IconButton(
+                              onPressed: () {},
+                              icon: Icon(Icons.notifications_none_rounded, color: headerTextColor, size: 24),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                            Positioned(
+                              right: 2,
+                              top: 2,
                               child: Container(
-                                width: 115,
-                                height: 115,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(24),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.4),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                  ],
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.08),
-                                  ),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(23),
-                                  child: Image.asset(
-                                    'assets/images/cozy_scandinavian_sunrise.png',
-                                    fit: BoxFit.cover,
-                                  ),
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF97316),
+                                  shape: BoxShape.circle,
                                 ),
                               ),
-                            );
-                          },
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
                 ),
-                // Main Routine List
+                // Hero Header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Left Text Block
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Good morning, Syed ☀️',
+                                style: GoogleFonts.outfit(
+                                  color: labelColor,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                "Today is a\nnew opportunity.",
+                                style: GoogleFonts.gelasio(
+                                  color: headerTextColor,
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.15,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Small actions, big changes.',
+                                style: GoogleFonts.outfit(
+                                  color: headerTextColor.withValues(alpha: 0.5),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Right Side Artwork Card (routine_img.png)
+                        Container(
+                          width: 100,
+                          height: 145,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(22),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.35),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.08),
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(21),
+                            child: Image.asset(
+                              'assets/images/routine_img.png',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Today's Progress Card
+                SliverToBoxAdapter(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: cardBgColor,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.05),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Upper Label Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "TODAY'S PROGRESS",
+                              style: GoogleFonts.outfit(
+                                color: labelColor.withValues(alpha: 0.8),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                            Text(
+                              "Keep going! 🔥",
+                              style: GoogleFonts.outfit(
+                                color: const Color(0xFFF97316),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Inner Content Row
+                        Row(
+                          children: [
+                            // Circular Progress Ring
+                            SizedBox(
+                              width: 82,
+                              height: 82,
+                              child: TweenAnimationBuilder<double>(
+                                tween: Tween<double>(begin: 0, end: progressVal),
+                                duration: const Duration(milliseconds: 1000),
+                                curve: Curves.easeOutCubic,
+                                builder: (context, val, child) {
+                                  return CustomPaint(
+                                    painter: _ProgressRingPainter(
+                                      progress: val,
+                                      baseColor: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.05),
+                                      progressColor: labelColor,
+                                    ),
+                                    child: Center(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            '${(val * 100).toInt()}%',
+                                            style: GoogleFonts.outfit(
+                                              color: headerTextColor,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Completed',
+                                            style: GoogleFonts.outfit(
+                                              color: headerTextColor.withValues(alpha: 0.4),
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            // Stats Info Column
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '"Discipline today, freedom tomorrow."',
+                                    style: GoogleFonts.gelasio(
+                                      color: headerTextColor,
+                                      fontSize: 14,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      _buildStatItem(Icons.star_rounded, '$completedCount', 'Completed', labelColor),
+                                      _buildStatItem(Icons.adjust_rounded, '$totalCount', 'Total', labelColor),
+                                      _buildStatItem(Icons.local_fire_department_rounded, '12', 'Day Streak', const Color(0xFFF97316)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Today's Routines Section Header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.assignment_outlined, color: labelColor, size: 20),
+                            const SizedBox(width: 10),
+                            Text(
+                              "TODAY'S ROUTINES",
+                              style: GoogleFonts.outfit(
+                                color: headerTextColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ],
+                        ),
+                        GestureDetector(
+                          onTap: () => _showSuggestedLibrarySheet(context),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: labelColor,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: labelColor.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.add_rounded,
+                              color: Color(0xFF0F1115),
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Routines List
                 if (routines.isEmpty)
-                  SliverFillRemaining(
-                    hasScrollBody: false,
+                  SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(28),
+                            padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: const Color(0xFFEAD2AC).withOpacity(0.05),
-                              border: Border.all(color: const Color(0xFFEAD2AC).withOpacity(0.15)),
+                              color: labelColor.withValues(alpha: 0.05),
+                              border: Border.all(color: labelColor.withValues(alpha: 0.15)),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.spa_rounded,
-                              size: 48,
-                              color: Color(0xFFEAD2AC),
+                              size: 40,
+                              color: labelColor,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 20),
                           Text(
                             'Build your perfect day.',
                             style: GoogleFonts.outfit(
-                              color: const Color(0xFFFBF7F0),
-                              fontSize: 22,
+                              color: headerTextColor,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
                           Text(
                             'Create routines that help you become the person you want to be.',
                             style: GoogleFonts.outfit(
-                              color: Colors.white38,
-                              fontSize: 14,
+                              color: headerTextColor.withValues(alpha: 0.4),
+                              fontSize: 13,
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 24),
                           ElevatedButton(
                             onPressed: () => _showSuggestedLibrarySheet(context),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFEAD2AC),
+                              backgroundColor: labelColor,
                               foregroundColor: const Color(0xFF0F1115),
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              elevation: 8,
-                              shadowColor: const Color(0xFFEAD2AC).withOpacity(0.3),
+                              elevation: 6,
+                              shadowColor: labelColor.withValues(alpha: 0.3),
                             ),
                             child: Text(
                               'Create First Routine',
                               style: GoogleFonts.outfit(
-                                fontSize: 16,
+                                fontSize: 15,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 60),
                         ],
                       ),
                     ),
                   )
-                else ...[
+                else
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     sliver: SliverList(
@@ -721,92 +932,102 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
                         (context, index) {
                           final item = routines[index];
                           final isCompleted = item.completedDates.contains(todayStr);
+                          final designStyle = _getRoutineIconAndColor(item.title);
 
-                          return AnimatedOpacity(
-                            opacity: isCompleted ? 0.55 : 1.0,
-                            duration: const Duration(milliseconds: 300),
-                            child: GestureDetector(
-                              onLongPress: () => _showDeleteConfirmDialog(context, item),
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(vertical: 8),
-                                padding: const EdgeInsets.all(18),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(isCompleted ? 0.02 : 0.04),
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(isCompleted ? 0.04 : 0.08),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
+                          return Container(
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isCompleted ? cardBgColor.withValues(alpha: 0.4) : cardBgColor,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
                                 ),
-                                child: Row(
-                                  children: [
-                                    // Custom Rounded Checkbox
-                                    GestureDetector(
-                                      onTap: () {
-                                        HapticFeedback.mediumImpact();
-                                        ref.read(routineProvider.notifier).toggleRoutineCompletion(
-                                          item.id,
-                                          todayStr,
-                                        );
-                                      },
-                                      child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 250),
-                                        width: 28,
-                                        height: 28,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: isCompleted ? const Color(0xFFEAD2AC) : Colors.transparent,
-                                          border: Border.all(
-                                            color: isCompleted ? const Color(0xFFEAD2AC) : Colors.white24,
-                                            width: 2,
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                // Icon Box Container
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: designStyle['bg'] as Color,
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: Icon(
+                                    designStyle['icon'] as IconData,
+                                    color: designStyle['fg'] as Color,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                // Text Content block
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.title,
+                                        style: GoogleFonts.outfit(
+                                          color: isCompleted ? headerTextColor.withValues(alpha: 0.5) : headerTextColor,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                        ),
+                                      ),
+                                      if (item.subtitle != null && item.subtitle!.isNotEmpty) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          item.subtitle!,
+                                          style: GoogleFonts.outfit(
+                                            color: headerTextColor.withValues(alpha: 0.35),
+                                            fontSize: 13,
                                           ),
                                         ),
-                                        child: isCompleted
-                                            ? const Icon(
-                                                Icons.check_rounded,
-                                                color: Color(0xFF0F1115),
-                                                size: 18,
-                                              )
-                                            : null,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    // Text Content
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            item.title,
-                                            style: GoogleFonts.outfit(
-                                              color: const Color(0xFFFBF7F0),
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              decoration: isCompleted ? TextDecoration.lineThrough : null,
-                                            ),
-                                          ),
-                                          if (item.subtitle != null && item.subtitle!.isNotEmpty) ...[
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              item.subtitle!,
-                                              style: GoogleFonts.outfit(
-                                                color: Colors.white38,
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                      ],
+                                    ],
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 12),
+                                // Check Circle Outline or Checked Circle
+                                GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.mediumImpact();
+                                    ref.read(routineProvider.notifier).toggleRoutineCompletion(
+                                      item.id,
+                                      todayStr,
+                                    );
+                                  },
+                                  onLongPress: () => _showDeleteConfirmDialog(context, item),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 250),
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isCompleted ? labelColor : Colors.transparent,
+                                      border: Border.all(
+                                        color: isCompleted ? labelColor : headerTextColor.withValues(alpha: 0.2),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: isCompleted
+                                        ? const Icon(
+                                            Icons.check_rounded,
+                                            color: Color(0xFF0F1115),
+                                            size: 14,
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         },
@@ -814,23 +1035,23 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
                       ),
                     ),
                   ),
-                  // Suggested Routines Section
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 32, left: 24, right: 24, bottom: 12),
-                      child: Text(
-                        'Suggested Routines',
-                        style: GoogleFonts.outfit(
-                          color: const Color(0xFFFBF7F0),
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                // Suggested Routines Section
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 12),
+                    child: Text(
+                      'Suggested Routines',
+                      style: GoogleFonts.outfit(
+                        color: headerTextColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: 50,
+                ),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 50,
                       child: ListView.builder(
                         physics: const BouncingScrollPhysics(),
                         scrollDirection: Axis.horizontal,
@@ -850,10 +1071,10 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
                               margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.03),
+                                color: cardBgColor.withValues(alpha: 0.4),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: const Color(0xFFEAD2AC).withOpacity(0.12),
+                                  color: labelColor.withValues(alpha: 0.12),
                                 ),
                               ),
                               child: Row(
@@ -866,7 +1087,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
                                   Text(
                                     chip['title']!,
                                     style: GoogleFonts.outfit(
-                                      color: const Color(0xFFFBF7F0).withOpacity(0.9),
+                                      color: headerTextColor.withValues(alpha: 0.9),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -879,50 +1100,116 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
                       ),
                     ),
                   ),
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 120),
+                // Premium Banner at the Bottom
+                SliverToBoxAdapter(
+                  child: Container(
+                    margin: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: cardBgColor,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // Left 3D Avatar Image
+                        Container(
+                          width: 70,
+                          height: 70,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(35),
+                            child: Image.asset(
+                              'assets/images/boy_avatar.png',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Text & Spark Curve Column
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "You're doing amazing, Syed!",
+                                style: GoogleFonts.outfit(
+                                  color: headerTextColor,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                "Consistency is your superpower.",
+                                style: GoogleFonts.outfit(
+                                  color: headerTextColor.withValues(alpha: 0.5),
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              // Custom SparkLine Graphic
+                              SizedBox(
+                                width: 140,
+                                height: 35,
+                                child: CustomPaint(
+                                  painter: _SparkLinePainter(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
+                ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 60),
+                ),
               ],
             ),
           ),
         ],
       ),
-      floatingActionButton: routines.isEmpty
-          ? null
-          : Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFEAD2AC).withOpacity(0.15),
-                    blurRadius: 16,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: FloatingActionButton.extended(
-                onPressed: () => _showSuggestedLibrarySheet(context),
-                backgroundColor: const Color(0xFF161A22).withOpacity(0.85),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  side: BorderSide(color: const Color(0xFFEAD2AC).withOpacity(0.2)),
-                ),
-                icon: const Icon(
-                  Icons.add_rounded,
-                  color: Color(0xFFEAD2AC),
-                  size: 24,
-                ),
-                label: Text(
-                  'New Routine',
-                  style: GoogleFonts.outfit(
-                    color: const Color(0xFFFBF7F0),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+    );
+  }
+
+  Widget _buildStatItem(IconData icon, String val, String sub, Color accent) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final headerTextColor = isDark ? const Color(0xFFFBF7F0) : context.colors.textPrimary;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: accent, size: 14),
+            const SizedBox(width: 4),
+            Text(
+              val,
+              style: GoogleFonts.outfit(
+                color: headerTextColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          sub,
+          style: GoogleFonts.outfit(
+            color: headerTextColor.withValues(alpha: 0.4),
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -956,7 +1243,7 @@ class _ProgressRingPainter extends CustomPainter {
 
     // Draw glow shadow for progress
     final shadowPaint = Paint()
-      ..color = progressColor.withOpacity(0.25)
+      ..color = progressColor.withValues(alpha: 0.25)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth + 3
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
@@ -987,4 +1274,42 @@ class _ProgressRingPainter extends CustomPainter {
   bool shouldRepaint(covariant _ProgressRingPainter oldDelegate) {
     return oldDelegate.progress != progress;
   }
+}
+
+// 🎨 custom spark curve line painter for bottom banner card
+class _SparkLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFEAD2AC).withValues(alpha: 0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    final path = Path();
+    path.moveTo(0, size.height * 0.85);
+    path.quadraticBezierTo(
+      size.width * 0.35,
+      size.height * 0.90,
+      size.width * 0.65,
+      size.height * 0.35,
+    );
+    path.quadraticBezierTo(
+      size.width * 0.85,
+      size.height * 0.05,
+      size.width * 0.95,
+      size.height * 0.15,
+    );
+
+    canvas.drawPath(path, paint);
+
+    // Draw a small glowing star at the end of the line
+    final starPaint = Paint()
+      ..color = const Color(0xFFEAD2AC)
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawCircle(Offset(size.width * 0.95, size.height * 0.15), 4, starPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
