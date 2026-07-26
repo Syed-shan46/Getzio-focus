@@ -567,6 +567,10 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                       color: const Color(0xFFFBF7F0).withValues(alpha: 0.02), // Soft Cream
                       blurRadius: 120,
                       spreadRadius: 120,
+                    ),
+                  ],
+                ),
+              ),
             ),
           // Top Right Hero Room Overlay (routine_img.png)
           Positioned(
