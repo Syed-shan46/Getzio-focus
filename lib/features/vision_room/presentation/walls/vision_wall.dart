@@ -37,6 +37,9 @@ class _VisionWallState extends ConsumerState<VisionWall>
   double _itemStartWidth = 0;
   double _itemStartHeight = 0;
   double _itemStartRotation = 0;
+  double _itemStartX = 0;
+  double _itemStartY = 0;
+  Offset? _startFocalPoint;
 
   late AnimationController _springController;
   late Animation<double> _springAnimation;
@@ -94,18 +97,24 @@ class _VisionWallState extends ConsumerState<VisionWall>
             },
             onScaleStart: isEditMode
                 ? (details) {
-                    // Interaction target and start parameters are initialized on touch down
-                    // by the child GestureDetector's onTapDown for 100% accurate hit-testing.
+                    _startFocalPoint = details.localFocalPoint;
+                    if (_interactingItemId != null) {
+                      try {
+                        final item = items.firstWhere((i) => i.id == _interactingItemId);
+                        _itemStartX = item.x;
+                        _itemStartY = item.y;
+                      } catch (_) {}
+                    }
                   }
                 : null,
             onScaleUpdate: isEditMode
                 ? (details) {
-                    if (_interactingItemId != null) {
-                      final dx = details.focalPointDelta.dx / scaleFactor;
-                      final dy = details.focalPointDelta.dy / scaleFactor;
+                    if (_interactingItemId != null && _startFocalPoint != null) {
+                      final dx = (details.localFocalPoint.dx - _startFocalPoint!.dx) / scaleFactor;
+                      final dy = (details.localFocalPoint.dy - _startFocalPoint!.dy) / scaleFactor;
                       ref
                           .read(canvasStateProvider.notifier)
-                          .updatePosition(_interactingItemId!, dx, dy);
+                          .updatePositionAbsolute(_interactingItemId!, _itemStartX + dx, _itemStartY + dy);
                       ref
                           .read(canvasStateProvider.notifier)
                           .updateTransform(
@@ -172,6 +181,8 @@ class _VisionWallState extends ConsumerState<VisionWall>
                             _itemStartWidth = item.width;
                             _itemStartHeight = h;
                             _itemStartRotation = item.rotation;
+                            _itemStartX = item.x;
+                            _itemStartY = item.y;
                           });
                           ref
                               .read(canvasStateProvider.notifier)

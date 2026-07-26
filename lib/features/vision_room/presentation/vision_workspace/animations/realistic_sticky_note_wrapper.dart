@@ -9,12 +9,14 @@ class RealisticStickyNoteWrapper extends ConsumerStatefulWidget {
   final String noteId;
   final Widget child;
   final Color paperColor;
+  final bool isDragging;
 
   const RealisticStickyNoteWrapper({
     super.key,
     required this.noteId,
     required this.child,
     required this.paperColor,
+    this.isDragging = false,
   });
 
   @override
@@ -63,26 +65,19 @@ class _RealisticStickyNoteWrapperState extends ConsumerState<RealisticStickyNote
     super.dispose();
   }
 
-  void _handleTapDown(TapDownDetails details) {
-    _interactionController.stop();
-    _springSimulation = SpringSimulation(
-      const SpringDescription(mass: 1, stiffness: 400, damping: 10),
-      _interactionBend, 1.0, 0, 
-    );
-    _interactionController.animateWith(_springSimulation!);
-    
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted && !_isDragging) {
-        _springSimulation = SpringSimulation(
-          const SpringDescription(mass: 1, stiffness: 200, damping: 15),
-          _interactionBend, 0.0, 0, 
-        );
-        _interactionController.animateWith(_springSimulation!);
+  @override
+  void didUpdateWidget(covariant RealisticStickyNoteWrapper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isDragging != oldWidget.isDragging) {
+      if (widget.isDragging) {
+        _startDragBend();
+      } else {
+        _endDragBend();
       }
-    });
+    }
   }
 
-  void _handlePanStart(DragStartDetails details) {
+  void _startDragBend() {
     _isDragging = true;
     _interactionController.stop();
     _springSimulation = SpringSimulation(
@@ -92,13 +87,12 @@ class _RealisticStickyNoteWrapperState extends ConsumerState<RealisticStickyNote
     _interactionController.animateWith(_springSimulation!);
   }
 
-  void _handlePanEnd(DragEndDetails details) {
+  void _endDragBend() {
     _isDragging = false;
     _interactionController.stop();
     _springSimulation = SpringSimulation(
       const SpringDescription(mass: 1, stiffness: 150, damping: 8),
-      _interactionBend, 0.0, 
-      (details.velocity.pixelsPerSecond.dx + details.velocity.pixelsPerSecond.dy) * 0.005,
+      _interactionBend, 0.0, 0.0,
     );
     _interactionController.animateWith(_springSimulation!);
   }
@@ -108,68 +102,60 @@ class _RealisticStickyNoteWrapperState extends ConsumerState<RealisticStickyNote
     final isEditMode = ref.watch(editModeProvider);
     
     return RepaintBoundary(
-      child: GestureDetector(
-        onTapDown: isEditMode ? null : _handleTapDown,
-        onPanStart: isEditMode ? null : _handlePanStart,
-        onPanEnd: isEditMode ? null : _handlePanEnd,
-        onPanCancel: isEditMode ? null : () => _handlePanEnd(DragEndDetails(velocity: Velocity.zero)),
-        behavior: HitTestBehavior.deferToChild,
-        child: AnimatedBuilder(
-          animation: Listenable.merge([
-            windController,
-            _flutterController,
-          ]),
-          builder: (context, child) {
-            final windForce = windController.sampleWindForNote(_seed);
-            
-            final targetAngle = (windForce * 0.045) / _weight;
-            final windBendX = (windForce * 0.6) / _weight; 
-            final dragBendX = _interactionBend * 0.6;
-            final flutter = sin(_flutterController.value * pi * 2) * 0.05 * windController.globalIntensity;
-            
-            final transform = Matrix4.identity()
-              ..setEntry(3, 2, 0.003) 
-              ..rotateZ(targetAngle)
-              ..rotateX(-windBendX - dragBendX) 
-              ..rotateY(targetAngle * 0.8 + flutter); 
-
-            final shadowBend = (windBendX.abs() + dragBendX).clamp(0.0, 1.0);
-            
-            // Calculate a 0.0 to 1.0 curl amount for the bottom right corner
-            // based on how much the paper is bending + some continuous flutter
-            final curlAmount = (shadowBend * 0.8 + flutter.abs() * 5).clamp(0.05, 1.0);
-            
-            return Transform(
-              alignment: Alignment.topCenter,
-              transform: transform,
-              child: Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.35 - (shadowBend * 0.25)),
-                      blurRadius: 8.0 + (shadowBend * 32.0),
-                      spreadRadius: -1.0,
-                      offset: Offset(
-                        2.0 + (targetAngle * 10), 
-                        6.0 + (shadowBend * 25.0)
-                      ),
+      child: AnimatedBuilder(
+        animation: Listenable.merge([
+          windController,
+          _flutterController,
+        ]),
+        builder: (context, child) {
+          final windForce = windController.sampleWindForNote(_seed);
+          
+          final targetAngle = (windForce * 0.045) / _weight;
+          final windBendX = (windForce * 0.6) / _weight; 
+          final dragBendX = _interactionBend * 0.6;
+          final flutter = sin(_flutterController.value * pi * 2) * 0.05 * windController.globalIntensity;
+          
+          final transform = Matrix4.identity()
+            ..setEntry(3, 2, 0.003) 
+            ..rotateZ(targetAngle)
+            ..rotateX(-windBendX - dragBendX) 
+            ..rotateY(targetAngle * 0.8 + flutter); 
+          final shadowBend = (windBendX.abs() + dragBendX).clamp(0.0, 1.0);
+          
+          // Calculate a 0.0 to 1.0 curl amount for the bottom right corner
+          // based on how much the paper is bending + some continuous flutter
+          final curlAmount = (shadowBend * 0.8 + flutter.abs() * 5).clamp(0.05, 1.0);
+          
+          return Transform(
+            alignment: Alignment.topCenter,
+            transform: transform,
+            child: Container(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.35 - (shadowBend * 0.25)),
+                    blurRadius: 8.0 + (shadowBend * 32.0),
+                    spreadRadius: -1.0,
+                    offset: Offset(
+                      2.0 + (targetAngle * 10), 
+                      6.0 + (shadowBend * 25.0)
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              child: CustomPaint(
+                foregroundPainter: CurledCornerPainter(
+                  curlAmount: curlAmount,
+                  paperColor: widget.paperColor,
                 ),
-                child: CustomPaint(
-                  foregroundPainter: CurledCornerPainter(
-                    curlAmount: curlAmount,
-                    paperColor: widget.paperColor,
-                  ),
-                  child: ClipPath(
-                    clipper: CurledCornerClipper(curlAmount),
-                    child: widget.child,
-                  ),
+                child: ClipPath(
+                  clipper: CurledCornerClipper(curlAmount),
+                  child: widget.child,
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

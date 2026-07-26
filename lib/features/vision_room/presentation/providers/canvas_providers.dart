@@ -24,19 +24,13 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     : super(CanvasState(items: [])) {
     // FIRST: Immediately set defaults for guest users before any async ops.
     // This runs synchronously and guarantees the vision room is never empty.
-    final token = _hiveDb.getAuthToken();
-    final isGuest = token == null || token.trim().isEmpty;
-    if (isGuest) {
-      state = state.copyWith(
-        items: _getGuestDefaults(),
-      );
-    }
+
 
     // THEN: schedule async loading (for logged-in users from backend)
     Future.microtask(() => _initAsync());
   }
 
-  static List<VisionItem> _getGuestDefaults() {
+  static List<VisionItem> getGuestDefaults() {
     return [
       VisionItem(
         id: "14393812-96a0-467f-ac72-715425daa015",
@@ -539,7 +533,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
 
       if (!isGuest) {
         // Double safety: if user is logged in, but cache still has guest items, clear them!
-        final hasGuestItems = items.any((i) => i.id.startsWith('guest_') || i.id == '14393812-96a0-467f-ac72-715425daa015');
+        final hasGuestItems = items.any((i) => i.id.startsWith('guest_') || i.id.startsWith('vis_demo_') || i.id == '14393812-96a0-467f-ac72-715425daa015');
         if (hasGuestItems) {
           debugPrint('[CanvasSync] _initAsync: clearing guest items on successful login');
           await repo.saveLocalVisionItems([]);
@@ -549,19 +543,7 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
       }
 
       if (isGuest) {
-        // For guest users: if Hive has items (from seed or previous session) and has all 18 guest defaults, use those.
-        // Otherwise, reload/reset to our 18 beautiful default cards.
-        final hasNewDefaults = items.length >= 18 &&
-            items.any((i) => i.id == '14393812-96a0-467f-ac72-715425daa015');
-        debugPrint('[CanvasSync] _initAsync: guest path, hasNewDefaults = $hasNewDefaults');
-        if (items.isNotEmpty && hasNewDefaults) {
-          state = state.copyWith(items: items);
-        } else {
-          debugPrint('[CanvasSync] _initAsync: resetting to defaults list');
-          final defaults = _getGuestDefaults();
-          repo.saveLocalVisionItems(defaults);
-          state = state.copyWith(items: defaults);
-        }
+        state = state.copyWith(items: items);
       } else {
         // For logged-in users: load from Hive and/or fetch from server
         if (items.isNotEmpty) {
@@ -635,31 +617,26 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   }
 
   void _debouncePatchItem(String id) {
-    final hasToken = _hiveDb.getAuthToken() != null;
-    if (!hasToken) return;
-
     _itemDebouncers[id]?.cancel();
-    _itemDebouncers[id] = Timer(const Duration(milliseconds: 350), () {
+    _itemDebouncers[id] = Timer(const Duration(milliseconds: 500), () {
       try {
         final itemIndex = state.items.indexWhere((i) => i.id == id);
         if (itemIndex == -1) return;
         final item = state.items[itemIndex];
-        final repo = _ref.read(visionRoomRepositoryProvider);
-        final data = repo.mapItemToDbKeys(item);
-        final dio = _ref.read(dioClientProvider);
-        dio
-            .patch('/focus/vision-room/item/$id', data: data)
-            .then((_) {
-              debugPrint('[CanvasSync] Patched item $id successfully');
-            })
-            .catchError((e) async {
-              debugPrint(
-                '[CanvasSync] Failed to patch item $id, queuing sync: $e',
-              );
-              await repo.queueItemUpsert(item, 'update');
-            });
+        
+        final meta = Map<String, dynamic>.from(item.metadata ?? {});
+        meta['syncStatus'] = 'pending';
+        meta['updatedAt'] = DateTime.now().toIso8601String();
+        
+        final updatedItem = item.copyWith(metadata: meta);
+        final updatedItems = state.items.map((i) => i.id == id ? updatedItem : i).toList();
+        state = state.copyWith(items: updatedItems);
+        _saveState();
+
+        // Notify SyncQueueService
+        _ref.read(syncQueueServiceProvider).triggerSync();
       } catch (e) {
-        debugPrint('[CanvasSync] Exception patching item $id: $e');
+        debugPrint('[CanvasSync] Error updating item sync status: $e');
       }
     });
   }
@@ -694,37 +671,20 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
     for (var i in state.items) {
       if (i.zIndex > maxZ) maxZ = i.zIndex;
     }
-    final newItem = item.copyWith(zIndex: maxZ + 1);
+    
+    final meta = Map<String, dynamic>.from(item.metadata ?? {});
+    meta['syncStatus'] = 'pending';
+    meta['createdAt'] = DateTime.now().toIso8601String();
+
+    final newItem = item.copyWith(zIndex: maxZ + 1, metadata: meta);
 
     final newItems = List<VisionItem>.from(state.items)..add(newItem);
     newItems.sort((a, b) => a.zIndex.compareTo(b.zIndex));
 
     commitState(state.copyWith(items: newItems));
 
-    final hasToken = _hiveDb.getAuthToken() != null;
-    if (hasToken) {
-      try {
-        final repo = _ref.read(visionRoomRepositoryProvider);
-        final dio = _ref.read(dioClientProvider);
-        final payload = repo.mapItemToDbKeys(newItem);
-        final createdAt = DateTime.now().toIso8601String();
-        payload['metadata'] = {...?(newItem.metadata), 'createdAt': createdAt};
-        payload['countdownDate'] = newItem.countdownDate?.toIso8601String();
-        dio
-            .post('/focus/vision-room/item', data: payload)
-            .then((_) {
-              debugPrint('[CanvasSync] Created item ${newItem.id} on backend');
-            })
-            .catchError((e) async {
-              debugPrint(
-                '[CanvasSync] Failed to create item ${newItem.id}, queuing sync: $e',
-              );
-              await repo.queueItemUpsert(newItem, 'create');
-            });
-      } catch (e) {
-        debugPrint('[CanvasSync] Exception creating item: $e');
-      }
-    }
+    // Notify SyncQueueService to trigger a debounced sync
+    _ref.read(syncQueueServiceProvider).triggerSync();
   }
 
   void bringToFront(String id) {
@@ -770,6 +730,16 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
       if (item.id == id) {
         final updated = item.copyWith(x: item.x + dx, y: item.y + dy);
         return updated;
+      }
+      return item;
+    }).toList();
+    state = state.copyWith(items: updatedItems);
+  }
+
+  void updatePositionAbsolute(String id, double x, double y) {
+    final updatedItems = state.items.map((item) {
+      if (item.id == id) {
+        return item.copyWith(x: x, y: y);
       }
       return item;
     }).toList();
@@ -916,32 +886,20 @@ class CanvasHistoryNotifier extends StateNotifier<CanvasState> {
   }
 
   void removeItem(String id) {
+    final updatedItems = state.items.where((item) => item.id != id).toList();
+    // Mark remaining items as pending to trigger overwriting on server during bulk sync
+    final pendingItems = updatedItems.map((item) {
+      final meta = Map<String, dynamic>.from(item.metadata ?? {});
+      meta['syncStatus'] = 'pending';
+      return item.copyWith(metadata: meta);
+    }).toList();
+
     commitState(
-      state.copyWith(
-        items: state.items.where((item) => item.id != id).toList(),
-      ),
+      state.copyWith(items: pendingItems),
     );
 
-    final hasToken = _hiveDb.getAuthToken() != null;
-    if (hasToken) {
-      try {
-        final repo = _ref.read(visionRoomRepositoryProvider);
-        final dio = _ref.read(dioClientProvider);
-        dio
-            .delete('/focus/vision-room/item/$id')
-            .then((_) {
-              debugPrint('[CanvasSync] Deleted item $id on backend');
-            })
-            .catchError((e) async {
-              debugPrint(
-                '[CanvasSync] Failed to delete item $id, queuing sync: $e',
-              );
-              await repo.queueItemDeletion(id);
-            });
-      } catch (e) {
-        debugPrint('[CanvasSync] Exception deleting item: $e');
-      }
-    }
+    // Notify SyncQueueService to trigger a debounced sync
+    _ref.read(syncQueueServiceProvider).triggerSync();
   }
 
   void updateViewport(Matrix4 newTransform) {

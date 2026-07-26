@@ -8,8 +8,11 @@ import '../../data/repositories/tasks_repository.dart';
 import '../../../affirmations/domain/models/affirmation_model.dart';
 import '../../../../core/storage/sync_manager.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+
 final tasksRepositoryProvider = Provider<TasksRepository>((ref) {
   final hive = ref.watch(hiveDatabaseProvider);
+  ref.watch(authProvider);
   return TasksRepository(hive, ref);
 });
 
@@ -83,15 +86,20 @@ class TasksNotifier extends StateNotifier<TasksState> {
   }
 
   Future<void> _loadData() async {
+    final userId = _ref.read(hiveDatabaseProvider).getUserId();
     final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
-    print('[Tasks] _loadData hasToken: $hasToken');
+    print('[Tasks Debug] _loadData: userId=$userId, hasToken=$hasToken');
 
     // 1. Load instantly from local cache
     try {
       final localTasks = _repository.getLocalTasks();
-      print('[Tasks] _loadData: ${localTasks.length} tasks from local cache');
+      final activeTasks = localTasks.where((t) => !t.deleted).toList();
+      print('[Tasks Debug] Loaded ${localTasks.length} tasks from local cache box (active count: ${activeTasks.length})');
+      for (final t in activeTasks) {
+        print('[Tasks Debug] Task in cache: id=${t.id}, title="${t.title}", syncStatus=${t.syncStatus}');
+      }
       if (localTasks.isNotEmpty) {
-        state = state.copyWith(allTasks: localTasks, isLoading: false);
+        state = state.copyWith(allTasks: activeTasks, isLoading: false);
       } else {
         if (!hasToken) {
           // Seed guest tasks
@@ -116,8 +124,21 @@ class TasksNotifier extends StateNotifier<TasksState> {
     _repository.fetchTasksFromServer().then((serverTasks) async {
       print('[Tasks] Server returned ${serverTasks?.length ?? 0} tasks');
       if (serverTasks != null) {
-        state = state.copyWith(allTasks: serverTasks, isLoading: false);
-        await _repository.saveLocalTasks(serverTasks);
+        final localTasks = _repository.getLocalTasks();
+        final pendingTasks = localTasks.where((t) => t.syncStatus == SyncStatus.pending || t.deleted).toList();
+        
+        final List<TaskModel> mergedTasks = [];
+        mergedTasks.addAll(pendingTasks);
+        
+        for (final st in serverTasks) {
+          final isPendingLocally = pendingTasks.any((pt) => pt.id == st.id);
+          if (!isPendingLocally) {
+            mergedTasks.add(st);
+          }
+        }
+        
+        state = state.copyWith(allTasks: mergedTasks.where((t) => !t.deleted).toList(), isLoading: false);
+        await _repository.saveLocalTasks(mergedTasks);
       }
       // Process pending sync queue
       _ref.read(syncManagerProvider).processQueue();
@@ -173,30 +194,8 @@ class TasksNotifier extends StateNotifier<TasksState> {
       }
     }
     
-    // Background sync
-    final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
-    if (!hasToken) {
-      final syncedList = state.allTasks.map((t) => t.id == task.id ? t.copyWith(syncStatus: SyncStatus.synced) : t).toList();
-      state = state.copyWith(allTasks: syncedList);
-      await _repository.saveLocalTasks(syncedList);
-      return;
-    }
-    
-    final dio = _ref.read(dioClientProvider);
-    dio.post('/tasks/sync', data: {
-      'modifications': [pendingTask.toMap()],
-      'deletedIds': [],
-    }).then((response) async {
-      if (response.statusCode == 200) {
-        final syncedList = state.allTasks.map((t) => t.id == task.id ? t.copyWith(syncStatus: SyncStatus.synced, lastSyncedAt: DateTime.now()) : t).toList();
-        state = state.copyWith(allTasks: syncedList);
-        await _repository.saveLocalTasks(syncedList);
-      } else {
-        await _repository.queueTaskUpsert(pendingTask);
-      }
-    }).catchError((e) async {
-      await _repository.queueTaskUpsert(pendingTask);
-    });
+    // Notify SyncQueueService
+    _ref.read(syncQueueServiceProvider).triggerSync();
   }
 
   Future<void> updateTask(TaskModel task) async {
@@ -263,54 +262,32 @@ class TasksNotifier extends StateNotifier<TasksState> {
       }
     }
 
-    // Background sync
-    final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
-    if (!hasToken) {
-      final syncedList = state.allTasks.map((t) => t.id == task.id ? t.copyWith(syncStatus: SyncStatus.synced) : t).toList();
-      state = state.copyWith(allTasks: syncedList);
-      await _repository.saveLocalTasks(syncedList);
-      return;
-    }
-
-    final dio = _ref.read(dioClientProvider);
-    dio.post('/tasks/sync', data: {
-      'modifications': [updatedTask.toMap()],
-      'deletedIds': [],
-    }).then((response) async {
-      if (response.statusCode == 200) {
-        final syncedList = state.allTasks.map((t) => t.id == task.id ? t.copyWith(syncStatus: SyncStatus.synced, lastSyncedAt: DateTime.now()) : t).toList();
-        state = state.copyWith(allTasks: syncedList);
-        await _repository.saveLocalTasks(syncedList);
-      } else {
-        await _repository.queueTaskUpsert(updatedTask);
-      }
-    }).catchError((e) async {
-      await _repository.queueTaskUpsert(updatedTask);
-    });
+    // Notify SyncQueueService
+    _ref.read(syncQueueServiceProvider).triggerSync();
   }
 
   Future<void> deleteTask(String id) async {
-    final newList = state.allTasks.where((t) => t.id != id).toList();
-    state = state.copyWith(allTasks: newList);
-    await _repository.saveLocalTasks(newList);
+    final filteredList = state.allTasks.where((t) => t.id != id).toList();
+    state = state.copyWith(allTasks: filteredList);
+
+    final allTasksInHive = _repository.getLocalTasks();
+    final updatedHiveTasks = allTasksInHive.map((t) {
+      if (t.id == id) {
+        return t.copyWith(deleted: true, syncStatus: SyncStatus.pending);
+      }
+      return t;
+    }).toList();
+    
+    if (!allTasksInHive.any((t) => t.id == id)) {
+      await _repository.saveLocalTasks(filteredList);
+    } else {
+      await _repository.saveLocalTasks(updatedHiveTasks);
+    }
 
     NotificationService().cancelReminders(id);
 
-    // Background sync
-    final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
-    if (!hasToken) return;
-
-    final dio = _ref.read(dioClientProvider);
-    dio.post('/tasks/sync', data: {
-      'modifications': [],
-      'deletedIds': [id],
-    }).then((response) async {
-      if (response.statusCode != 200) {
-        await _repository.queueTaskDeletion(id);
-      }
-    }).catchError((e) async {
-      await _repository.queueTaskDeletion(id);
-    });
+    // Notify SyncQueueService
+    _ref.read(syncQueueServiceProvider).triggerSync();
   }
 }
 
@@ -320,166 +297,5 @@ final tasksProvider = StateNotifierProvider<TasksNotifier, TasksState>((ref) {
 });
 
 List<TaskModel> _getGuestSeededTasks() {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final yesterday = today.subtract(const Duration(days: 1));
-  final threeDaysAgo = today.subtract(const Duration(days: 3));
-
-  return [
-    // Today's Targets (3 cards)
-    TaskModel(
-      id: 'guest_today_1',
-      title: 'Outline Weekly Goals',
-      description: 'Prepare target overview list and organize boards.',
-      category: 'Work',
-      priority: TaskPriority.high,
-      dueDate: today,
-      dueTime: '10:00 AM',
-      reminder: true,
-      reminderStyle: ReminderStyle.balanced,
-      createdAt: now,
-      updatedAt: now,
-      subtasks: [
-        SubtaskModel(
-          id: 'guest_today_1_sub1',
-          title: 'Draft board outline',
-          completed: false,
-          dueDate: today,
-          dueTime: '10:00 AM',
-        ),
-        SubtaskModel(
-          id: 'guest_today_1_sub2',
-          title: 'Review team backlog',
-          completed: true,
-          dueDate: today,
-          dueTime: '11:00 AM',
-        ),
-      ],
-    ),
-    TaskModel(
-      id: 'guest_today_2',
-      title: 'Full Body HIIT Workout',
-      description: 'Complete HIIT circuit and light stretching.',
-      category: 'Fitness',
-      priority: TaskPriority.medium,
-      dueDate: today,
-      dueTime: '6:30 PM',
-      reminder: true,
-      reminderStyle: ReminderStyle.balanced,
-      createdAt: now,
-      updatedAt: now,
-      subtasks: [
-        SubtaskModel(
-          id: 'guest_today_2_sub1',
-          title: 'Warmup stretches',
-          completed: false,
-          dueDate: today,
-          dueTime: '6:30 PM',
-        ),
-      ],
-    ),
-    TaskModel(
-      id: 'guest_today_3',
-      title: 'Read 15 Pages of Book',
-      description: 'Focus on productivity book chapter 4.',
-      category: 'Personal',
-      priority: TaskPriority.low,
-      dueDate: today,
-      createdAt: now,
-      updatedAt: now,
-      subtasks: [],
-    ),
-
-    // Completed Targets (3 cards)
-    TaskModel(
-      id: 'guest_comp_1',
-      title: 'Design Dashboard Mockups',
-      description: 'Complete UI layout variants for the Tasks feature.',
-      category: 'Work',
-      priority: TaskPriority.high,
-      dueDate: yesterday,
-      completed: true,
-      completedAt: yesterday,
-      createdAt: yesterday,
-      updatedAt: yesterday,
-      subtasks: [
-        SubtaskModel(
-          id: 'guest_comp_1_sub1',
-          title: 'Layout structure setup',
-          completed: true,
-          dueDate: yesterday,
-        ),
-      ],
-    ),
-    TaskModel(
-      id: 'guest_comp_2',
-      title: 'Monthly Budget Review',
-      description: 'Calculate subscription renewals and personal expenses.',
-      category: 'Finance',
-      priority: TaskPriority.medium,
-      dueDate: yesterday,
-      completed: true,
-      completedAt: yesterday,
-      createdAt: yesterday,
-      updatedAt: yesterday,
-      subtasks: [],
-    ),
-    TaskModel(
-      id: 'guest_comp_3',
-      title: 'Water Houseplants',
-      description: 'Water indoor plants and add fertilizer.',
-      category: 'Personal',
-      priority: TaskPriority.low,
-      dueDate: yesterday,
-      completed: true,
-      completedAt: yesterday,
-      createdAt: yesterday,
-      updatedAt: yesterday,
-      subtasks: [],
-    ),
-
-    // Overdue Targets (3 cards)
-    TaskModel(
-      id: 'guest_over_1',
-      title: 'Submit Project Milestone 1',
-      description: 'Publish documentation and initial code branch.',
-      category: 'Work',
-      priority: TaskPriority.high,
-      dueDate: yesterday,
-      dueTime: '2:00 PM',
-      createdAt: yesterday,
-      updatedAt: yesterday,
-      subtasks: [
-        SubtaskModel(
-          id: 'guest_over_1_sub1',
-          title: 'Finalize branch tests',
-          completed: false,
-          dueDate: yesterday,
-          dueTime: '2:00 PM',
-        ),
-      ],
-    ),
-    TaskModel(
-      id: 'guest_over_2',
-      title: 'Plan Travel Vacation Route',
-      description: 'Outline flights, hotels, and tourist spots.',
-      category: 'Travel',
-      priority: TaskPriority.medium,
-      dueDate: threeDaysAgo,
-      createdAt: threeDaysAgo,
-      updatedAt: threeDaysAgo,
-      subtasks: [],
-    ),
-    TaskModel(
-      id: 'guest_over_3',
-      title: 'Schedule Annual Dentist Checkup',
-      description: 'Call dentist office for appointment options.',
-      category: 'Health',
-      priority: TaskPriority.low,
-      dueDate: yesterday,
-      createdAt: yesterday,
-      updatedAt: yesterday,
-      subtasks: [],
-    ),
-  ];
+  return [];
 }

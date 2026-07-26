@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../painters/wall_background_painter.dart';
 import '../painters/rope_painter.dart';
-import '../painters/wooden_hook_painter.dart';
 import 'affirmation_plank.dart';
 import '../../domain/models/affirmation_model.dart';
 import '../providers/affirmations_provider.dart';
@@ -14,18 +13,18 @@ import '../../../../core/theme/app_theme.dart';
 
 /// Layout constants for the hanging affirmation board.
 class _Layout {
-  static const double headerHeight = 56;
-  static const double hookDiameter = 56;
-  static const double hookToBoardGap = 42;
-  static const double boardHeight = 76;
-  static const double boardSpacing = 16.0;
+  static const double headerHeight = 44;
+  static const double hookDiameter = 44;
+  static const double hookToBoardGap = 28;
+  static const double boardHeight = 58;
+  static const double boardSpacing = 12.0;
   static const double knotsHeight = 0.0;
-  static const double boardMarginH = 20;
-  static const double paddingTop = 24;
-  static const double paddingBottom = 32;
-  static const double holeInset = 28;
-  static const double holeRadius = 5;
-  static const double ropeThickness = 5.0;
+  static const double boardMarginH = 32;
+  static const double paddingTop = 16;
+  static const double paddingBottom = 20;
+  static const double holeInset = 24;
+  static const double holeRadius = 4;
+  static const double ropeThickness = 3.8;
 }
 
 /// The complete redesigned hanging affirmation board experience.
@@ -52,30 +51,25 @@ class HangingAffirmationBoard extends ConsumerStatefulWidget {
 class _HangingAffirmationBoardState
     extends ConsumerState<HangingAffirmationBoard>
     with TickerProviderStateMixin {
-  // ── Drop bounce on open ──
-  late AnimationController _dropController;
-  late Animation<double> _dropAnimation;
-
-  // ── Planks individual gravity tilt ──
-  late AnimationController _tiltController;
-  late Animation<double> _tiltAnimation;
-  final List<double> _targetAngles = [];
+  // ── Domino Chain Reaction & Swaying Animation on Open ──
+  late AnimationController _dominoController;
+  final List<Animation<double>> _dominoTiltAnimations = [];
+  final List<Animation<double>> _dominoDropAnimations = [];
 
   // ── Drag swing with dampening ──
   double _swingAngle = 0;
   AnimationController? _dampenController;
 
-  // ── Ambient sway (very slow, ±1°) ──
+  // ── Ambient sway ──
   late AnimationController _swayController;
-  late Animation<double> _swayAnimation;
 
   // ── Ambient wall animation ──
   late AnimationController _ambientController;
   late AnimationController _sunlightController;
 
   // ── Per-plank wind offsets ──
-  late List<AnimationController> _windControllers;
-  late List<Animation<double>> _windAnimations;
+  late List<AnimationController> _windControllers = [];
+  late List<Animation<double>> _windAnimations = [];
 
   // ── Expanded plank state ──
   String? _expandedPlankId;
@@ -87,44 +81,14 @@ class _HangingAffirmationBoardState
   void initState() {
     super.initState();
 
-    // ── Planks gravity target angles (disabled - show straight) ──
-    _targetAngles.clear();
-    final count = widget.affirmations.length;
-    for (int i = 0; i < count; i++) {
-      _targetAngles.add(0.0);
-    }
+    // ── Domino Chain Reaction & Swaying Animation on Open ──
+    _initDominoAnimation();
 
-    // ── Drop bounce on open ──
-    _dropController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-    _dropAnimation = Tween<double>(begin: -800, end: 0).animate(
-      CurvedAnimation(parent: _dropController, curve: Curves.elasticOut),
-    );
-    _dropController.forward();
-
-    // ── Gravity tilt animation (starts when the boards hit the bottom at 400ms) ──
-    _tiltController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    _tiltAnimation = CurvedAnimation(
-      parent: _tiltController,
-      curve: Curves.elasticOut,
-    );
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (mounted) {
-        _tiltController.forward();
-      }
-    });
-
-    // Setup dummy sway/dampen animation objects to avoid breaking disposes
+    // ── Continuous Pendulum Swaying (3.2s natural period) ──
     _swayController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 7),
-    );
-    _swayAnimation = const AlwaysStoppedAnimation<double>(0.0);
+      duration: const Duration(milliseconds: 3200),
+    )..repeat();
 
     // ── Ambient wall dust ──
     _ambientController = AnimationController(
@@ -161,30 +125,6 @@ class _HangingAffirmationBoardState
   void _initWindControllers() {
     _windControllers = [];
     _windAnimations = [];
-    final rng = Random();
-
-    for (int i = 0; i < widget.affirmations.length; i++) {
-      // Each board has a different duration (4-6 second cycle)
-      final duration = 4.0 + rng.nextDouble() * 2.0;
-      final controller = AnimationController(
-        vsync: this,
-        duration: Duration(milliseconds: (duration * 1000).round()),
-      );
-      // Add slight delay between boards for wave effect
-      Future.delayed(Duration(milliseconds: i * 200), () {
-        if (mounted) controller.repeat(reverse: true);
-      });
-
-      // Amplitude 1-3 pixels (gentle breeze effect)
-      final amplitude = 1.0 + rng.nextDouble() * 2.0;
-      final animation = Tween<double>(
-        begin: -amplitude,
-        end: amplitude,
-      ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
-
-      _windControllers.add(controller);
-      _windAnimations.add(animation);
-    }
   }
 
   @override
@@ -198,10 +138,70 @@ class _HangingAffirmationBoardState
     }
   }
 
+  void _initDominoAnimation() {
+    final count = widget.affirmations.length;
+    _dominoTiltAnimations.clear();
+    _dominoDropAnimations.clear();
+
+    final totalMs = (1000 + (count * 140)).clamp(1200, 2600);
+
+    _dominoController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: totalMs),
+    );
+
+    for (int i = 0; i < count; i++) {
+      final startMs = i * 120;
+      final durationMs = 850;
+      final startInterval = (startMs / totalMs).clamp(0.0, 0.85);
+      final endInterval = ((startMs + durationMs) / totalMs).clamp(0.15, 1.0);
+
+      // Alternating domino impact angle: Card 0 tilts left (-0.14 rad), Card 1 tilts right (+0.12 rad)...
+      final initialImpactAngle = (i % 2 == 0 ? -0.14 : 0.12) * pow(0.88, i);
+
+      final tiltAnim = TweenSequence<double>([
+        // Stage 1: Fall & domino impact tilt (card falls and leans left/right)
+        TweenSequenceItem(
+          tween: Tween<double>(begin: initialImpactAngle, end: -initialImpactAngle * 0.5)
+              .chain(CurveTween(curve: Curves.easeOutCubic)),
+          weight: 40,
+        ),
+        // Stage 2: Rebound sway as rope catches it
+        TweenSequenceItem(
+          tween: Tween<double>(begin: -initialImpactAngle * 0.5, end: initialImpactAngle * 0.25)
+              .chain(CurveTween(curve: Curves.easeInOutCubic)),
+          weight: 35,
+        ),
+        // Stage 3: Smooth decay back to equilibrium (0.0)
+        TweenSequenceItem(
+          tween: Tween<double>(begin: initialImpactAngle * 0.25, end: 0.0)
+              .chain(CurveTween(curve: Curves.easeOutQuad)),
+          weight: 25,
+        ),
+      ]).animate(
+        CurvedAnimation(
+          parent: _dominoController,
+          curve: Interval(startInterval, endInterval, curve: Curves.linear),
+        ),
+      );
+
+      final dropAnim = Tween<double>(begin: -240.0 - (i * 30.0), end: 0.0).animate(
+        CurvedAnimation(
+          parent: _dominoController,
+          curve: Interval(startInterval, endInterval, curve: Curves.elasticOut),
+        ),
+      );
+
+      _dominoTiltAnimations.add(tiltAnim);
+      _dominoDropAnimations.add(dropAnim);
+    }
+
+    _dominoController.forward();
+  }
+
   @override
   void dispose() {
-    _dropController.dispose();
-    _tiltController.dispose();
+    _dominoController.dispose();
     _swayController.dispose();
     _ambientController.dispose();
     _sunlightController.dispose();
@@ -225,10 +225,9 @@ class _HangingAffirmationBoardState
   void _onPanEnd(DragEndDetails details) {}
 
   double _getSwayAngleForBoard(int index) {
-    final waveValue = sin(_swayController.value * pi);
-    final boardSway = waveValue * 0.008;
-    final boardSwing = _swingAngle;
-    return boardSway + boardSwing;
+    final waveValue = sin((_swayController.value * pi * 2) + (index * 0.5));
+    final boardSway = waveValue * (0.007 + (index * 0.0015));
+    return boardSway + _swingAngle;
   }
 
   double _getStaticTilt(String id) {
@@ -340,7 +339,6 @@ class _HangingAffirmationBoardState
       return _buildEmptyState(context, screenWidth, headerHeight);
     }
     final totalHeight = _calculateTotalHeight(headerHeight);
-    final boardRects = _calculateBoardRects(screenWidth, headerHeight);
     final hookCenterX = screenWidth / 2;
 
     // Calculate vertical positions and heights dynamically for the stack positioned elements
@@ -362,7 +360,6 @@ class _HangingAffirmationBoardState
     final List<Widget> preBuiltPlanks = List.generate(widget.affirmations.length, (i) {
       final aff = widget.affirmations[i];
       final isExpanded = _expandedPlankId == aff.id;
-      final targetAngle = i < _targetAngles.length ? _targetAngles[i] : 0.0;
 
       return AffirmationPlank(
         affirmation: aff,
@@ -379,59 +376,79 @@ class _HangingAffirmationBoardState
           ref.read(affirmationsProvider.notifier).togglePin(aff.id);
         },
         onRepeat: () => _showRepeatDialog(aff),
-        tiltAngle: targetAngle,
+        tiltAngle: 0.0,
       );
     });
 
-    final Widget staticContent = Stack(
-      clipBehavior: Clip.none,
-      children: [
-        // ── Rope system (drawn BEHIND boards) ──
-        Positioned.fill(
-          child: RepaintBoundary(
-            child: CustomPaint(
-              painter: RopeSystemPainter(
-                hookCenterX: hookCenterX,
-                hookBottomY: headerHeight + 8.0,
-                boardRects: boardRects,
-                holeInset: _Layout.holeInset,
-                holeRadius: _Layout.holeRadius,
-                thickness: _Layout.ropeThickness,
+    final Widget animatedHangingSystem = AnimatedBuilder(
+      animation: Listenable.merge([_dominoController, _swayController]),
+      builder: (context, _) {
+        // Continuous smooth pendulum sway (3.2s natural period)
+        final waveValue = sin(_swayController.value * pi * 2);
+        final masterSway = waveValue * 0.022; // ~1.25 degree active pendulum sway
+
+        // Calculate dynamic board rects for RopeSystemPainter frame-by-frame
+        final boardWidth = screenWidth - 2 * _Layout.boardMarginH;
+        final dynamicBoardRects = <Rect>[];
+
+        for (int i = 0; i < widget.affirmations.length; i++) {
+          final isExpanded = _expandedPlankId == widget.affirmations[i].id;
+          final h = isExpanded ? 110.0 : _Layout.boardHeight;
+          final dominoDrop = i < _dominoDropAnimations.length ? _dominoDropAnimations[i].value : 0.0;
+          dynamicBoardRects.add(Rect.fromLTWH(_Layout.boardMarginH, boardYs[i] + dominoDrop, boardWidth, h));
+        }
+
+        return Transform.rotate(
+          angle: masterSway + _swingAngle,
+          alignment: Alignment.topCenter,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // ── Rope system (drawn BEHIND boards, sways in 1:1 sync with cards & updates dynamically) ──
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: RopeSystemPainter(
+                    hookCenterX: hookCenterX,
+                    hookBottomY: headerHeight + 8.0,
+                    boardRects: dynamicBoardRects,
+                    holeInset: _Layout.holeInset,
+                    holeRadius: _Layout.holeRadius,
+                    thickness: _Layout.ropeThickness,
+                  ),
+                ),
               ),
-            ),
+
+              // ── Boards (drawn ON TOP of rope, domino drop & tilt, text locked to wood texture) ──
+              ...List.generate(widget.affirmations.length, (i) {
+                final boardY = boardYs[i];
+                final boardH = boardHeights[i];
+                final staticOffset = _getStaticOffsetX(widget.affirmations[i].id);
+                final dominoTilt = i < _dominoTiltAnimations.length
+                    ? _dominoTiltAnimations[i].value
+                    : 0.0;
+                final dominoDrop = i < _dominoDropAnimations.length
+                    ? _dominoDropAnimations[i].value
+                    : 0.0;
+
+                return Positioned(
+                  top: boardY + dominoDrop,
+                  left: 0,
+                  right: 0,
+                  height: boardH,
+                  child: Transform.translate(
+                    offset: Offset(staticOffset, 0),
+                    child: Transform.rotate(
+                      angle: dominoTilt,
+                      alignment: Alignment.topCenter,
+                      child: preBuiltPlanks[i],
+                    ),
+                  ),
+                );
+              }),
+            ],
           ),
-        ),
-
-        // ── Boards (drawn ON TOP of rope) ──
-        ...List.generate(widget.affirmations.length, (i) {
-          final boardY = boardYs[i];
-          final boardH = boardHeights[i];
-          final staticOffset = _getStaticOffsetX(widget.affirmations[i].id);
-
-          return Positioned(
-            top: boardY,
-            left: 0,
-            right: 0,
-            height: boardH,
-            child: Transform.translate(
-              offset: Offset(staticOffset, 0),
-              child: AnimatedBuilder(
-                animation: _tiltAnimation,
-                child: preBuiltPlanks[i],
-                builder: (context, child) {
-                  final targetAngle = i < _targetAngles.length ? _targetAngles[i] : 0.0;
-                  final currentAngle = targetAngle * _tiltAnimation.value;
-                  return Transform.rotate(
-                    angle: currentAngle,
-                    alignment: Alignment.center,
-                    child: child,
-                  );
-                },
-              ),
-            ),
-          );
-        }),
-      ],
+        );
+      },
     );
 
     return SingleChildScrollView(
@@ -447,18 +464,9 @@ class _HangingAffirmationBoardState
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              // ── Drop entrance ──
+              // ── Domino flow entrance ──
               Positioned.fill(
-                child: AnimatedBuilder(
-                  animation: _dropController,
-                  child: staticContent,
-                  builder: (context, child) {
-                    return Transform.translate(
-                      offset: Offset(0, _dropAnimation.value),
-                      child: child,
-                    );
-                  },
-                ),
+                child: animatedHangingSystem,
               ),
             ],
           ),
@@ -500,10 +508,10 @@ class _HangingAffirmationBoardState
               // Drop entrance (Empty state)
               Positioned.fill(
                 child: AnimatedBuilder(
-                  animation: _dropController,
+                  animation: _dominoController,
                   builder: (context, _) {
                     return Transform.translate(
-                      offset: Offset(0, _dropAnimation.value),
+                      offset: Offset(0, (1.0 - _dominoController.value) * -100.0),
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [

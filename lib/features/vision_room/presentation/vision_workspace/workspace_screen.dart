@@ -1,5 +1,8 @@
 import 'dart:math';
 import 'dart:ui';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,6 +47,8 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
   double _itemStartWidth = 0;
   double _itemStartHeight = 0;
   double _itemStartRotation = 0;
+  double _itemStartX = 0;
+  double _itemStartY = 0;
 
   Matrix4? _startViewportTransform;
   Offset? _startFocalPoint;
@@ -157,7 +162,25 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
       ref.read(canvasStateProvider.notifier).addItem(newItem);
       _setSaving();
 
-      // Upload in the background
+      final hasToken = ref.read(hiveDatabaseProvider).getAuthToken() != null;
+      if (!hasToken) {
+        // Guest User: Copy image to permanent directory and update item details
+        getApplicationDocumentsDirectory().then((appDocDir) {
+          final fileName = p.basename(image.path);
+          final targetPath = '${appDocDir.path}/$fileName';
+          File(image.path).copy(targetPath).then((savedFile) {
+            if (mounted) {
+              ref.read(canvasStateProvider.notifier).updateItemDetails(
+                newItem.id,
+                content: savedFile.path,
+              );
+            }
+          });
+        });
+        return;
+      }
+
+      // Upload in the background for logged-in users
       final dio = ref.read(dioClientProvider).dio;
       final uploadService = VisionUploadService(dio: dio);
       
@@ -547,6 +570,217 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
     );
   }
 
+  void _showAddOptionsBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        final colors = context.colors;
+        return DraggableScrollableSheet(
+          initialChildSize: 0.45,
+          minChildSize: 0.3,
+          maxChildSize: 0.8,
+          expand: false,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: colors.bg2,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  width: 0.5,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: colors.textMuted.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Add New Item',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Expanded(
+                          child: GridView.count(
+                            controller: scrollController,
+                            crossAxisCount: 4,
+                            mainAxisSpacing: 20,
+                            crossAxisSpacing: 16,
+                            children: [
+                              _bottomSheetToolItem(
+                                context,
+                                Icons.image_rounded,
+                                'Image',
+                                () {
+                                  Navigator.pop(context);
+                                  _pickImage();
+                                },
+                              ),
+                              _bottomSheetToolItem(
+                                context,
+                                Icons.sticky_note_2_rounded,
+                                'Note',
+                                () {
+                                  Navigator.pop(context);
+                                  _showAddStickyNoteDialog(context);
+                                },
+                              ),
+                              _bottomSheetToolItem(
+                                context,
+                                Icons.auto_awesome_rounded,
+                                'Quote',
+                                () {
+                                  Navigator.pop(context);
+                                  QuoteBuilderModal.show(context, onSubmit: _addQuote);
+                                },
+                              ),
+                              _bottomSheetToolItem(
+                                context,
+                                Icons.flag_rounded,
+                                'Goal',
+                                () {
+                                  Navigator.pop(context);
+                                  GoalBuilderModal.show(context, onSubmit: _addGoal);
+                                },
+                              ),
+                              _bottomSheetToolItem(
+                                context,
+                                Icons.account_tree_rounded,
+                                'Plan',
+                                () {
+                                  Navigator.pop(context);
+                                  PlanBuilderModal.show(context, onSubmit: _addPlan);
+                                },
+                              ),
+                              _bottomSheetToolItem(
+                                context,
+                                Icons.check_circle_outline_rounded,
+                                'Task',
+                                () {
+                                  Navigator.pop(context);
+                                  TaskBuilderModal.show(context, onSubmit: _addTask);
+                                },
+                              ),
+                              _bottomSheetToolItem(
+                                context,
+                                Icons.savings_rounded,
+                                'Finance',
+                                () {
+                                  Navigator.pop(context);
+                                  FinanceBuilderModal.show(context, onSubmit: _addFinance);
+                                },
+                              ),
+                              _bottomSheetToolItem(
+                                context,
+                                Icons.timer_rounded,
+                                'Countdown',
+                                () {
+                                  Navigator.pop(context);
+                                  CountdownBuilderModal.show(context, onSubmit: _addCountdown);
+                                },
+                              ),
+                              _bottomSheetToolItem(
+                                context,
+                                Icons.crop_square_rounded,
+                                'Frame',
+                                () {
+                                  Navigator.pop(context);
+                                  _addFrame();
+                                },
+                              ),
+                              _bottomSheetToolItem(
+                                context,
+                                Icons.category_rounded,
+                                'Shapes',
+                                () {
+                                  Navigator.pop(context);
+                                  _addShape();
+                                },
+                              ),
+                              _bottomSheetToolItem(
+                                context,
+                                Icons.text_fields_rounded,
+                                'Text',
+                                () {
+                                  Navigator.pop(context);
+                                  _addText();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _bottomSheetToolItem(
+    BuildContext context,
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+  ) {
+    final colors = context.colors;
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.accentBlue.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: colors.accentBlue,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: colors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _addShape() {
     final shapes = [
       ('Circle', Icons.circle_outlined),
@@ -806,23 +1040,27 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
                 FocusScope.of(context).unfocus();
               },
               onScaleStart: (details) {
+                _startFocalPoint = details.localFocalPoint;
                 if (_interactingItemId == null) {
                   _startViewportTransform = Matrix4.copy(viewportTransform);
-                  _startFocalPoint = details.localFocalPoint;
                 } else {
                   _startViewportTransform = null;
-                  _startFocalPoint = null;
+                  try {
+                    final item = items.firstWhere((i) => i.id == _interactingItemId);
+                    _itemStartX = item.x;
+                    _itemStartY = item.y;
+                  } catch (_) {}
                 }
               },
               onScaleUpdate: (details) {
-                if (_interactingItemId != null) {
+                if (_interactingItemId != null && _startFocalPoint != null) {
                   final scaleX = viewportTransform.entry(0, 0);
                   final scaleY = viewportTransform.entry(1, 1);
-                  final dx = details.focalPointDelta.dx / scaleX;
-                  final dy = details.focalPointDelta.dy / scaleY;
+                  final dx = (details.localFocalPoint.dx - _startFocalPoint!.dx) / scaleX;
+                  final dy = (details.localFocalPoint.dy - _startFocalPoint!.dy) / scaleY;
                   ref
                       .read(canvasStateProvider.notifier)
-                      .updatePosition(_interactingItemId!, dx, dy);
+                      .updatePositionAbsolute(_interactingItemId!, _itemStartX + dx, _itemStartY + dy);
                   ref
                       .read(canvasStateProvider.notifier)
                       .updateTransform(
@@ -914,6 +1152,8 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
                                 _itemStartWidth = item.width;
                                 _itemStartHeight = item.height;
                                 _itemStartRotation = item.rotation;
+                                _itemStartX = item.x;
+                                _itemStartY = item.y;
                               });
                               ref.read(canvasStateProvider.notifier).selectItem(item.id);
                               _propertiesAnimController.forward();
@@ -975,26 +1215,6 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
               },
             ),
           ),
-
-          // Properties panel
-          if (selectedIds.isNotEmpty)
-            AnimatedBuilder(
-              animation: _propertiesAnim,
-              builder: (context, _) {
-                return Positioned(
-                  bottom: 210,
-                  left: 20,
-                  right: 20,
-                  child: Transform.translate(
-                    offset: Offset(0, 120 * (1 - _propertiesAnim.value)),
-                    child: Opacity(
-                      opacity: _propertiesAnim.value,
-                      child: _buildPropertiesPanel(context, selectedIds.first),
-                    ),
-                  ),
-                );
-              },
-            ),
         ],
       ),
     );
@@ -1463,23 +1683,10 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
                               SmartObjectSheetRouter.open(context, item);
                               HapticFeedback.lightImpact();
                             }),
-                            _selectionAction(Icons.copy_rounded, 'Duplicate', () {
-                              final items = ref.read(canvasStateProvider).items;
-                              final item = items.firstWhere((i) => i.id == itemId);
-                              final newItem = item.copyWith(
-                                id: const Uuid().v4(),
-                                x: item.x + 40,
-                                y: item.y + 40,
-                                zIndex: item.zIndex + 1,
-                              );
-                              ref.read(canvasStateProvider.notifier).addItem(newItem);
-                              ref
-                                  .read(canvasStateProvider.notifier)
-                                  .selectItem(newItem.id);
-                              _setSaving();
+                            _selectionAction(Icons.add_circle_outline_rounded, 'Add New', () {
+                              _showAddOptionsBottomSheet(context);
                               HapticFeedback.lightImpact();
                             }),
-                            _selectionAction(Icons.lock_outline_rounded, 'Lock', () {}),
                             _selectionAction(Icons.delete_outline_rounded, 'Delete', () {
                               ref.read(canvasStateProvider.notifier).removeItem(itemId);
                               _propertiesAnimController.reverse();
@@ -1492,19 +1699,6 @@ class _VisionWorkspaceScreenState extends ConsumerState<VisionWorkspaceScreen>
                             }),
                             _selectionAction(Icons.flip_to_back_rounded, 'Back', () {
                               ref.read(canvasStateProvider.notifier).sendToBack(itemId);
-                              _setSaving();
-                            }),
-                            _selectionAction(Icons.rotate_right_rounded, 'Rotate', () {
-                              final items = ref.read(canvasStateProvider).items;
-                              final item = items.firstWhere((i) => i.id == itemId);
-                              ref
-                                  .read(canvasStateProvider.notifier)
-                                  .commitTransform(
-                                    itemId,
-                                    item.width,
-                                    item.height,
-                                    item.rotation + 0.15,
-                                  );
                               _setSaving();
                             }),
                           ],

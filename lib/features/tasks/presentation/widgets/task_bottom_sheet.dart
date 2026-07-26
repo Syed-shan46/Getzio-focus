@@ -10,6 +10,7 @@ import '../../domain/models/task_model.dart';
 import '../providers/tasks_provider.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class TaskBottomSheet extends ConsumerStatefulWidget {
   final TaskModel? existingTask;
@@ -345,14 +346,17 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
         : DateFormat('dd MMM').format(subtask.dueDate!);
     final countdown = _getCountdownString(subtask.dueDate, subtask.dueTime);
     final countdownColor = _getCountdownColor(subtask.dueDate, subtask.dueTime, subtask.completed);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       key: ValueKey(subtask.id),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: isDark ? Colors.white.withValues(alpha: 0.03) : context.colors.textPrimary.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : context.colors.textPrimary.withValues(alpha: 0.05),
+        ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -361,7 +365,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.drag_handle_rounded, color: Colors.white30, size: 20),
+              Icon(Icons.drag_handle_rounded, color: context.colors.textMuted, size: 20),
               const SizedBox(width: 8),
               GestureDetector(
                 onTap: () {
@@ -374,7 +378,9 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: subtask.completed ? Colors.greenAccent : Colors.white54,
+                      color: subtask.completed 
+                          ? Colors.greenAccent 
+                          : (isDark ? Colors.white54 : context.colors.textMuted),
                       width: 1.5,
                     ),
                     color: subtask.completed
@@ -395,7 +401,9 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
             Text(
               subtask.title,
               style: GoogleFonts.outfit(
-                color: subtask.completed ? Colors.white54 : Colors.white,
+                color: subtask.completed 
+                    ? (isDark ? Colors.white54 : context.colors.textMuted) 
+                    : context.colors.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 decoration: subtask.completed ? TextDecoration.lineThrough : null,
@@ -410,7 +418,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: isDark ? Colors.white.withValues(alpha: 0.05) : context.colors.textPrimary.withValues(alpha: 0.03),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
@@ -420,7 +428,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                         const SizedBox(width: 3),
                         Text(
                           dateStr ?? '',
-                          style: GoogleFonts.outfit(color: Colors.white70, fontSize: 9),
+                          style: GoogleFonts.outfit(color: context.colors.textSecondary, fontSize: 9),
                         ),
                       ],
                     ),
@@ -429,7 +437,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : context.colors.textPrimary.withValues(alpha: 0.03),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
@@ -439,7 +447,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                           const SizedBox(width: 3),
                           Text(
                             subtask.dueTime!,
-                            style: GoogleFonts.outfit(color: Colors.white70, fontSize: 9),
+                            style: GoogleFonts.outfit(color: context.colors.textSecondary, fontSize: 9),
                           ),
                         ],
                       ),
@@ -468,7 +476,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.edit_rounded, color: Colors.white54, size: 18),
+              icon: Icon(Icons.edit_rounded, color: context.colors.textSecondary, size: 18),
               onPressed: () => _openSubtaskEditor(index: index),
               constraints: const BoxConstraints(),
               padding: EdgeInsets.zero,
@@ -487,11 +495,12 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
   }
 
   Widget _buildSubtaskEditorCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : context.colors.textPrimary.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
       ),
@@ -501,7 +510,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
           Text(
             _editingSubtaskIndex != null ? 'Edit Subtask' : 'New Subtask',
             style: GoogleFonts.outfit(
-              color: Colors.white,
+              color: context.colors.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
@@ -509,12 +518,12 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
           const SizedBox(height: 12),
           TextField(
             controller: _subtaskTitleController,
-            style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
+            style: GoogleFonts.outfit(color: context.colors.textPrimary, fontSize: 14),
             decoration: InputDecoration(
               hintText: 'e.g. Design Landing Page',
-              hintStyle: GoogleFonts.outfit(color: Colors.white30),
+              hintStyle: GoogleFonts.outfit(color: context.colors.textMuted),
               filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.03),
+              fillColor: isDark ? Colors.white.withValues(alpha: 0.03) : context.colors.textPrimary.withValues(alpha: 0.015),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
@@ -533,6 +542,27 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                       initialDate: _subtaskDueDate ?? DateTime.now(),
                       firstDate: DateTime.now().subtract(const Duration(days: 365)),
                       lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                      builder: (context, child) => Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: isDark 
+                              ? const ColorScheme.dark(
+                                  primary: Color(0xFF3B82F6),
+                                  onPrimary: Colors.white,
+                                  surface: Color(0xFF131722),
+                                  onSurface: Colors.white,
+                                )
+                              : ColorScheme.light(
+                                  primary: const Color(0xFF3B82F6),
+                                  onPrimary: Colors.white,
+                                  surface: context.colors.bg2,
+                                  onSurface: context.colors.textPrimary,
+                                ),
+                          dialogBackgroundColor: isDark 
+                              ? const Color(0xFF131722)
+                              : context.colors.bg2,
+                        ),
+                        child: child!,
+                      ),
                     );
                     if (date != null) {
                       setState(() => _subtaskDueDate = date);
@@ -541,9 +571,11 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.03),
+                      color: isDark ? Colors.white.withValues(alpha: 0.03) : context.colors.textPrimary.withValues(alpha: 0.015),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                      border: Border.all(
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : context.colors.textPrimary.withValues(alpha: 0.05),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -555,7 +587,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                                 ? 'Target Date'
                                 : DateFormat('dd MMM yyyy').format(_subtaskDueDate!),
                             style: GoogleFonts.outfit(
-                              color: _subtaskDueDate == null ? Colors.white54 : Colors.white,
+                              color: _subtaskDueDate == null ? context.colors.textMuted : context.colors.textPrimary,
                               fontSize: 12,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -573,6 +605,27 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                     final time = await showTimePicker(
                       context: context,
                       initialTime: TimeOfDay.now(),
+                      builder: (context, child) => Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: isDark 
+                              ? const ColorScheme.dark(
+                                  primary: Color(0xFF3B82F6),
+                                  onPrimary: Colors.white,
+                                  surface: Color(0xFF131722),
+                                  onSurface: Colors.white,
+                                )
+                              : ColorScheme.light(
+                                  primary: const Color(0xFF3B82F6),
+                                  onPrimary: Colors.white,
+                                  surface: context.colors.bg2,
+                                  onSurface: context.colors.textPrimary,
+                                ),
+                          dialogBackgroundColor: isDark 
+                              ? const Color(0xFF131722)
+                              : context.colors.bg2,
+                        ),
+                        child: child!,
+                      ),
                     );
                     if (time != null) {
                       setState(() => _subtaskDueTime = time.format(context));
@@ -581,9 +634,11 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.03),
+                      color: isDark ? Colors.white.withValues(alpha: 0.03) : context.colors.textPrimary.withValues(alpha: 0.015),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                      border: Border.all(
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : context.colors.textPrimary.withValues(alpha: 0.05),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -593,7 +648,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                           child: Text(
                             _subtaskDueTime ?? 'Target Time',
                             style: GoogleFonts.outfit(
-                              color: _subtaskDueTime == null ? Colors.white54 : Colors.white,
+                              color: _subtaskDueTime == null ? context.colors.textMuted : context.colors.textPrimary,
                               fontSize: 12,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -604,7 +659,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                             onTap: () {
                               setState(() => _subtaskDueTime = null);
                             },
-                            child: const Icon(Icons.close_rounded, color: Colors.white38, size: 14),
+                            child: Icon(Icons.close_rounded, color: context.colors.textMuted, size: 14),
                           ),
                       ],
                     ),
@@ -624,7 +679,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                   Text(
                     'Notify me before deadline',
                     style: GoogleFonts.outfit(
-                      color: Colors.white70,
+                      color: context.colors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -645,7 +700,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                 onPressed: _cancelSubtaskEditor,
                 child: Text(
                   'Cancel',
-                  style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13),
+                  style: GoogleFonts.outfit(color: context.colors.textSecondary, fontSize: 13),
                 ),
               ),
               const SizedBox(width: 12),
@@ -677,12 +732,14 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final screenHeight = MediaQuery.of(context).size.height;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: screenHeight * 0.90),
+      constraints: BoxConstraints(maxHeight: screenHeight * 0.82),
       child: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF131722),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF131722) : context.colors.bg2,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -693,15 +750,15 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
               children: [
                 // Header
                 Padding(
-                  padding: const EdgeInsets.only(left: 24, right: 8, top: 20),
+                  padding: const EdgeInsets.only(left: 20, right: 8, top: 16, bottom: 4),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         widget.existingTask != null ? 'Edit Task' : 'New Task',
                         style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 20,
+                          color: context.colors.textPrimary,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -710,7 +767,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                           _pinned
                               ? Icons.push_pin_rounded
                               : Icons.push_pin_outlined,
-                          color: _pinned ? Colors.amber : Colors.white54,
+                          color: _pinned ? Colors.amber : context.colors.textMuted,
                         ),
                         onPressed: _isReadOnly ? null : () => setState(() => _pinned = !_pinned),
                       ),
@@ -722,10 +779,10 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                 Flexible(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.only(
-                      left: 24,
-                      right: 24,
-                      top: 16,
-                      bottom: 24 + bottomInset,
+                      left: 20,
+                      right: 20,
+                      top: 8,
+                      bottom: 20 + bottomInset,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -735,396 +792,409 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                        // ── Title ──
-                        TextField(
-                          controller: _titleController,
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'What needs to be done? *',
-                            hintStyle: GoogleFonts.outfit(
-                              color: Colors.white38,
-                            ),
-                            filled: true,
-                            fillColor: Colors.white.withValues(alpha: 0.05),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // ── Description ──
-                        TextField(
-                          controller: _descController,
-                          maxLines: 2,
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Description (optional)',
-                            hintStyle: GoogleFonts.outfit(
-                              color: Colors.white38,
-                            ),
-                            filled: true,
-                            fillColor: Colors.white.withValues(alpha: 0.05),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // ── Progress (only when no subtasks) ──
-                        if (_subtasks.isEmpty) ...[
-                          Text(
-                            'Progress',
-                            style: GoogleFonts.outfit(
-                              color: Colors.white70,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: SliderTheme(
-                                  data: SliderThemeData(
-                                    activeTrackColor: const Color(0xFF3B82F6),
-                                    inactiveTrackColor: Colors.white.withValues(
-                                      alpha: 0.1,
-                                    ),
-                                    thumbColor: Colors.white,
-                                    trackHeight: 4,
+                              // ── Title ──
+                              TextField(
+                                controller: _titleController,
+                                style: GoogleFonts.outfit(
+                                  color: context.colors.textPrimary,
+                                  fontSize: 15,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'What needs to be done? *',
+                                  hintStyle: GoogleFonts.outfit(
+                                    color: context.colors.textMuted,
+                                    fontSize: 14,
                                   ),
-                                  child: Slider(
-                                    value: _manualProgress,
-                                    min: 0,
-                                    max: 100,
-                                    divisions: 100,
-                                    onChanged: (value) =>
-                                        setState(() => _manualProgress = value),
+                                  filled: true,
+                                  fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : context.colors.textPrimary.withValues(alpha: 0.03),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
                                   ),
                                 ),
                               ),
-                              SizedBox(
-                                width: 48,
-                                child: Text(
-                                  '${_manualProgress.toInt()}%',
-                                  textAlign: TextAlign.right,
+                              const SizedBox(height: 12),
+
+                              // ── Description ──
+                              TextField(
+                                controller: _descController,
+                                maxLines: 2,
+                                style: GoogleFonts.outfit(
+                                  color: context.colors.textPrimary,
+                                  fontSize: 13,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Description (optional)',
+                                  hintStyle: GoogleFonts.outfit(
+                                    color: context.colors.textMuted,
+                                    fontSize: 13,
+                                  ),
+                                  filled: true,
+                                  fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : context.colors.textPrimary.withValues(alpha: 0.03),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // ── Progress (only when no subtasks) ──
+                              if (_subtasks.isEmpty) ...[
+                                Text(
+                                  'Progress',
                                   style: GoogleFonts.outfit(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
+                                    color: context.colors.textSecondary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                        ],
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: SliderTheme(
+                                        data: SliderThemeData(
+                                          activeTrackColor: const Color(0xFF3B82F6),
+                                          inactiveTrackColor: isDark 
+                                              ? Colors.white.withValues(alpha: 0.1)
+                                              : context.colors.textPrimary.withValues(alpha: 0.1),
+                                          thumbColor: context.colors.textPrimary,
+                                          trackHeight: 4,
+                                        ),
+                                        child: Slider(
+                                          value: _manualProgress,
+                                          min: 0,
+                                          max: 100,
+                                          divisions: 100,
+                                          onChanged: (value) =>
+                                              setState(() => _manualProgress = value),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 48,
+                                      child: Text(
+                                        '${_manualProgress.toInt()}%',
+                                        textAlign: TextAlign.right,
+                                        style: GoogleFonts.outfit(
+                                          color: context.colors.textPrimary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 24),
+                              ],
 
-                        // ── Category ──
-                        Text(
-                          'Category',
-                          style: GoogleFonts.outfit(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            ..._allCategories.map((c) {
-                              final isSelected = c == _category;
-                              return GestureDetector(
-                                onTap: () => setState(() => _category = c),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
+                              // ── Category ──
+                              Text(
+                                'Category',
+                                style: GoogleFonts.outfit(
+                                  color: context.colors.textSecondary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: [
+                                  ..._allCategories.map((c) {
+                                    final isSelected = c == _category;
+                                    return GestureDetector(
+                                      onTap: () => setState(() => _category = c),
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 200),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? Colors.blueAccent
+                                              : (isDark ? Colors.white.withValues(alpha: 0.05) : context.colors.textPrimary.withValues(alpha: 0.03)),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          c,
+                                          style: GoogleFonts.outfit(
+                                            color: isSelected
+                                                ? Colors.white
+                                                : context.colors.textSecondary,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+
+                              // ── Priority ──
+                              Text(
+                                'Priority',
+                                style: GoogleFonts.outfit(
+                                  color: context.colors.textSecondary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: TaskPriority.values.map((p) {
+                                  final isSelected = p == _priority;
+                                  final String label = p
+                                      .toString()
+                                      .split('.')
+                                      .last
+                                      .toUpperCase();
+                                  Color pColor;
+                                  if (p == TaskPriority.high)
+                                    pColor = Colors.redAccent;
+                                  else if (p == TaskPriority.medium)
+                                    pColor = Colors.orangeAccent;
+                                  else
+                                    pColor = Colors.greenAccent;
+                                  return Expanded(
+                                    child: GestureDetector(
+                                      onTap: () => setState(() => _priority = p),
+                                      child: Container(
+                                        margin: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? pColor.withValues(alpha: 0.2)
+                                              : (isDark ? Colors.white.withValues(alpha: 0.05) : context.colors.textPrimary.withValues(alpha: 0.03)),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? pColor
+                                                : Colors.transparent,
+                                            width: 1.5,
+                                          ),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            label,
+                                            style: GoogleFonts.outfit(
+                                              color: isSelected
+                                                  ? pColor
+                                                  : context.colors.textSecondary,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                              const SizedBox(height: 14),
+
+                              // ── Due Date ──
+                              Text(
+                                'Due Date',
+                                style: GoogleFonts.outfit(
+                                  color: context.colors.textSecondary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              GestureDetector(
+                                onTap: () async {
+                                  final selectedDate = await showDatePicker(
+                                    context: context,
+                                    initialDate: _dueDate ?? DateTime.now(),
+                                    firstDate: DateTime.now().subtract(
+                                      const Duration(days: 365),
+                                    ),
+                                    lastDate: DateTime.now().add(
+                                      const Duration(days: 3650),
+                                    ),
+                                    builder: (context, child) => Theme(
+                                      data: Theme.of(context).copyWith(
+                                        colorScheme: isDark 
+                                            ? const ColorScheme.dark(
+                                                primary: Color(0xFF3B82F6),
+                                                onPrimary: Colors.white,
+                                                surface: Color(0xFF131722),
+                                                onSurface: Colors.white,
+                                              )
+                                            : ColorScheme.light(
+                                                primary: const Color(0xFF3B82F6),
+                                                onPrimary: Colors.white,
+                                                surface: context.colors.bg2,
+                                                onSurface: context.colors.textPrimary,
+                                              ),
+                                        dialogBackgroundColor: isDark 
+                                            ? const Color(0xFF131722)
+                                            : context.colors.bg2,
+                                      ),
+                                      child: child!,
+                                    ),
+                                  );
+                                  if (selectedDate != null)
+                                    setState(() => _dueDate = selectedDate);
+                                },
+                                child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 8,
+                                    horizontal: 12,
+                                    vertical: 10,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? Colors.blueAccent
-                                        : Colors.white.withValues(alpha: 0.05),
+                                    color: isDark ? Colors.white.withValues(alpha: 0.05) : context.colors.textPrimary.withValues(alpha: 0.03),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: Text(
-                                    c,
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.calendar_today_rounded,
+                                        color: Color(0xFF3B82F6),
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          _dueDate != null
+                                              ? DateFormat(
+                                                  'EEEE, MMMM d, yyyy',
+                                                ).format(_dueDate!)
+                                              : 'No due date set (Optional)',
+                                          style: GoogleFonts.outfit(
+                                            color: _dueDate != null
+                                                ? context.colors.textPrimary
+                                                : context.colors.textMuted,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                      if (_dueDate != null)
+                                        GestureDetector(
+                                          onTap: () =>
+                                              setState(() => _dueDate = null),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 4,
+                                            ),
+                                            child: Icon(
+                                              Icons.clear_rounded,
+                                              color: context.colors.textSecondary,
+                                              size: 16,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              // ── Subtasks Section ──
+                              const SizedBox(height: 18),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Subtasks',
                                     style: GoogleFonts.outfit(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.white70,
+                                      color: context.colors.textSecondary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  if (_subtasks.isNotEmpty)
+                                    Text(
+                                      '${_subtasks.where((s) => s.completed).length}/${_subtasks.length} done',
+                                      style: GoogleFonts.outfit(
+                                        color: context.colors.textMuted,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              if (_showSubtaskEditor) _buildSubtaskEditorCard(),
+
+                              if (_subtasks.isEmpty) ...[
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    'Break your task into smaller achievable steps.',
+                                    style: GoogleFonts.outfit(
+                                      color: context.colors.textMuted,
                                       fontSize: 12,
                                     ),
                                   ),
                                 ),
-                              );
-                            }),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
+                              ] else
+                                ReorderableListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: _subtasks.length,
+                                  itemBuilder: (context, index) => _buildSubtaskItem(index),
+                                  onReorder: (oldIndex, newIndex) {
+                                    setState(() {
+                                      if (newIndex > oldIndex) {
+                                        newIndex -= 1;
+                                      }
+                                      final item = _subtasks.removeAt(oldIndex);
+                                      _subtasks.insert(newIndex, item);
+                                      for (int i = 0; i < _subtasks.length; i++) {
+                                        _subtasks[i] = _subtasks[i].copyWith(sortOrder: i);
+                                      }
+                                    });
+                                  },
+                                ),
 
-                        // ── Priority ──
-                        Text(
-                          'Priority',
-                          style: GoogleFonts.outfit(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: TaskPriority.values.map((p) {
-                            final isSelected = p == _priority;
-                            final String label = p
-                                .toString()
-                                .split('.')
-                                .last
-                                .toUpperCase();
-                            Color pColor;
-                            if (p == TaskPriority.high)
-                              pColor = Colors.redAccent;
-                            else if (p == TaskPriority.medium)
-                              pColor = Colors.orangeAccent;
-                            else
-                              pColor = Colors.greenAccent;
-                            return Expanded(
-                              child: GestureDetector(
-                                onTap: () => setState(() => _priority = p),
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 10,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? pColor.withValues(alpha: 0.2)
-                                        : Colors.white.withValues(alpha: 0.05),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? pColor
-                                          : Colors.transparent,
-                                      width: 1.5,
+                              const SizedBox(height: 8),
+                              if (!_showSubtaskEditor)
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 38,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => _openSubtaskEditor(),
+                                    icon: Icon(
+                                      Icons.add,
+                                      color: context.colors.textPrimary,
+                                      size: 16,
                                     ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      label,
+                                    label: Text(
+                                      'Add Subtask',
                                       style: GoogleFonts.outfit(
-                                        color: isSelected
-                                            ? pColor
-                                            : Colors.white70,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
+                                        color: context.colors.textPrimary,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      side: BorderSide(
+                                        color: isDark 
+                                            ? Colors.white.withValues(alpha: 0.2) 
+                                            : context.colors.textPrimary.withValues(alpha: 0.15),
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // ── Due Date ──
-                        Text(
-                          'Due Date',
-                          style: GoogleFonts.outfit(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        GestureDetector(
-                          onTap: () async {
-                            final selectedDate = await showDatePicker(
-                              context: context,
-                              initialDate: _dueDate ?? DateTime.now(),
-                              firstDate: DateTime.now().subtract(
-                                const Duration(days: 365),
-                              ),
-                              lastDate: DateTime.now().add(
-                                const Duration(days: 3650),
-                              ),
-                              builder: (context, child) => Theme(
-                                data: Theme.of(context).copyWith(
-                                  colorScheme: const ColorScheme.dark(
-                                    primary: Color(0xFF3B82F6),
-                                    onPrimary: Colors.white,
-                                    surface: Color(0xFF131722),
-                                    onSurface: Colors.white,
-                                  ),
-                                  dialogBackgroundColor: const Color(
-                                    0xFF131722,
-                                  ),
-                                ),
-                                child: child!,
-                              ),
-                            );
-                            if (selectedDate != null)
-                              setState(() => _dueDate = selectedDate);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.calendar_today_rounded,
-                                  color: Color(0xFF3B82F6),
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    _dueDate != null
-                                        ? DateFormat(
-                                            'EEEE, MMMM d, yyyy',
-                                          ).format(_dueDate!)
-                                        : 'No due date set (Optional)',
-                                    style: GoogleFonts.outfit(
-                                      color: _dueDate != null
-                                          ? Colors.white
-                                          : Colors.white38,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                                if (_dueDate != null)
-                                  GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _dueDate = null),
-                                    child: const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                      ),
-                                      child: Icon(
-                                        Icons.clear_rounded,
-                                        color: Colors.white54,
-                                        size: 16,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // ── Subtasks Section ──
-                        const SizedBox(height: 28),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Subtasks',
-                              style: GoogleFonts.outfit(
-                                color: Colors.white70,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            if (_subtasks.isNotEmpty)
-                              Text(
-                                '${_subtasks.where((s) => s.completed).length}/${_subtasks.length} done',
-                                style: GoogleFonts.outfit(
-                                  color: Colors.white38,
-                                  fontSize: 11,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        if (_showSubtaskEditor) _buildSubtaskEditorCard(),
-
-                        if (_subtasks.isEmpty) ...[
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Text(
-                              'Break your task into smaller achievable steps.',
-                              style: GoogleFonts.outfit(
-                                color: Colors.white38,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ] else
-                          ReorderableListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _subtasks.length,
-                            itemBuilder: (context, index) => _buildSubtaskItem(index),
-                            onReorder: (oldIndex, newIndex) {
-                              setState(() {
-                                if (newIndex > oldIndex) {
-                                  newIndex -= 1;
-                                }
-                                final item = _subtasks.removeAt(oldIndex);
-                                _subtasks.insert(newIndex, item);
-                                for (int i = 0; i < _subtasks.length; i++) {
-                                  _subtasks[i] = _subtasks[i].copyWith(sortOrder: i);
-                                }
-                              });
-                            },
-                          ),
-
-                        const SizedBox(height: 12),
-                        if (!_showSubtaskEditor)
-                          SizedBox(
-                            width: double.infinity,
-                            height: 44,
-                            child: OutlinedButton.icon(
-                              onPressed: () => _openSubtaskEditor(),
-                              icon: const Icon(
-                                Icons.add,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                              label: Text(
-                                'Add Subtask',
-                                style: GoogleFonts.outfit(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
                             ],
                           ),
                         ),
 
                         // ── Save / Delete (or Preview Warning for Guest) ──
                         if (_isReadOnly) ...[
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -1150,7 +1220,7 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                                       child: Text(
                                         'This task is in Preview Mode. Sign in to edit or manage your own tasks.',
                                         style: GoogleFonts.outfit(
-                                          color: Colors.white70,
+                                          color: context.colors.textSecondary,
                                           fontSize: 13,
                                           height: 1.4,
                                         ),
@@ -1184,60 +1254,60 @@ class _TaskBottomSheetState extends ConsumerState<TaskBottomSheet> {
                             ),
                           ),
                         ] else ...[
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           SizedBox(
                             width: double.infinity,
-                            height: 50,
+                            height: 44,
                             child: ElevatedButton(
                               onPressed: _saveTask,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF10B981),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                  backgroundColor: const Color(0xFF10B981),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                'Save Task',
-                                style: GoogleFonts.outfit(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (widget.existingTask != null) ...[
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 40,
-                              child: TextButton(
-                                onPressed: () {
-                                  ref
-                                      .read(tasksProvider.notifier)
-                                      .deleteTask(widget.existingTask!.id);
-                                  Navigator.pop(context);
-                                },
                                 child: Text(
-                                  'Delete Task',
+                                  'Save Task',
                                   style: GoogleFonts.outfit(
-                                    color: Colors.redAccent,
-                                    fontSize: 14,
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                             ),
+                            if (widget.existingTask != null) ...[
+                              const SizedBox(height: 6),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 34,
+                                child: TextButton(
+                                  onPressed: () {
+                                    ref
+                                        .read(tasksProvider.notifier)
+                                        .deleteTask(widget.existingTask!.id);
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text(
+                                    'Delete Task',
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.redAccent,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 }

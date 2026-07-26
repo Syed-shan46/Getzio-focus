@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/storage/hive_database.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../shared/providers/app_providers.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../domain/models/affirmation_model.dart';
 
 class AffirmationsRepository {
@@ -224,5 +225,6 @@ class AffirmationsRepository {
 
 final affirmationsRepositoryProvider = Provider<AffirmationsRepository>((ref) {
   final hiveDb = ref.watch(hiveDatabaseProvider);
+  ref.watch(authProvider);
   return AffirmationsRepository(hiveDb, ref);
 });

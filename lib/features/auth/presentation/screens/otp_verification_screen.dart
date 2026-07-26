@@ -118,7 +118,13 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       );
     } catch (e) {
       if (mounted) {
-        setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
         // Shake the OTP boxes by clearing and refocusing
         for (final c in _controllers) {
           c.clear();

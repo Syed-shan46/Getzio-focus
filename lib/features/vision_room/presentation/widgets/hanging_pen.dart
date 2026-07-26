@@ -121,35 +121,59 @@ class _HangingPenState extends State<HangingPen> with TickerProviderStateMixin {
           width: 2,
           height: topPadding + 20, // Just clears the safe area
           decoration: BoxDecoration(
-            color: Colors.brown.shade700,
+            color: Colors.white.withValues(alpha: 0.95),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: Colors.white.withValues(alpha: 0.35),
+                blurRadius: 4,
+                spreadRadius: 0.5,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 2,
                 offset: const Offset(1, 0),
               ),
             ],
           ),
         ),
-        // Small transparent container with border
+        // Small transparent container with crisp pure white border and white text
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.transparent, // bg transparent
+            color: Colors.black.withValues(alpha: 0.35),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.brown.shade800, // border needed
-              width: 1.5,
+              color: Colors.white,
+              width: 1.8,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.35),
+                blurRadius: 10,
+                spreadRadius: 1.0,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          child: Text(
+          child: const Text(
             'Focus',
             style: TextStyle(
               fontFamily: 'Kalam',
               fontWeight: FontWeight.bold,
-              fontSize: 14, // Made text smaller
-              color: Colors.brown.shade900,
-              letterSpacing: 1.2,
+              fontSize: 14,
+              color: Colors.white,
+              letterSpacing: 1.3,
+              shadows: [
+                Shadow(
+                  color: Colors.black54,
+                  blurRadius: 4,
+                  offset: Offset(0, 1),
+                ),
+              ],
             ),
           ),
         ),

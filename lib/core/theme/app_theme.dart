@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive/hive.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // COLORS EXTENSION
@@ -130,8 +131,8 @@ class AppColors {
   );
 
   static const light = AppColorsExtension(
-    bg1: Color(0xFFF5E6D3),
-    bg2: Color(0xFFEDE0CC),
+    bg1: Color(0xFFFAF7F2),
+    bg2: Color(0xFFF4ECE1),
     bg3: Color(0xFFFFFFFF),
     accentBlue: Color(0xFF3888FF),
     accentEmerald: Color(0xFF1CB06B),
@@ -147,22 +148,40 @@ class AppColors {
     darkOverlay: Color.fromRGBO(0, 0, 0, 0.15),
   );
 
+  static bool _isDarkTheme() {
+    try {
+      if (Hive.isBoxOpen('todo_personal_settings')) {
+        final box = Hive.box('todo_personal_settings');
+        final savedMode = box.get('app_theme_mode', defaultValue: 'system') as String;
+        if (savedMode == 'dark') return true;
+        if (savedMode == 'light') return false;
+      }
+    } catch (_) {}
+
+    try {
+      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      return brightness == Brightness.dark;
+    } catch (_) {}
+
+    return true; // Default to dark theme
+  }
+
   // Backward compatibility aliases (use context.colors instead in widgets!)
-  static Color get bg1 => dark.bg1;
-  static Color get bg2 => dark.bg2;
-  static Color get bg3 => dark.bg3;
-  static Color get accentBlue => dark.accentBlue;
-  static Color get accentEmerald => dark.accentEmerald;
-  static Color get glass => dark.glass;
-  static Color get glassBorder => dark.glassBorder;
-  static Color get glassHover => dark.glassHover;
-  static Color get textPrimary => dark.textPrimary;
-  static Color get textSecondary => dark.textSecondary;
-  static Color get textMuted => dark.textMuted;
-  static Color get success => dark.success;
-  static Color get error => dark.error;
-  static Color get warning => dark.warning;
-  static Color get darkOverlay => dark.darkOverlay;
+  static Color get bg1 => _isDarkTheme() ? dark.bg1 : light.bg1;
+  static Color get bg2 => _isDarkTheme() ? dark.bg2 : light.bg2;
+  static Color get bg3 => _isDarkTheme() ? dark.bg3 : light.bg3;
+  static Color get accentBlue => _isDarkTheme() ? dark.accentBlue : light.accentBlue;
+  static Color get accentEmerald => _isDarkTheme() ? dark.accentEmerald : light.accentEmerald;
+  static Color get glass => _isDarkTheme() ? dark.glass : light.glass;
+  static Color get glassBorder => _isDarkTheme() ? dark.glassBorder : light.glassBorder;
+  static Color get glassHover => _isDarkTheme() ? dark.glassHover : light.glassHover;
+  static Color get textPrimary => _isDarkTheme() ? dark.textPrimary : light.textPrimary;
+  static Color get textSecondary => _isDarkTheme() ? dark.textSecondary : light.textSecondary;
+  static Color get textMuted => _isDarkTheme() ? dark.textMuted : light.textMuted;
+  static Color get success => _isDarkTheme() ? dark.success : light.success;
+  static Color get error => _isDarkTheme() ? dark.error : light.error;
+  static Color get warning => _isDarkTheme() ? dark.warning : light.warning;
+  static Color get darkOverlay => _isDarkTheme() ? dark.darkOverlay : light.darkOverlay;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -407,4 +426,150 @@ class AppTheme {
       ),
     );
   }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SHADOWS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+class AppShadows {
+  AppShadows._();
+
+  static const List<BoxShadow> none = [];
+  
+  static final List<BoxShadow> soft = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.04),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+  ];
+
+  static final List<BoxShadow> card = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.08),
+      blurRadius: 16,
+      offset: const Offset(0, 6),
+    ),
+  ];
+
+  static final List<BoxShadow> floating = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.12),
+      blurRadius: 24,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  static final List<BoxShadow> popup = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.15),
+      blurRadius: 32,
+      offset: const Offset(0, 12),
+    ),
+  ];
+
+  static final List<BoxShadow> bottomSheet = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.1),
+      blurRadius: 20,
+      offset: const Offset(0, -4),
+    ),
+  ];
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// BORDERS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+class AppBorders {
+  AppBorders._();
+
+  static Border thin(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Border.all(
+      color: isDark 
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.black.withValues(alpha: 0.05),
+      width: 1.0,
+    );
+  }
+
+  static Border medium(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Border.all(
+      color: isDark 
+          ? Colors.white.withValues(alpha: 0.12)
+          : Colors.black.withValues(alpha: 0.08),
+      width: 1.5,
+    );
+  }
+
+  static Border thick(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Border.all(
+      color: isDark 
+          ? Colors.white.withValues(alpha: 0.18)
+          : Colors.black.withValues(alpha: 0.12),
+      width: 2.0,
+    );
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DURATIONS & EASING
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+class AppDurations {
+  AppDurations._();
+
+  static const Duration fast = Duration(milliseconds: 150);
+  static const Duration normal = Duration(milliseconds: 250);
+  static const Duration slow = Duration(milliseconds: 400);
+}
+
+class AppAnimations {
+  AppAnimations._();
+
+  static const Curve easeInOut = Curves.easeInOut;
+  static const Curve easeOut = Curves.easeOut;
+  static const Curve fastOutSlowIn = Curves.fastOutSlowIn;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// GRADIENTS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+class AppGradients {
+  AppGradients._();
+
+  static const LinearGradient orangeToPurple = LinearGradient(
+    colors: [Color(0xFFF97316), Color(0xFF8B5CF6)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static final LinearGradient cardOverlay = LinearGradient(
+    colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
+    begin: Alignment.bottomCenter,
+    end: Alignment.topCenter,
+  );
+
+  static LinearGradient glass(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return LinearGradient(
+      colors: isDark 
+          ? [Colors.white.withValues(alpha: 0.08), Colors.white.withValues(alpha: 0.02)]
+          : [Colors.black.withValues(alpha: 0.03), Colors.black.withValues(alpha: 0.01)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ICONS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+class AppIcons {
+  AppIcons._();
+
+  static const double small = 16.0;
+  static const double medium = 24.0;
+  static const double large = 32.0;
 }

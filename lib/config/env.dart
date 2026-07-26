@@ -1,10 +1,6 @@
-import 'dart:io';
-
 class EnvConfig {
-  // Development backend
-  static final String devBaseUrl = Platform.isAndroid
-      ? 'http://10.0.2.2:5005/api'
-      : 'http://localhost:5005/api';
+  // Development backend (use localhost with adb reverse tcp:5005 tcp:5005)
+  static const String devBaseUrl = 'http://localhost:5005/api';
   
   // Production backend
   static const String prodBaseUrl = 'https://api.getzio.in/api';

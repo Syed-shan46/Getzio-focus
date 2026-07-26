@@ -98,7 +98,7 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
   }
 
   Widget _buildPreviewCard() {
-    Color cardBg = context.colors.textPrimary;
+    Color cardBg = const Color(0xFFFFFFFF);
     Color textCol = Colors.black;
     Color borderCol = Colors.transparent;
 
@@ -366,7 +366,7 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
                           child: Text(
                             cat,
                             style: GoogleFonts.outfit(
-                              color: isSelected ? context.colors.textPrimary : context.colors.textSecondary,
+                              color: isSelected ? Colors.white : context.colors.textSecondary,
                               fontSize: 11,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
@@ -409,7 +409,7 @@ class _AffirmationBottomSheetState extends ConsumerState<AffirmationBottomSheet>
                           child: Text(
                             theme,
                             style: GoogleFonts.outfit(
-                              color: isSelected ? context.colors.textPrimary : context.colors.textSecondary,
+                              color: isSelected ? Colors.white : context.colors.textSecondary,
                               fontSize: 11,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),

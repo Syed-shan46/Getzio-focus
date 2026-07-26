@@ -4,15 +4,27 @@ import '../../../../core/theme/app_theme.dart';
 
 class QuoteBuilderModal extends StatefulWidget {
   final Function(Map<String, dynamic> metadata) onSubmit;
+  final Map<String, dynamic>? initialMetadata;
 
-  const QuoteBuilderModal({super.key, required this.onSubmit});
+  const QuoteBuilderModal({
+    super.key,
+    required this.onSubmit,
+    this.initialMetadata,
+  });
 
-  static void show(BuildContext context, {required Function(Map<String, dynamic> metadata) onSubmit}) {
+  static void show(
+    BuildContext context, {
+    required Function(Map<String, dynamic> metadata) onSubmit,
+    Map<String, dynamic>? initialMetadata,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => QuoteBuilderModal(onSubmit: onSubmit),
+      builder: (context) => QuoteBuilderModal(
+        onSubmit: onSubmit,
+        initialMetadata: initialMetadata,
+      ),
     );
   }
 
@@ -24,6 +36,16 @@ class _QuoteBuilderModalState extends State<QuoteBuilderModal> {
   final _quoteController = TextEditingController();
   final _authorController = TextEditingController();
   String _selectedStyle = 'Elegant Minimal';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialMetadata != null) {
+      _quoteController.text = widget.initialMetadata!['quote'] as String? ?? '';
+      _authorController.text = widget.initialMetadata!['author'] as String? ?? '';
+      _selectedStyle = widget.initialMetadata!['style'] as String? ?? 'Elegant Minimal';
+    }
+  }
 
   final List<String> _quoteStyles = [
     'Elegant Minimal',

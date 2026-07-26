@@ -7,19 +7,26 @@ import '../../../../shared/providers/app_providers.dart';
 import '../../../vision_room/domain/models/vision_item.dart';
 import '../../../vision_room/domain/models/sticky_note.dart';
 import '../../../vision_room/data/repositories/vision_room_repository.dart';
+import '../../../vision_room/data/services/vision_upload_service.dart';
 import '../../../tasks/presentation/providers/tasks_provider.dart';
+import '../../../affirmations/presentation/providers/affirmations_provider.dart';
+import '../../../vision_room/presentation/providers/sticky_note_provider.dart';
+import '../../../vision_room/presentation/providers/canvas_providers.dart';
+import '../../../todo/presentation/providers/todo_providers.dart';
+import '../../../os_dashboard/presentation/providers/os_providers.dart';
 
 class GuestDataMigrationService {
   static const String _logTag = '[Migration]';
 
   /// Check if local guest data exists to migrate
-  static bool checkGuestDataExists(HiveDatabase hiveDb) {
+  static Future<bool> checkGuestDataExists(HiveDatabase hiveDb) async {
     final habits = hiveDb.getSelectedHabits();
-    final goals = hiveDb.getSelectedGoals();
+    final goals = await hiveDb.getUserItemsForId('goals', 'guest');
     final identity = hiveDb.getSelectedIdentity();
     final areas = hiveDb.getSelectedLifeAreas();
-    final vision = hiveDb.getVisionItems();
-    final tasks = hiveDb.getTasks();
+    final vision = await hiveDb.getUserItemsForId('vision_items', 'guest');
+    final tasks = await hiveDb.getUserItemsForId('tasks', 'guest');
+    final affirmations = await hiveDb.getUserItemsForId('affirmations', 'guest');
     final stickyNotes = Hive.box<StickyNote>('sticky_notes').values.toList();
 
     final exists = habits.isNotEmpty ||
@@ -28,8 +35,9 @@ class GuestDataMigrationService {
         areas.isNotEmpty ||
         vision.isNotEmpty ||
         tasks.isNotEmpty ||
+        affirmations.isNotEmpty ||
         stickyNotes.isNotEmpty;
-    dev.log('$_logTag Check Guest Data: $exists (Habits: ${habits.length}, Goals: ${goals.length}, Tasks: ${tasks.length}, StickyNotes: ${stickyNotes.length})');
+    dev.log('$_logTag Check Guest Data: $exists (Habits: ${habits.length}, Goals: ${goals.length}, Tasks: ${tasks.length}, Affirmations: ${affirmations.length}, StickyNotes: ${stickyNotes.length})');
     return exists;
   }
 
@@ -38,8 +46,9 @@ class GuestDataMigrationService {
     final hiveDb = ref.read(hiveDatabaseProvider);
     final dio = ref.read(dioClientProvider);
 
-    if (!checkGuestDataExists(hiveDb)) {
-      dev.log('$_logTag No guest data exists. Skipping migration.');
+    if (!await checkGuestDataExists(hiveDb)) {
+      dev.log('$_logTag No guest data exists. Skipping migration. Reloading from backend...');
+      await reloadFromBackend(ref);
       return true;
     }
 
@@ -48,22 +57,22 @@ class GuestDataMigrationService {
     // Read every collection from local storage
     final identity = hiveDb.getSelectedIdentity();
     final lifeAreas = hiveDb.getSelectedLifeAreas();
-    final selectedGoals = hiveDb.getSelectedGoals();
+    final selectedGoals = await hiveDb.getUserItemsForId('goals', 'guest');
     final selectedHabits = hiveDb.getSelectedHabits();
-    final selectedAffirmations = hiveDb.getSelectedAffirmations();
+    final selectedAffirmations = await hiveDb.getUserItemsForId('affirmations', 'guest');
     final habitLogs = hiveDb.getHabitLogs();
     final workspaceSettings = hiveDb.getWorkspaceSettings();
     final readingPrefs = hiveDb.getReadingPreferences() ?? {};
     final healthPrefs = hiveDb.getHealthPreferences() ?? {};
     final financePrefs = hiveDb.getFinancePreferences() ?? {};
-    final visionItems = hiveDb.getVisionItems();
+    final visionItems = await hiveDb.getUserItemsForId('vision_items', 'guest');
 
     dev.log('$_logTag Profile Loaded');
     dev.log('$_logTag Habits Loaded (count: ${selectedHabits.length})');
     dev.log('$_logTag Goals Loaded (count: ${selectedGoals.length})');
 
     // Migrate tasks first
-    final localTasks = hiveDb.getTasks();
+    final localTasks = await hiveDb.getUserItemsForId('tasks', 'guest');
     if (localTasks.isNotEmpty) {
       dev.log('$_logTag Uploading ${localTasks.length} guest tasks to server...');
       try {
@@ -109,10 +118,28 @@ class GuestDataMigrationService {
     });
 
     final repo = ref.read(visionRoomRepositoryProvider);
-    final mappedVisionItems = visionItems.map((v) {
+    final uploadService = VisionUploadService(dio: dio.dio);
+    final List<Map<String, dynamic>> mappedVisionItems = [];
+    for (var v in visionItems) {
       final item = VisionItem.fromJson(Map<String, dynamic>.from(v));
-      return repo.mapItemToDbKeys(item);
-    }).toList();
+      if (item.type == 'image' && 
+          item.content.isNotEmpty && 
+          !item.content.startsWith('http://') && 
+          !item.content.startsWith('https://')) {
+        try {
+          dev.log('$_logTag Uploading local vision item image during migration: ${item.content}');
+          final remoteUrl = await uploadService.uploadImage(item.content);
+          if (remoteUrl != null) {
+            final updatedItem = item.copyWith(content: remoteUrl);
+            mappedVisionItems.add(repo.mapItemToDbKeys(updatedItem));
+            continue;
+          }
+        } catch (e) {
+          dev.log('$_logTag Failed to upload local image ${item.content} during migration: $e');
+        }
+      }
+      mappedVisionItems.add(repo.mapItemToDbKeys(item));
+    }
 
     final mappedAffirmations = selectedAffirmations.map((a) => {
       'id': a['id'],
@@ -189,7 +216,7 @@ class GuestDataMigrationService {
             if (mapping['goals'] != null) {
               final goalMap = mapping['goals'] as Map<String, dynamic>;
               final goalsToSave = hiveDb.getSelectedGoals();
-              final mapped = goalsToSave.map((g) {
+              final List<Map<String, dynamic>> mapped = goalsToSave.map<Map<String, dynamic>>((g) {
                 final map = Map<String, dynamic>.from(g);
                 final locId = map['localId'];
                 if (locId != null && goalMap.containsKey(locId)) {
@@ -204,7 +231,7 @@ class GuestDataMigrationService {
             if (mapping['habits'] != null) {
               final habitMap = mapping['habits'] as Map<String, dynamic>;
               final habitsToSave = hiveDb.getSelectedHabits();
-              final mapped = habitsToSave.map((h) {
+              final List<Map<String, dynamic>> mapped = habitsToSave.map<Map<String, dynamic>>((h) {
                 final map = Map<String, dynamic>.from(h);
                 final locId = map['localId'];
                 if (locId != null && habitMap.containsKey(locId)) {
@@ -219,7 +246,7 @@ class GuestDataMigrationService {
             if (mapping['affirmations'] != null) {
               final affMap = mapping['affirmations'] as Map<String, dynamic>;
               final affirmationsToSave = hiveDb.getSelectedAffirmations();
-              final mapped = affirmationsToSave.map((a) {
+              final List<Map<String, dynamic>> mapped = affirmationsToSave.map<Map<String, dynamic>>((a) {
                 final map = Map<String, dynamic>.from(a);
                 final locId = map['localId'];
                 if (locId != null && affMap.containsKey(locId)) {
@@ -326,17 +353,20 @@ class GuestDataMigrationService {
       if (goalsRes.statusCode == 200 && goalsRes.data != null) {
         final goalsList = goalsRes.data['data'] as List?;
         if (goalsList != null) {
-          final mapped = goalsList.map((g) => {
-            'localId': g['localId'] ?? g['_id'],
-            'serverId': g['_id'],
-            'title': g['title'],
-            'category': g['category'],
-            'target': g['target'],
-            'currentProgress': g['currentProgress'],
-            'status': g['status'],
-            'priority': g['priority'],
-            'deadline': g['deadline'],
-            'syncStatus': 'synced'
+          final List<Map<String, dynamic>> mapped = goalsList.map<Map<String, dynamic>>((g) {
+            final map = Map<String, dynamic>.from(g as Map);
+            return <String, dynamic>{
+              'localId': map['localId'] ?? map['_id'],
+              'serverId': map['_id'],
+              'title': map['title'],
+              'category': map['category'],
+              'target': map['target'],
+              'currentProgress': map['currentProgress'],
+              'status': map['status'],
+              'priority': map['priority'],
+              'deadline': map['deadline'],
+              'syncStatus': 'synced'
+            };
           }).toList();
           await hiveDb.saveSelectedGoals(mapped);
         }
@@ -384,7 +414,7 @@ class GuestDataMigrationService {
         final visionData = visionRes.data['data'] as Map<String, dynamic>?;
         if (visionData != null && visionData['items'] != null) {
           final itemsList = visionData['items'] as List;
-          final mappedItems = itemsList.map((itemJson) {
+          final List<Map<String, dynamic>> mappedItems = itemsList.map<Map<String, dynamic>>((itemJson) {
             final typeStr = itemJson['type'] ?? '';
             final contentStr = typeStr == 'image' ? (itemJson['imageUrl'] ?? '') : (itemJson['text'] ?? '');
             final colorHex = itemJson['color'] ?? '';
@@ -392,7 +422,7 @@ class GuestDataMigrationService {
                 ? int.tryParse(colorHex, radix: 16) ?? 0xFF1E1B4B 
                 : 0xFF1E1B4B;
 
-            return {
+            return <String, dynamic>{
               'id': itemJson['itemId'] ?? '',
               'type': typeStr,
               'content': contentStr,
@@ -407,7 +437,7 @@ class GuestDataMigrationService {
               'attachmentType': 'pin',
               'attachmentStyle': 'redPin',
               'materialStyle': 'default',
-              'metadata': {
+              'metadata': <String, dynamic>{
                 'scale': (itemJson['scale'] as num?)?.toDouble() ?? 1.0,
                 'opacity': (itemJson['opacity'] as num?)?.toDouble() ?? 1.0,
                 'font': itemJson['font'] ?? '',
@@ -516,10 +546,26 @@ class GuestDataMigrationService {
         }
       }
 
+      dev.log('$_logTag Reloading Tasks from backend...');
+      try {
+        final serverTasks = await ref.read(tasksRepositoryProvider).fetchTasksFromServer();
+        if (serverTasks != null) {
+          await ref.read(tasksRepositoryProvider).saveLocalTasks(serverTasks);
+          dev.log('$_logTag Mapped and reloaded ${serverTasks.length} tasks successfully.');
+        }
+      } catch (tasksErr) {
+        dev.log('$_logTag Failed to reload tasks: $tasksErr');
+      }
+
       dev.log('$_logTag All collections populated to Local Database successfully.');
       
-      // Refresh Tasks provider
-      await ref.read(tasksProvider.notifier).refresh();
+      // Invalidate and refresh Riverpod providers to update the UI on iPhone instantly
+      ref.invalidate(tasksProvider);
+      ref.invalidate(affirmationsProvider);
+      ref.invalidate(stickyNotesProvider);
+      ref.invalidate(canvasStateProvider);
+      ref.invalidate(todosProvider);
+      ref.invalidate(osStateProvider);
     } catch (e) {
       dev.log('$_logTag Failed to reload/update server state to Hive: $e');
     }

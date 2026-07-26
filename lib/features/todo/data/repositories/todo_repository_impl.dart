@@ -20,6 +20,30 @@ class TodoRepositoryImpl implements TodoRepository {
     _stream.add(getLocalTodos());
   }
 
+  /// Helper to safely extract a TodoModel from API responses, falling back to local prepared todo
+  TodoModel _parseTodoResponse(dynamic resData, TodoModel fallback) {
+    try {
+      final raw = resData is Map && resData.containsKey('data')
+          ? resData['data']
+          : resData;
+      if (raw is Map<String, dynamic> &&
+          (raw.containsKey('title') || raw.containsKey('id') || raw.containsKey('_id'))) {
+        final parsed = TodoModel.fromJson(raw);
+        // Preserve local subTodos if server response omitted them
+        final mergedSubs = (parsed.subTodos.isEmpty && fallback.subTodos.isNotEmpty)
+            ? fallback.subTodos
+            : parsed.subTodos;
+        return parsed.copyWith(
+          subTodos: mergedSubs,
+          syncStatus: SyncStatus.synced,
+        );
+      }
+    } catch (e) {
+      log('[Repo] Error parsing todo response: $e');
+    }
+    return fallback.copyWith(syncStatus: SyncStatus.synced);
+  }
+
   // ─── Read ───────────────────────────────────────────────────────────────
 
   @override
@@ -42,8 +66,15 @@ class TodoRepositoryImpl implements TodoRepository {
   DateTime? _lastFetchTime;
 
   Future<void> _fetchBackground() async {
+    final token = _hiveDb.getAuthToken();
+    if (token == null || token.isEmpty) {
+      log('[Repo] Skipping background fetch for guest user');
+      return;
+    }
+
     final now = DateTime.now();
-    if (_lastFetchTime != null && now.difference(_lastFetchTime!) < const Duration(seconds: 30)) {
+    if (_lastFetchTime != null &&
+        now.difference(_lastFetchTime!) < const Duration(seconds: 30)) {
       log('[Repo] Skipped background fetch to avoid unnecessary API call (cached recently)');
       return;
     }
@@ -52,19 +83,47 @@ class TodoRepositoryImpl implements TodoRepository {
     try {
       final res = await _dio.get('/todos');
       if (res.statusCode == 200 && res.data != null) {
-        final List<dynamic> data = res.data['data'] ?? res.data;
-        final todos =
-            data.map((e) => TodoModel.fromJson(e as Map<String, dynamic>)).toList();
+        final dynamic rawList =
+            res.data is Map && res.data.containsKey('data')
+                ? res.data['data']
+                : res.data;
+        if (rawList is List) {
+          final serverTodos = rawList
+              .whereType<Map>()
+              .map((e) => TodoModel.fromJson(Map<String, dynamic>.from(e)))
+              .toList();
 
-        // Preserve pending local changes
-        final pending =
-            getLocalTodos().where((e) => e.syncStatus != SyncStatus.synced).toList();
-        await _hiveDb.clearTodos();
-        for (var p in pending) {
-          await _hiveDb.saveTodo(p.toJson());
+          final localTodos = getLocalTodos();
+          final localMap = {for (var t in localTodos) t.id: t};
+
+          // Intelligently merge server todos with local todos
+          final Map<String, TodoModel> mergedMap = {};
+
+          for (var st in serverTodos) {
+            final local = localMap[st.id];
+            if (local != null && local.syncStatus != SyncStatus.synced) {
+              // Keep local pending todo
+              mergedMap[local.id] = local;
+            } else {
+              mergedMap[st.id] = st.copyWith(syncStatus: SyncStatus.synced);
+            }
+          }
+
+          // Preserve any local pending todo that wasn't in server list yet
+          for (var local in localTodos) {
+            if (local.syncStatus != SyncStatus.synced &&
+                !mergedMap.containsKey(local.id)) {
+              mergedMap[local.id] = local;
+            }
+          }
+
+          final mergedList = mergedMap.values.toList();
+          await _hiveDb.clearTodos();
+          for (var item in mergedList) {
+            await _hiveDb.saveTodo(item.toJson());
+          }
+          _emit();
         }
-        await _hiveDb.saveTodos(todos.map((e) => e.toJson()).toList());
-        _emit();
       }
     } catch (e) {
       log('[Repo] Fetch failed: $e');
@@ -84,11 +143,10 @@ class TodoRepositoryImpl implements TodoRepository {
     try {
       final res = await _dio.post('/todos', data: {
         'title': prepared.title,
-        'subTodos': prepared.subTodos.map((s) => {'title': s.title}).toList(),
+        'subTodos': prepared.subTodos.map((s) => s.toJson()).toList(),
       });
       if (res.statusCode == 201 || res.statusCode == 200) {
-        final synced = TodoModel.fromJson(res.data['data'] ?? res.data)
-            .copyWith(syncStatus: SyncStatus.synced);
+        final synced = _parseTodoResponse(res.data, prepared);
         await _hiveDb.deleteTodo(prepared.id);
         await _hiveDb.saveTodo(synced.toJson());
         _emit();
@@ -117,8 +175,7 @@ class TodoRepositoryImpl implements TodoRepository {
     try {
       final res = await _dio.put('/todos/${todo.id}', data: todo.toJson());
       if (res.statusCode == 200) {
-        final synced = TodoModel.fromJson(res.data['data'] ?? res.data)
-            .copyWith(syncStatus: SyncStatus.synced);
+        final synced = _parseTodoResponse(res.data, prepared);
         await _hiveDb.saveTodo(synced.toJson());
         _emit();
         return synced;
@@ -173,10 +230,14 @@ class TodoRepositoryImpl implements TodoRepository {
     _emit();
 
     try {
-      final res = await _dio.patch('/todos/$id/toggle');
+      dynamic res;
+      try {
+        res = await _dio.patch('/todos/$id/toggle');
+      } catch (_) {
+        res = await _dio.put('/todos/$id', data: prepared.toJson());
+      }
       if (res.statusCode == 200) {
-        final synced = TodoModel.fromJson(res.data['data'] ?? res.data)
-            .copyWith(syncStatus: SyncStatus.synced);
+        final synced = _parseTodoResponse(res.data, prepared);
         await _hiveDb.saveTodo(synced.toJson());
         _emit();
         return synced;
@@ -205,21 +266,34 @@ class TodoRepositoryImpl implements TodoRepository {
     final newSub = SubTodoModel(id: const Uuid().v4(), title: title);
     final prepared = original.copyWith(
       subTodos: [...original.subTodos, newSub],
+      syncStatus: SyncStatus.pendingUpdate,
     );
 
     await _hiveDb.saveTodo(prepared.toJson());
     _emit();
 
     try {
-      final res = await _dio.post('/todos/$todoId/subtodos', data: {'title': title});
+      dynamic res;
+      try {
+        res = await _dio.post('/todos/$todoId/subtodos', data: {'title': title});
+      } catch (_) {
+        res = await _dio.put('/todos/$todoId', data: prepared.toJson());
+      }
+
       if (res.statusCode == 200 || res.statusCode == 201) {
-        final synced = TodoModel.fromJson(res.data['data'] ?? res.data);
+        final synced = _parseTodoResponse(res.data, prepared);
         await _hiveDb.saveTodo(synced.toJson());
         _emit();
         return synced;
       }
     } catch (e) {
       log('[Repo] Add subtask failed: $e');
+      await _hiveDb.addToSyncQueue({
+        'id': prepared.id,
+        'action': 'UPDATE_TODO',
+        'payload': prepared.toJson(),
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
     }
     return prepared;
   }
@@ -236,20 +310,35 @@ class TodoRepositoryImpl implements TodoRepository {
       return s;
     }).toList();
 
-    final prepared = original.copyWith(subTodos: updated);
+    final prepared = original.copyWith(
+      subTodos: updated,
+      syncStatus: SyncStatus.pendingUpdate,
+    );
     await _hiveDb.saveTodo(prepared.toJson());
     _emit();
 
     try {
-      final res = await _dio.patch('/todos/$todoId/subtodos/$subId/toggle');
-      if (res.statusCode == 200) {
-        final synced = TodoModel.fromJson(res.data['data'] ?? res.data);
+      dynamic res;
+      try {
+        res = await _dio.patch('/todos/$todoId/subtodos/$subId/toggle');
+      } catch (_) {
+        res = await _dio.put('/todos/$todoId', data: prepared.toJson());
+      }
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final synced = _parseTodoResponse(res.data, prepared);
         await _hiveDb.saveTodo(synced.toJson());
         _emit();
         return synced;
       }
     } catch (e) {
       log('[Repo] Toggle subtask failed: $e');
+      await _hiveDb.addToSyncQueue({
+        'id': prepared.id,
+        'action': 'UPDATE_TODO',
+        'payload': prepared.toJson(),
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
     }
     return prepared;
   }
@@ -262,21 +351,36 @@ class TodoRepositoryImpl implements TodoRepository {
 
     final original = todos[idx];
     final updated = original.subTodos.where((s) => s.id != subId).toList();
-    final prepared = original.copyWith(subTodos: updated);
+    final prepared = original.copyWith(
+      subTodos: updated,
+      syncStatus: SyncStatus.pendingUpdate,
+    );
 
     await _hiveDb.saveTodo(prepared.toJson());
     _emit();
 
     try {
-      final res = await _dio.delete('/todos/$todoId/subtodos/$subId');
+      dynamic res;
+      try {
+        res = await _dio.delete('/todos/$todoId/subtodos/$subId');
+      } catch (_) {
+        res = await _dio.put('/todos/$todoId', data: prepared.toJson());
+      }
+
       if (res.statusCode == 200) {
-        final synced = TodoModel.fromJson(res.data['data'] ?? res.data);
+        final synced = _parseTodoResponse(res.data, prepared);
         await _hiveDb.saveTodo(synced.toJson());
         _emit();
         return synced;
       }
     } catch (e) {
       log('[Repo] Delete subtask failed: $e');
+      await _hiveDb.addToSyncQueue({
+        'id': prepared.id,
+        'action': 'UPDATE_TODO',
+        'payload': prepared.toJson(),
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
     }
     return prepared;
   }
@@ -295,12 +399,13 @@ class TodoRepositoryImpl implements TodoRepository {
       final id = op['id'] as String;
       final action = op['action'] as String;
       final payload = Map<String, dynamic>.from(op['payload'] as Map);
+      final preparedFallback = TodoModel.fromJson(payload);
 
       try {
         if (action == 'CREATE_TODO') {
           final res = await _dio.post('/todos', data: payload);
           if (res.statusCode == 200 || res.statusCode == 201) {
-            final synced = TodoModel.fromJson(res.data['data'] ?? res.data);
+            final synced = _parseTodoResponse(res.data, preparedFallback);
             await _hiveDb.deleteTodo(id);
             await _hiveDb.saveTodo(synced.toJson());
             await _hiveDb.removeFromSyncQueue(id);
@@ -308,7 +413,7 @@ class TodoRepositoryImpl implements TodoRepository {
         } else if (action == 'UPDATE_TODO' || action == 'TOGGLE_TODO') {
           final res = await _dio.put('/todos/$id', data: payload);
           if (res.statusCode == 200) {
-            final synced = TodoModel.fromJson(res.data['data'] ?? res.data);
+            final synced = _parseTodoResponse(res.data, preparedFallback);
             await _hiveDb.saveTodo(synced.toJson());
             await _hiveDb.removeFromSyncQueue(id);
           }

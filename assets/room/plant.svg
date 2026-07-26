@@ -1,0 +1,11 @@
+<svg width="100" height="150" xmlns="http://www.w3.org/2000/svg">
+  <!-- Pot -->
+  <path d="M 20 150 L 80 150 L 90 100 L 10 100 Z" fill="#D2691E"/>
+  <rect x="5" y="90" width="90" height="10" fill="#8B4513"/>
+  <!-- Stem -->
+  <path d="M 50 90 Q 40 50 60 10" stroke="#228B22" stroke-width="4" fill="none"/>
+  <!-- Leaves -->
+  <path d="M 50 70 Q 20 70 30 40 Q 50 50 50 70" fill="#32CD32"/>
+  <path d="M 55 50 Q 80 50 70 20 Q 55 30 55 50" fill="#32CD32"/>
+  <path d="M 60 10 Q 70 0 80 15 Q 70 25 60 10" fill="#32CD32"/>
+</svg>

@@ -78,42 +78,7 @@ class AffirmationsNotifier extends StateNotifier<AffirmationsState> {
     final local = _repo.getLocalAffirmations();
     final isGuest = _ref.read(authProvider).valueOrNull == null;
 
-    if (local.isEmpty && isGuest) {
-      final defaults = [
-        DailyAffirmation(
-          id: 'def_1',
-          title: 'Growth Mindset',
-          text:
-              'Challenges are opportunities to grow and expand my capabilities.',
-          category: 'Mindset',
-          colorTheme: 'Minimal White',
-          isPinned: true,
-          syncStatus: SyncStatus.synced,
-        ),
-        DailyAffirmation(
-          id: 'def_2',
-          title: 'Daily Discipline',
-          text:
-              'I choose consistency over temporary motivation. I finish what I start.',
-          category: 'Discipline',
-          colorTheme: 'Midnight Black',
-          syncStatus: SyncStatus.synced,
-        ),
-        DailyAffirmation(
-          id: 'def_3',
-          title: 'Grateful Heart',
-          text:
-              'I appreciate the little details today. Peace is within my control.',
-          category: 'Gratitude',
-          colorTheme: 'Sunrise Orange',
-          syncStatus: SyncStatus.synced,
-        ),
-      ];
-      await _repo.saveLocalAffirmations(defaults);
-      state = state.copyWith(affirmations: defaults);
-    } else {
-      state = state.copyWith(affirmations: local);
-    }
+    state = state.copyWith(affirmations: local);
 
     final hasToken = _ref.read(hiveDatabaseProvider).getAuthToken() != null;
     if (!hasToken) return;

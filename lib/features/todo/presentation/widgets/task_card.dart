@@ -92,7 +92,14 @@ class _TaskCardState extends ConsumerState<TaskCard>
               child: AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeInOut,
-                  decoration: GlassDecoration.card(),
+                  decoration: BoxDecoration(
+                    color: context.colors.bg2,
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    border: Border.all(
+                      color: context.colors.textPrimary.withValues(alpha: 0.04),
+                      width: 1,
+                    ),
+                  ),
                   child: Column(
                     children: [
                       // ── Main Row ──
@@ -231,18 +238,25 @@ class _TaskCardState extends ConsumerState<TaskCard>
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: AppTypography.bodyMedium(
-                color: sub.isCompleted
-                    ? context.colors.textMuted
-                    : context.colors.textSecondary,
-              ).copyWith(
-                decoration:
-                    sub.isCompleted ? TextDecoration.lineThrough : null,
-                decorationColor: context.colors.textMuted,
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                ref.read(todosProvider.notifier).toggleSubTodo(todoId, sub.id);
+              },
+              behavior: HitTestBehavior.opaque,
+              child: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: AppTypography.bodyMedium(
+                  color: sub.isCompleted
+                      ? context.colors.textMuted
+                      : context.colors.textSecondary,
+                ).copyWith(
+                  decoration:
+                      sub.isCompleted ? TextDecoration.lineThrough : null,
+                  decorationColor: context.colors.textMuted,
+                ),
+                child: Text(sub.title),
               ),
-              child: Text(sub.title),
             ),
           ),
           GestureDetector(

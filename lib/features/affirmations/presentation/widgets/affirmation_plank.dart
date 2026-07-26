@@ -208,10 +208,10 @@ ${aff.author != null && aff.author!.isNotEmpty ? '— ${aff.author}' : ''}
                     Container(
                       width: double.infinity,
                       constraints: BoxConstraints(
-                        minHeight: widget.isExpanded ? 110 : 76,
-                        maxHeight: widget.isExpanded ? 110 : 76,
+                        minHeight: widget.isExpanded ? 90 : 58,
+                        maxHeight: widget.isExpanded ? 90 : 58,
                       ),
-                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      margin: const EdgeInsets.symmetric(horizontal: 32),
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
@@ -253,8 +253,8 @@ ${aff.author != null && aff.author!.isNotEmpty ? '— ${aff.author}' : ''}
                           // Text content (centered, avoiding holes)
                           Padding(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 44,
-                              vertical: 12,
+                              horizontal: 36,
+                              vertical: 6,
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -269,8 +269,8 @@ ${aff.author != null && aff.author!.isNotEmpty ? '— ${aff.author}' : ''}
                                       overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.patrickHand(
                                         color: colorScheme.text,
-                                        fontSize: widget.isExpanded ? 20 : 17.5,
-                                        height: 1.2,
+                                        fontSize: widget.isExpanded ? 17 : 14.5,
+                                        height: 1.15,
                                       ),
                                     ),
                                   ),

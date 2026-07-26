@@ -15,6 +15,7 @@ import '../../widgets/goal_card_widget.dart';
 import '../../widgets/polaroid_image_widget.dart';
 import '../../widgets/premium_cards.dart'
     show PlanCardWidget, TaskCardWidget, FinanceCardWidget, CountdownCardWidget;
+import '../../widgets/quote_builder_modal.dart';
 import '../../../../../core/theme/app_theme.dart';
 
 class _ShapePainter extends CustomPainter {
@@ -256,6 +257,7 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
       contentWidget = RealisticStickyNoteWrapper(
         noteId: item.id,
         paperColor: noteColor,
+        isDragging: widget.isInteracting,
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -474,11 +476,36 @@ class _CanvasItemWidgetState extends ConsumerState<CanvasItemWidget> {
       curve: Curves.easeOutBack,
       child: GestureDetector(
         onDoubleTap: () {
-          if (item.type != VisionItemType.image.name) {
+          final isInlineEditable = item.type == VisionItemType.stickyNote.name ||
+              (![
+                VisionItemType.image.name,
+                VisionItemType.quote.name,
+                VisionItemType.goal.name,
+                VisionItemType.plan.name,
+                VisionItemType.task.name,
+                VisionItemType.financeGoal.name,
+                VisionItemType.countdown.name,
+                VisionItemType.decoration.name,
+              ].contains(item.type));
+
+          if (isInlineEditable) {
             setState(() {
               _isEditing = true;
             });
             _focusNode.requestFocus();
+          } else if (item.type == VisionItemType.quote.name) {
+            QuoteBuilderModal.show(
+              context,
+              initialMetadata: item.metadata?.cast<String, dynamic>(),
+              onSubmit: (newMetadata) {
+                ref.read(canvasStateProvider.notifier).updateItemDetails(
+                  item.id,
+                  content: newMetadata['quote'] as String,
+                  secondaryContent: newMetadata['author'] as String,
+                  metadata: newMetadata,
+                );
+              },
+            );
           }
         },
         child: Hero(

@@ -15,7 +15,7 @@ class SubTodoModel {
     return SubTodoModel(
       id: json['id'] as String? ?? json['_id'] as String? ?? '',
       title: json['title'] as String? ?? '',
-      isCompleted: json['isCompleted'] as bool? ?? false,
+      isCompleted: (json['isCompleted'] as bool?) ?? (json['completed'] as bool?) ?? false,
     );
   }
 
@@ -24,6 +24,7 @@ class SubTodoModel {
         '_id': id,
         'title': title,
         'isCompleted': isCompleted,
+        'completed': isCompleted,
       };
 
   SubTodoModel copyWith({String? id, String? title, bool? isCompleted}) {

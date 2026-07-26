@@ -4,12 +4,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import 'package:getzio_todo_app/shared/widgets/design_system.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../providers/os_providers.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/widgets/save_workspace_sheet.dart';
+import '../../../auth/domain/models/auth_user_model.dart';
+
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 import '../../../auth/presentation/screens/phone_login_screen.dart';
 import '../../../auth/domain/services/guest_migration_service.dart';
@@ -113,9 +117,7 @@ class _ClassicDashboardWidgetState
     final isRoom = _currentIndex == 2;
 
     // Adaptive colors
-    final activeColor = isRoom
-        ? Colors.white
-        : const Color(0xFFF97316);
+    final activeColor = isRoom ? Colors.white : const Color(0xFFF97316);
 
     final inactiveColor = isRoom
         ? Colors.white.withValues(alpha: 0.6)
@@ -1027,13 +1029,7 @@ class _AffirmationsTab extends ConsumerWidget {
     final affirmations = affState.affirmations;
 
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF0F1524), Color(0xFF070A13)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
+      decoration: BoxDecoration(color: context.colors.bg1),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1356,7 +1352,7 @@ class _ProfileTab extends ConsumerWidget {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: BoxDecoration(color: context.colors.bg2),
+      decoration: BoxDecoration(color: context.colors.bg1),
       child: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -1375,6 +1371,10 @@ class _ProfileTab extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 24),
+              if (isLoggedIn && user != null) ...[
+                _buildUserProfileCard(context, user),
+                const SizedBox(height: 24),
+              ],
               _buildCloudSyncCard(context, ref, isLoggedIn),
               const SizedBox(height: 24),
 
@@ -1404,7 +1404,12 @@ class _ProfileTab extends ConsumerWidget {
                   AppColors.accentBlue,
                   () {
                     HapticFeedback.mediumImpact();
-                    PremiumAuthSheet.show(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PhoneLoginScreen(),
+                      ),
+                    );
                   },
                 ),
               if (isLoggedIn) ...[
@@ -1458,10 +1463,7 @@ class _ProfileTab extends ConsumerWidget {
           ),
           content: Text(
             'Are you sure you want to permanently delete your account and all associated tasks? This action is immediate and cannot be undone.',
-            style: TextStyle(
-              color: context.colors.textPrimary,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
           ),
           actions: [
             TextButton(
@@ -2068,21 +2070,24 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
       secondaryContent: 'Career & Skills',
       metadata: {
         'title': 'Master Mobile Development',
-        'description': 'Become a senior developer by mastering Flutter, Riverpod, and clean architecture.',
+        'description':
+            'Become a senior developer by mastering Flutter, Riverpod, and clean architecture.',
         'status': 'In Progress',
         'category': 'Career',
         'milestones': [
           {
             'id': 'sm_1',
             'title': 'Learn Advanced State Management',
-            'description': 'Master Riverpod providers, ref.watch, family, and notifier patterns.',
+            'description':
+                'Master Riverpod providers, ref.watch, family, and notifier patterns.',
             'isCompleted': true,
             'order': 0,
           },
           {
             'id': 'sm_2',
             'title': 'Build Production Quality App',
-            'description': 'Release a complete App on App Store with local storage and syncing.',
+            'description':
+                'Release a complete App on App Store with local storage and syncing.',
             'isCompleted': false,
             'order': 1,
           },
@@ -2105,7 +2110,8 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
           {
             'id': 'sf_1',
             'title': 'Save 6-Month Emergency Fund',
-            'description': 'Keep emergency funds in a high-yield savings account.',
+            'description':
+                'Keep emergency funds in a high-yield savings account.',
             'isCompleted': true,
             'order': 0,
           },
@@ -2121,14 +2127,16 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
       secondaryContent: 'Health & Fitness',
       metadata: {
         'title': 'Run a Half Marathon',
-        'description': 'Train consistently to finish the local 21km race under 2 hours.',
+        'description':
+            'Train consistently to finish the local 21km race under 2 hours.',
         'status': 'On Hold',
         'category': 'Health',
         'milestones': [
           {
             'id': 'sh_1',
             'title': 'Weekly 15km Runs',
-            'description': 'Build endurance and steady pace during weekend long runs.',
+            'description':
+                'Build endurance and steady pace during weekend long runs.',
             'isCompleted': false,
             'order': 0,
           },
@@ -2144,7 +2152,8 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
       secondaryContent: 'Education & Culture',
       metadata: {
         'title': 'Learn French Language',
-        'description': 'Practice daily vocabulary and conversation to reach B2 level.',
+        'description':
+            'Practice daily vocabulary and conversation to reach B2 level.',
         'status': 'Not Started',
         'category': 'Education',
         'milestones': [
@@ -2651,13 +2660,7 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
     return Stack(
       children: [
         Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [context.colors.bg1, context.colors.bg1],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
+          decoration: BoxDecoration(color: context.colors.bg1),
           child: SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2823,126 +2826,12 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
                             120,
                           ), // Padding bottom for banner
                           physics: const BouncingScrollPhysics(),
-                          itemCount: isUsingSamples
-                              ? filteredGoals.length + 3
-                              : filteredGoals.length,
+                          itemCount: filteredGoals.length,
                           itemBuilder: (context, index) {
-                            if (isUsingSamples) {
-                              if (index == 0) {
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 16),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: context.colors.accentBlue
-                                        .withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: context.colors.accentBlue
-                                          .withValues(alpha: 0.2),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.info_outline_rounded,
-                                        color: context.colors.accentBlue,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          'Preview Mode: Explore sample goals. Go to the Room tab to place your first goal.',
-                                          style: GoogleFonts.outfit(
-                                            color: context.colors.textPrimary
-                                                .withValues(alpha: 0.8),
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              } else if (index == 1) {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'WHAT YOU CAN DO',
-                                      style: GoogleFonts.outfit(
-                                        color: context.colors.textPrimary
-                                            .withValues(alpha: 0.4),
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1.5,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    SizedBox(
-                                      height: 110,
-                                      child: SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        physics: const BouncingScrollPhysics(),
-                                        child: Row(
-                                          children: [
-                                            _buildFeatureCard(
-                                              context,
-                                              'Milestone Tracking',
-                                              'Break down big dreams into actionable checkpoints.',
-                                              Icons.playlist_add_check_rounded,
-                                              const Color(0xFFF59E0B),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            _buildFeatureCard(
-                                              context,
-                                              'Interactive Room',
-                                              'Place goal widgets in your Room space to stay motivated.',
-                                              Icons.door_sliding_rounded,
-                                              const Color(0xFF3B82F6),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            _buildFeatureCard(
-                                              context,
-                                              'Progress Analytics',
-                                              'See completion progress update automatically.',
-                                              Icons.donut_large_rounded,
-                                              const Color(0xFF10B981),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 24),
-                                  ],
-                                );
-                              } else if (index == 2) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 10),
-                                  child: Text(
-                                    'SAMPLE GOALS',
-                                    style: GoogleFonts.outfit(
-                                      color: context.colors.textPrimary
-                                          .withValues(alpha: 0.4),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 1.5,
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                return _buildGoalCard(
-                                  context,
-                                  filteredGoals[index - 3],
-                                );
-                              }
-                            } else {
-                              return _buildGoalCard(
-                                context,
-                                filteredGoals[index],
-                              );
-                            }
+                            return _buildGoalCard(
+                              context,
+                              filteredGoals[index],
+                            );
                           },
                         ),
                 ),
@@ -2956,25 +2845,90 @@ class _GoalsTabState extends ConsumerState<_GoalsTab> {
 }
 
 extension on _ProfileTab {
-  Widget _buildCloudSyncCard(BuildContext context, WidgetRef ref, bool isLoggedIn) {
+  Widget _buildUserProfileCard(BuildContext context, AuthUserModel user) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pendingCount = ref.watch(pendingSyncCountProvider);
-    final hiveDb = ref.read(hiveDatabaseProvider);
-    final lastSync = hiveDb.getWorkspaceSettings()['last_sync_time'] as String?;
-    
-    String formattedSyncTime = 'Never';
-    if (lastSync != null) {
-      try {
-        final dt = DateTime.parse(lastSync);
-        final format = DateFormat('MMM d, h:mm a');
-        formattedSyncTime = format.format(dt);
-      } catch (_) {}
-    }
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [
+                  const Color(0xFF1E293B),
+                  const Color(0xFF0F172A),
+                ]
+              : [
+                  Colors.white,
+                  const Color(0xFFF1F5F9),
+                ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.05),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.amberAccent.withValues(alpha: 0.1)
+                  : Colors.amberAccent.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.person_rounded,
+              color: Colors.amberAccent,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user.name.isNotEmpty ? user.name : 'Focus Member',
+                  style: GoogleFonts.outfit(
+                    color: context.colors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  user.mobile,
+                  style: GoogleFonts.outfit(
+                    color: context.colors.textSecondary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    String timeAgo(String? isoString) {
-      if (isoString == null) return 'Never';
+  Widget _buildCloudSyncCard(
+    BuildContext context,
+    WidgetRef ref,
+    bool isLoggedIn,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final syncStatus = ref.watch(cloudSyncStatusProvider);
+    final pendingCount = syncStatus.pendingCount;
+
+    String timeAgo(DateTime? dt) {
+      if (dt == null) return 'Never';
       try {
-        final dt = DateTime.parse(isoString);
         final diff = DateTime.now().difference(dt);
         if (diff.inSeconds < 30) {
           return 'Just now';
@@ -2995,22 +2949,53 @@ extension on _ProfileTab {
       }
     }
 
-    final String title = isLoggedIn ? 'Cloud Sync Enabled' : 'Local Workspace';
+    final String title = isLoggedIn ? 'Cloud Sync' : 'Local Workspace';
     final String description = isLoggedIn
-        ? 'Last synced: ${timeAgo(lastSync)}'
+        ? 'Last synced: ${timeAgo(syncStatus.lastSyncTime)}'
         : 'Your data is safely stored on this device.';
+
+    final String statusText;
+    final Color statusColor;
+    final Color statusBg;
+
+    switch (syncStatus.status) {
+      case 'syncing':
+        statusText = 'Syncing...';
+        statusColor = const Color(0xFF3B82F6);
+        statusBg = const Color(0xFF3B82F6).withValues(alpha: 0.15);
+        break;
+      case 'synced':
+        statusText = 'Synced';
+        statusColor = const Color(0xFF10B981);
+        statusBg = const Color(0xFF10B981).withValues(alpha: 0.15);
+        break;
+      case 'failed':
+        statusText = 'Sync Failed';
+        statusColor = const Color(0xFFEF4444);
+        statusBg = const Color(0xFFEF4444).withValues(alpha: 0.15);
+        break;
+      case 'offline':
+        statusText = 'Offline';
+        statusColor = const Color(0xFF64748B);
+        statusBg = const Color(0xFF64748B).withValues(alpha: 0.15);
+        break;
+      case 'pending':
+      default:
+        statusText = '$pendingCount Pending';
+        statusColor = const Color(0xFFF97316);
+        statusBg = const Color(0xFFF97316).withValues(alpha: 0.15);
+        break;
+    }
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark 
-            ? const Color(0xFF1E293B)
-            : const Color(0xFFEFF6FF),
+        color: context.colors.bg2,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark 
+          color: isDark
               ? Colors.white.withValues(alpha: 0.08)
-              : const Color(0xFF3B82F6).withValues(alpha: 0.15),
+              : Colors.black.withValues(alpha: 0.05),
           width: 1,
         ),
       ),
@@ -3023,17 +3008,18 @@ extension on _ProfileTab {
               Text(
                 title,
                 style: GoogleFonts.outfit(
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  color: context.colors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: isLoggedIn 
-                      ? const Color(0xFF10B981).withValues(alpha: 0.15)
-                      : const Color(0xFF64748B).withValues(alpha: 0.15),
+                  color: statusBg,
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Row(
@@ -3042,15 +3028,15 @@ extension on _ProfileTab {
                       width: 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: isLoggedIn ? const Color(0xFF10B981) : const Color(0xFF64748B),
+                        color: statusColor,
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      isLoggedIn ? 'Connected' : 'Offline',
+                      statusText,
                       style: GoogleFonts.outfit(
-                        color: isLoggedIn ? const Color(0xFF10B981) : const Color(0xFF64748B),
+                        color: statusColor,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -3064,56 +3050,79 @@ extension on _ProfileTab {
           Text(
             description,
             style: GoogleFonts.outfit(
-              color: isLoggedIn
-                  ? (isDark ? Colors.white70 : const Color(0xFF475569))
-                  : (isDark ? Colors.white70 : const Color(0xFF475569)),
-              fontSize: isLoggedIn ? 12.5 : 13,
-              fontWeight: isLoggedIn ? FontWeight.w500 : FontWeight.w400,
+              color: context.colors.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
             ),
           ),
           const SizedBox(height: 12),
           if (isLoggedIn) ...[
-            _buildSyncDetailRow('Last Sync', formattedSyncTime, isDark),
-            const SizedBox(height: 6),
-            _buildSyncDetailRow('Pending Changes', '$pendingCount', isDark),
+            _buildSyncDetailRow(
+              context,
+              'Last Sync',
+              syncStatus.lastSyncTime != null
+                  ? DateFormat('MMM d, h:mm a').format(syncStatus.lastSyncTime!)
+                  : 'Never',
+            ),
+            if (pendingCount > 0) ...[
+              const SizedBox(height: 6),
+              _buildSyncDetailRow(context, 'Pending Changes', '$pendingCount'),
+            ],
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      ref.read(syncQueueServiceProvider).processQueue();
-                    },
-                    icon: const Icon(Icons.sync_rounded, size: 14),
-                    label: const Text('Sync Now'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  HapticFeedback.lightImpact();
+                  final connectivityResult = await Connectivity()
+                      .checkConnectivity();
+                  final isOnline =
+                      connectivityResult.isNotEmpty &&
+                      connectivityResult.any(
+                        (r) => r != ConnectivityResult.none,
+                      );
+                  if (!isOnline) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Row(
+                            children: [
+                              Icon(
+                                Icons.wifi_off_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'You are offline. Connect to internet to sync.',
+                              ),
+                            ],
+                          ),
+                          backgroundColor: Colors.grey[850],
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                    return;
+                  }
+                  ref.read(syncQueueServiceProvider).processQueue();
+                },
+                icon: const Icon(Icons.sync_rounded, size: 14),
+                label: const Text('Sync Now'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3B82F6),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      _restoreData(context, ref);
-                    },
-                    icon: const Icon(Icons.cloud_download_rounded, size: 14),
-                    label: const Text('Restore Data'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF3B82F6),
-                      side: const BorderSide(color: Color(0xFF3B82F6)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ] else ...[
             const SizedBox(height: 4),
@@ -3129,7 +3138,9 @@ extension on _ProfileTab {
                 backgroundColor: const Color(0xFFF97316),
                 foregroundColor: Colors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               child: Text(
@@ -3146,21 +3157,21 @@ extension on _ProfileTab {
     );
   }
 
-  Widget _buildSyncDetailRow(String label, String value, bool isDark) {
+  Widget _buildSyncDetailRow(BuildContext context, String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: GoogleFonts.outfit(
-            color: isDark ? Colors.white60 : const Color(0xFF64748B),
+            color: context.colors.textSecondary,
             fontSize: 12,
           ),
         ),
         Text(
           value,
           style: GoogleFonts.outfit(
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
+            color: context.colors.textPrimary,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -3174,10 +3185,12 @@ extension on _ProfileTab {
       context: context,
       builder: (dialogContext) {
         final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
-        
+
         return Dialog(
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -3201,7 +3214,7 @@ extension on _ProfileTab {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Would you like to keep a copy of your workspace data on this device?',
+                  'Are you sure you want to sign out? This will remove your account data from this device. (Your cloud database will not be affected).',
                   style: GoogleFonts.outfit(
                     fontSize: 14,
                     color: isDark ? Colors.white70 : const Color(0xFF475569),
@@ -3213,46 +3226,47 @@ extension on _ProfileTab {
                 ElevatedButton(
                   onPressed: () async {
                     Navigator.pop(dialogContext);
-                    await ref.read(authProvider.notifier).logout(keepLocalData: true);
+                    await ref
+                        .read(authProvider.notifier)
+                        .logout(keepLocalData: false);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B82F6),
+                    backgroundColor: Colors.redAccent,
                     foregroundColor: Colors.white,
                     fixedSize: const Size.fromHeight(48),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                     elevation: 0,
                   ),
                   child: Text(
-                    'Keep Local Copy',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+                    'Yes, Sign Out',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
                 OutlinedButton(
-                  onPressed: () async {
-                    Navigator.pop(dialogContext);
-                    await ref.read(authProvider.notifier).logout(keepLocalData: false);
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.redAccent,
-                    side: const BorderSide(color: Colors.redAccent, width: 1),
-                    fixedSize: const Size.fromHeight(48),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: Text(
-                    'Delete All Data',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  style: TextButton.styleFrom(
-                    foregroundColor: isDark ? Colors.white54 : const Color(0xFF94A3B8),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: isDark ? Colors.white : const Color(0xFF1E293B),
+                    side: BorderSide(
+                      color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
+                      width: 1,
+                    ),
+                    fixedSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   child: Text(
-                    'Cancel',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14),
+                    'No, Go Back',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ],
@@ -3269,10 +3283,12 @@ extension on _ProfileTab {
       barrierDismissible: false,
       builder: (dialogContext) {
         final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
-        
+
         return Dialog(
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(28),
             child: FutureBuilder(
@@ -3283,7 +3299,9 @@ extension on _ProfileTab {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFF3B82F6),
+                        ),
                       ),
                       const SizedBox(height: 20),
                       Text(
@@ -3291,7 +3309,9 @@ extension on _ProfileTab {
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1E293B),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -3299,7 +3319,9 @@ extension on _ProfileTab {
                         'Downloading your data from the cloud...',
                         style: GoogleFonts.outfit(
                           fontSize: 12,
-                          color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                          color: isDark
+                              ? Colors.white54
+                              : const Color(0xFF64748B),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -3309,14 +3331,20 @@ extension on _ProfileTab {
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 40),
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        color: Colors.redAccent,
+                        size: 40,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'Restore Failed',
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1E293B),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -3324,7 +3352,9 @@ extension on _ProfileTab {
                         snapshot.error.toString(),
                         style: GoogleFonts.outfit(
                           fontSize: 12,
-                          color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                          color: isDark
+                              ? Colors.white54
+                              : const Color(0xFF64748B),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -3333,7 +3363,9 @@ extension on _ProfileTab {
                         onPressed: () => Navigator.pop(futureContext),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF3B82F6),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: const Text('Close'),
                       ),
@@ -3343,14 +3375,20 @@ extension on _ProfileTab {
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 40),
+                      const Icon(
+                        Icons.check_circle_outline_rounded,
+                        color: Colors.green,
+                        size: 40,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'Workspace Restored',
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1E293B),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -3358,7 +3396,9 @@ extension on _ProfileTab {
                         'All your backup data has been successfully restored to this device.',
                         style: GoogleFonts.outfit(
                           fontSize: 12,
-                          color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                          color: isDark
+                              ? Colors.white54
+                              : const Color(0xFF64748B),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -3369,7 +3409,9 @@ extension on _ProfileTab {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF3B82F6),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: const Text('Continue'),
                       ),

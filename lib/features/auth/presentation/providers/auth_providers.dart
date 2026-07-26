@@ -8,8 +8,11 @@ import '../../../../core/storage/sync_manager.dart';
 import '../../../todo/presentation/providers/todo_providers.dart';
 import '../screens/otp_verification_screen.dart';
 import 'preview_mode_provider.dart';
+import 'package:hive/hive.dart';
 import '../../../affirmations/presentation/providers/affirmations_provider.dart';
 import '../../../vision_room/presentation/providers/canvas_providers.dart';
+import '../../../vision_room/presentation/providers/sticky_note_provider.dart';
+import '../../../vision_room/domain/models/sticky_note.dart';
 import '../../../os_dashboard/presentation/providers/os_providers.dart';
 import '../../../os_dashboard/presentation/providers/daily_motivation_provider.dart';
 import '../../../tasks/presentation/providers/tasks_provider.dart';
@@ -335,7 +338,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
 
 
     // Guest -> Account Migration / Reload from Backend
-    final hasGuestData = GuestDataMigrationService.checkGuestDataExists(_hiveDb);
+    final hasGuestData = await GuestDataMigrationService.checkGuestDataExists(_hiveDb);
     if (hasGuestData) {
       log('[Auth] Guest data detected, migrating to server...');
       await GuestDataMigrationService.migrate(_ref);
@@ -383,15 +386,18 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
       await _hiveDb.saveUserPhone(user.mobile);
       await _hiveDb.saveUserName(user.name);
 
-
-      // Guest -> Account Migration / Reload from Backend
-      final hasGuestData = GuestDataMigrationService.checkGuestDataExists(_hiveDb);
-      if (hasGuestData) {
-        log('[Auth] Guest data detected, migrating to server...');
-        await GuestDataMigrationService.migrate(_ref);
-      } else {
-        log('[Auth] No guest data, reloading from server...');
-        await GuestDataMigrationService.reloadFromBackend(_ref);
+      // 4. Migrate guest data or reload user's data from server
+      try {
+        final hasGuestData = await GuestDataMigrationService.checkGuestDataExists(_hiveDb);
+        if (hasGuestData) {
+          log('[Auth] Guest data detected, migrating to server...');
+          await GuestDataMigrationService.migrate(_ref);
+        } else {
+          log('[Auth] No guest data, reloading from server...');
+          await GuestDataMigrationService.reloadFromBackend(_ref);
+        }
+      } catch (migrationErr) {
+        log('[Auth] Migration/Reload error: $migrationErr');
       }
 
       state = AsyncValue.data(user);
@@ -422,6 +428,19 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
         // Clear all local Hive databases/boxes
         await _hiveDb.clearAll();
 
+        // Clear sticky notes box
+        try {
+          if (Hive.isBoxOpen('sticky_notes')) {
+            await Hive.box<StickyNote>('sticky_notes').clear();
+          } else {
+            final box = await Hive.openBox<StickyNote>('sticky_notes');
+            await box.clear();
+            await box.close();
+          }
+        } catch (e) {
+          log('[Auth] Error clearing sticky note box on logout: $e');
+        }
+
         // Clean up temporary files
         try {
           final cacheDir = await getTemporaryDirectory();
@@ -440,6 +459,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
       Future.microtask(() {
         _ref.invalidate(todosProvider);
         _ref.invalidate(canvasStateProvider);
+        _ref.invalidate(stickyNotesProvider);
         _ref.invalidate(affirmationsProvider);
         _ref.invalidate(osStateProvider);
         _ref.invalidate(previewModeProvider);
@@ -447,7 +467,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUserModel?>> {
         _ref.invalidate(tasksProvider);
         // Also invalidate sync queue provider
         _ref.invalidate(syncQueueServiceProvider);
-        _ref.read(pendingSyncCountProvider.notifier).state = 0;
+        _ref.invalidate(cloudSyncStatusProvider);
       });
       
       state = const AsyncValue.data(null);

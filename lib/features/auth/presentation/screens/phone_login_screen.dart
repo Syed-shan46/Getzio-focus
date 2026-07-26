@@ -1,9 +1,8 @@
-import 'dart:ui';
-import 'dart:math' as math;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/auth_providers.dart';
 import 'legal_document_screen.dart';
@@ -23,6 +22,12 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    _focusNode.requestFocus();
+  }
+
+  @override
   void dispose() {
     _phoneController.dispose();
     _focusNode.dispose();
@@ -33,10 +38,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => LegalDocumentScreen(
-          title: title,
-          isPrivacyPolicy: isPrivacyPolicy,
-        ),
+        builder: (_) =>
+            LegalDocumentScreen(title: title, isPrivacyPolicy: isPrivacyPolicy),
       ),
     );
   }
@@ -46,6 +49,24 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
     if (rawPhone.length != 10) {
       setState(() => _error = 'Enter a valid 10-digit mobile number');
       HapticFeedback.vibrate();
+      return;
+    }
+
+    // Check connectivity first
+    final connectivityResult = await Connectivity().checkConnectivity();
+    final hasInternet = !connectivityResult.contains(ConnectivityResult.none);
+    if (!hasInternet) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No internet connection. Please connect to the internet and try again.',
+            ),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
       return;
     }
 
@@ -67,13 +88,13 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                   OtpVerificationScreen(phoneNumber: fullPhone),
               transitionsBuilder: (_, anim, __, child) {
                 return SlideTransition(
-                  position: Tween(
-                    begin: const Offset(1, 0),
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(
-                    parent: anim,
-                    curve: Curves.easeOutCubic,
-                  )),
+                  position: Tween(begin: const Offset(1, 0), end: Offset.zero)
+                      .animate(
+                        CurvedAnimation(
+                          parent: anim,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
                   child: child,
                 );
               },
@@ -82,10 +103,31 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
           );
         }
       } else {
-        setState(() => _error = 'Failed to send OTP. Try again.');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to send OTP. Please try again.'),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     } catch (e) {
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+      if (mounted) {
+        String errorMsg = e.toString().replaceFirst('Exception: ', '');
+        if (errorMsg.contains('notification-not-forwarded')) {
+          errorMsg =
+              'Verification service setup pending. You can use test number +918888888888 or +919999999999 to test instantly.';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -122,7 +164,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
               ),
             ),
           ),
-          
+
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -137,7 +179,9 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                         children: [
                           Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -169,7 +213,9 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                       fontFamily: 'Outfit',
                                       fontSize: 15,
                                       fontWeight: FontWeight.w400,
-                                      color: Colors.white.withValues(alpha: 0.7),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.7,
+                                      ),
                                       height: 1.4,
                                     ),
                                   ),
@@ -178,7 +224,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                               ),
                             ),
                           ),
-                          
+
                           // Bottom Card
                           Container(
                             margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -207,7 +253,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                     ),
                                     const SizedBox(width: 12),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         const Text(
                                           'Login or Sign up',
@@ -223,7 +270,9 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                           style: TextStyle(
                                             fontFamily: 'Outfit',
                                             fontSize: 12,
-                                            color: Colors.white.withValues(alpha: 0.5),
+                                            color: Colors.white.withValues(
+                                              alpha: 0.5,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -231,7 +280,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 24),
-                                
+
                                 // Input Field
                                 Container(
                                   height: 56,
@@ -242,7 +291,9 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                   child: Row(
                                     children: [
                                       Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
                                         child: Row(
                                           children: [
                                             const Text(
@@ -257,7 +308,9 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                             const SizedBox(width: 4),
                                             Icon(
                                               Icons.keyboard_arrow_down_rounded,
-                                              color: Colors.white.withValues(alpha: 0.5),
+                                              color: Colors.white.withValues(
+                                                alpha: 0.5,
+                                              ),
                                               size: 20,
                                             ),
                                           ],
@@ -266,7 +319,9 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                       Container(
                                         width: 1,
                                         height: 24,
-                                        color: Colors.white.withValues(alpha: 0.1),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.1,
+                                        ),
                                       ),
                                       const SizedBox(width: 16),
                                       Expanded(
@@ -283,13 +338,16 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                           cursorColor: const Color(0xFFFDEBB2),
                                           maxLength: 10,
                                           inputFormatters: [
-                                            FilteringTextInputFormatter.digitsOnly,
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
                                           ],
                                           decoration: InputDecoration(
                                             hintText: 'Enter mobile number',
                                             hintStyle: TextStyle(
                                               fontFamily: 'Outfit',
-                                              color: Colors.white.withValues(alpha: 0.3),
+                                              color: Colors.white.withValues(
+                                                alpha: 0.3,
+                                              ),
                                               fontSize: 15,
                                             ),
                                             border: InputBorder.none,
@@ -301,15 +359,17 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                     ],
                                   ),
                                 ),
-                                
+
                                 // Error message
                                 if (_error != null) ...[
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
-                                      Icon(Icons.error_outline_rounded,
-                                          size: 14,
-                                          color: context.colors.error),
+                                      Icon(
+                                        Icons.error_outline_rounded,
+                                        size: 14,
+                                        color: context.colors.error,
+                                      ),
                                       const SizedBox(width: 6),
                                       Expanded(
                                         child: Text(
@@ -324,16 +384,18 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                     ],
                                   ),
                                 ],
-                                
+
                                 const SizedBox(height: 20),
-                                
+
                                 // Continue Button
                                 GestureDetector(
                                   onTap: _loading ? null : _submit,
                                   child: Container(
                                     height: 56,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFE5C07B), // Golden color
+                                      color: const Color(
+                                        0xFFE5C07B,
+                                      ), // Golden color
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     child: Center(
@@ -369,16 +431,18 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                     ),
                                   ),
                                 ),
-                                
+
                                 const SizedBox(height: 24),
-                                
+
                                 // Shield Icon & text
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
                                       Icons.shield_outlined,
-                                      color: const Color(0xFFFDEBB2).withValues(alpha: 0.7),
+                                      color: const Color(
+                                        0xFFFDEBB2,
+                                      ).withValues(alpha: 0.7),
                                       size: 16,
                                     ),
                                     const SizedBox(width: 8),
@@ -387,7 +451,9 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                       style: TextStyle(
                                         fontFamily: 'Outfit',
                                         fontSize: 12,
-                                        color: Colors.white.withValues(alpha: 0.5),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -395,9 +461,9 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                               ],
                             ),
                           ),
-                          
+
                           const SizedBox(height: 32),
-                          
+
                           // Terms & Privacy
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -411,7 +477,9 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                   height: 1.5,
                                 ),
                                 children: [
-                                  const TextSpan(text: 'By continuing, you agree to our\n'),
+                                  const TextSpan(
+                                    text: 'By continuing, you agree to our\n',
+                                  ),
                                   TextSpan(
                                     text: 'Terms of Service',
                                     style: const TextStyle(
@@ -419,8 +487,10 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                       fontWeight: FontWeight.w500,
                                     ),
                                     recognizer: TapGestureRecognizer()
-                                      ..onTap = () =>
-                                          _openLegalDocument('Terms of Service', false),
+                                      ..onTap = () => _openLegalDocument(
+                                        'Terms of Service',
+                                        false,
+                                      ),
                                   ),
                                   const TextSpan(text: ' and '),
                                   TextSpan(
@@ -430,14 +500,16 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                                       fontWeight: FontWeight.w500,
                                     ),
                                     recognizer: TapGestureRecognizer()
-                                      ..onTap = () =>
-                                          _openLegalDocument('Privacy Policy', true),
+                                      ..onTap = () => _openLegalDocument(
+                                        'Privacy Policy',
+                                        true,
+                                      ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 24),
                         ],
                       ),
@@ -452,4 +524,3 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
     );
   }
 }
-

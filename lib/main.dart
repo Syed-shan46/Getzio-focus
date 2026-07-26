@@ -10,6 +10,7 @@ import 'shared/providers/app_providers.dart';
 import 'features/onboarding/presentation/screens/premium_mvp_onboarding_screen.dart';
 import 'features/onboarding/presentation/screens/video_splash_screen.dart';
 import 'features/daily_motivation/presentation/screens/daily_motivation_screen.dart';
+import 'features/os_dashboard/presentation/screens/os_dashboard_screen.dart';
 import 'shared/providers/theme_provider.dart';
 import 'core/services/notification_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -109,7 +110,7 @@ class TodoApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       home: VideoSplashScreen(
         nextScreen: onboardingCompleted
-            ? const DailyMotivationScreen()
+            ? const OSDashboardScreen()
             : const PremiumMVPOnboardingScreen(),
       ),
     );

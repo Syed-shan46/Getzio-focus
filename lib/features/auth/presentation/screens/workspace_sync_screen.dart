@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../domain/services/guest_migration_service.dart';
 
+import '../../../../core/storage/sync_manager.dart';
+
 class WorkspaceSyncScreen extends ConsumerStatefulWidget {
   const WorkspaceSyncScreen({super.key});
 
@@ -84,6 +86,9 @@ class _WorkspaceSyncScreenState extends ConsumerState<WorkspaceSyncScreen>
     });
 
     try {
+      // Pause background sync to avoid concurrent write conflicts on backend
+      ref.read(syncQueueServiceProvider).isSyncPaused = true;
+
       final success = await GuestDataMigrationService.migrate(ref);
       if (success) {
         // Save current timestamp as last sync time
@@ -115,9 +120,13 @@ class _WorkspaceSyncScreenState extends ConsumerState<WorkspaceSyncScreen>
     } catch (e) {
       setState(() {
         _isUploading = false;
-        _errorMessage = e.toString();
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
       });
       HapticFeedback.heavyImpact();
+    } finally {
+      // Resume background sync queue
+      ref.read(syncQueueServiceProvider).isSyncPaused = false;
+      ref.read(syncQueueServiceProvider).triggerSync();
     }
   }
 

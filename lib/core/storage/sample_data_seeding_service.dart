@@ -3,7 +3,7 @@ import '../../core/storage/hive_database.dart';
 
 class SampleDataSeedingService {
   static const String _logTag = '[SampleDataSeeding]';
-  static const int currentVersion = 4;
+  static const int currentVersion = 5;
 
   /// Seeds minimal setup preferences (identity, life areas, trackers, workspace settings, habits)
   /// and ensures sample tasks, goals, affirmations, and vision room items are left empty.
@@ -82,14 +82,16 @@ class SampleDataSeedingService {
       },
     ]);
 
-    // 6. Clear sample tasks, todos, affirmations, goals, and vision board items
+    // 6. Keep sample vision board items, goals, todos, affirmations, and tasks empty
+    await hiveDb.saveVisionItems([]);
     await hiveDb.saveSelectedGoals([]);
     await hiveDb.saveTodos([]);
     await hiveDb.saveSelectedAffirmations([]);
-    await hiveDb.saveVisionItems([]);
     await hiveDb.saveTasks([]);
 
     await hiveDb.saveSetupCompleted(true);
+    await hiveDb.saveSampleDataSeeded(true);
+    await hiveDb.saveSampleDataVersion(currentVersion);
     dev.log('$_logTag Seeding completed successfully!');
   }
 }

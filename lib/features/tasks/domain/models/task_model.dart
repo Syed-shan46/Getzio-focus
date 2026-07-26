@@ -57,6 +57,7 @@ class SubtaskModel {
       'title': title,
       'description': description,
       'completed': completed,
+      'isCompleted': completed,
       'dueDate': dueDate?.toIso8601String(),
       'dueTime': dueTime,
       'reminder': reminder,
@@ -125,7 +126,8 @@ class TaskModel {
   final DateTime? completedAt;
   final SyncStatus syncStatus;
   final DateTime? lastSyncedAt;
-
+  final bool deleted;
+ 
   TaskModel({
     required this.id,
     required this.title,
@@ -152,6 +154,7 @@ class TaskModel {
     this.completedAt,
     this.syncStatus = SyncStatus.synced,
     this.lastSyncedAt,
+    this.deleted = false,
   });
 
   double get effectiveProgress {
@@ -220,6 +223,7 @@ class TaskModel {
           ? SyncStatus.values.firstWhere((e) => e.name == map['syncStatus'], orElse: () => SyncStatus.synced)
           : SyncStatus.synced,
       lastSyncedAt: map['lastSyncedAt'] != null ? DateTime.tryParse(map['lastSyncedAt'].toString()) : null,
+      deleted: map['deleted'] ?? false,
     );
   }
 
@@ -251,6 +255,7 @@ class TaskModel {
       'completedAt': effectiveCompleted ? (completedAt ?? DateTime.now()).toIso8601String() : null,
       'syncStatus': syncStatus.name,
       'lastSyncedAt': lastSyncedAt?.toIso8601String(),
+      'deleted': deleted,
     };
   }
 
@@ -280,6 +285,7 @@ class TaskModel {
     DateTime? completedAt,
     SyncStatus? syncStatus,
     DateTime? lastSyncedAt,
+    bool? deleted,
   }) {
     return TaskModel(
       id: id ?? this.id,
@@ -307,6 +313,7 @@ class TaskModel {
       completedAt: completedAt ?? this.completedAt,
       syncStatus: syncStatus ?? this.syncStatus,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      deleted: deleted ?? this.deleted,
     );
   }
 }

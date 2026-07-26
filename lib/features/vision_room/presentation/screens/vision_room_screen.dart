@@ -1,5 +1,8 @@
 import 'dart:math';
 import 'dart:ui';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -141,7 +144,24 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
           // Optimistically add the item to the canvas using local cache
           ref.read(canvasStateProvider.notifier).addItem(newItem);
 
-          // Upload in the background
+          final hasToken = ref.read(hiveDatabaseProvider).getAuthToken() != null;
+          if (!hasToken) {
+            // Guest User: Copy image to permanent directory and update item details
+            getApplicationDocumentsDirectory().then((appDocDir) {
+              final fileName = p.basename(image.path);
+              final targetPath = '${appDocDir.path}/$fileName';
+              File(image.path).copy(targetPath).then((savedFile) {
+                if (mounted) {
+                  ref
+                      .read(canvasStateProvider.notifier)
+                      .updateItemDetails(newItem.id, content: savedFile.path);
+                }
+              });
+            });
+            return;
+          }
+
+          // Upload in the background for logged-in users
           final dio = ref.read(dioClientProvider).dio;
           final uploadService = VisionUploadService(dio: dio);
 
@@ -819,11 +839,18 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                         onTap: () =>
                             ref.read(canvasStateProvider.notifier).redo(),
                       ),
+                      _toolbarButton(
+                        icon: Icons.add_circle_outline_rounded,
+                        label: 'Add',
+                        color: Colors.white70,
+                        onTap: _openCreationSheet,
+                      ),
                       if (hasSelection) ...[
                         _divider(),
                         Builder(
                           builder: (context) {
                             final items = ref.read(canvasStateProvider).items;
+                            if (items.isEmpty) return const SizedBox.shrink();
                             final selectedItem = items.firstWhere(
                               (i) => i.id == selectedIds.first,
                               orElse: () => items.first,
@@ -840,32 +867,32 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                                   );
                                 },
                               );
+                            } else if (selectedItem.type ==
+                                VisionItemType.quote.name) {
+                              return _toolbarButton(
+                                icon: Icons.edit_note_rounded,
+                                label: 'Edit Quote',
+                                color: context.colors.accentBlue,
+                                onTap: () {
+                                  QuoteBuilderModal.show(
+                                    context,
+                                    initialMetadata: selectedItem.metadata?.cast<String, dynamic>(),
+                                    onSubmit: (newMetadata) {
+                                      ref
+                                          .read(canvasStateProvider.notifier)
+                                          .updateItemDetails(
+                                            selectedItem.id,
+                                            content: newMetadata['quote'] as String,
+                                            secondaryContent:
+                                                newMetadata['author'] as String,
+                                            metadata: newMetadata,
+                                          );
+                                    },
+                                  );
+                                },
+                              );
                             }
                             return const SizedBox.shrink();
-                          },
-                        ),
-                        _toolbarButton(
-                          icon: Icons.copy_rounded,
-                          label: 'Duplicate',
-                          color: Colors.white,
-                          onTap: () {
-                            final items = ref.read(canvasStateProvider).items;
-                            final item = items.firstWhere(
-                              (i) => i.id == selectedIds.first,
-                            );
-                            final newItem = item.copyWith(
-                              id: const Uuid().v4(),
-                              x: item.x + 40,
-                              y: item.y + 40,
-                              zIndex: item.zIndex + 1,
-                            );
-                            ref
-                                .read(canvasStateProvider.notifier)
-                                .addItem(newItem);
-                            ref
-                                .read(canvasStateProvider.notifier)
-                                .selectItem(newItem.id);
-                            HapticFeedback.lightImpact();
                           },
                         ),
                         _toolbarButton(
@@ -877,62 +904,6 @@ class _VisionRoomScreenState extends ConsumerState<VisionRoomScreen>
                                 .read(canvasStateProvider.notifier)
                                 .removeItem(selectedIds.first);
                             HapticFeedback.heavyImpact();
-                          },
-                        ),
-                        _toolbarButton(
-                          icon: Icons.lock_outline_rounded,
-                          label: 'Lock',
-                          color: Colors.white70,
-                          onTap: () {
-                            // Toggle pin
-                            final items = ref.read(canvasStateProvider).items;
-                            final item = items.firstWhere(
-                              (i) => i.id == selectedIds.first,
-                            );
-                            ref
-                                .read(canvasStateProvider.notifier)
-                                .updateAttachment(
-                                  item.id,
-                                  'pin',
-                                  item.attachmentStyle == 'redPin'
-                                      ? 'bluePin'
-                                      : 'redPin',
-                                );
-                          },
-                        ),
-                        _toolbarButton(
-                          icon: Icons.flip_to_front_rounded,
-                          label: 'Forward',
-                          color: Colors.white70,
-                          onTap: () => ref
-                              .read(canvasStateProvider.notifier)
-                              .bringToFront(selectedIds.first),
-                        ),
-                        _toolbarButton(
-                          icon: Icons.flip_to_back_rounded,
-                          label: 'Backward',
-                          color: Colors.white70,
-                          onTap: () => ref
-                              .read(canvasStateProvider.notifier)
-                              .sendToBack(selectedIds.first),
-                        ),
-                        _toolbarButton(
-                          icon: Icons.rotate_right_rounded,
-                          label: 'Rotate',
-                          color: Colors.white70,
-                          onTap: () {
-                            final items = ref.read(canvasStateProvider).items;
-                            final item = items.firstWhere(
-                              (i) => i.id == selectedIds.first,
-                            );
-                            ref
-                                .read(canvasStateProvider.notifier)
-                                .commitTransform(
-                                  item.id,
-                                  item.width,
-                                  item.height,
-                                  item.rotation + 0.15,
-                                );
                           },
                         ),
                       ],

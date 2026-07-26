@@ -813,7 +813,7 @@ class _PremiumMVPOnboardingScreenState
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Enter as a guest or sign in to securely save your Vision Room across all your devices.',
+                    'Continue without login or sign in to securely save your Vision Room across all your devices.',
                     style: GoogleFonts.outfit(
                       color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 14,
@@ -846,7 +846,7 @@ class _PremiumMVPOnboardingScreenState
                         elevation: 0,
                       ),
                       child: Text(
-                        'Continue as Guest',
+                        'Continue without login',
                         style: GoogleFonts.outfit(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -899,7 +899,7 @@ class _PremiumMVPOnboardingScreenState
 
                   // Note caption
                   Text(
-                    'Guest mode lets you explore the app.\nVision Rooms are only saved when you\'re signed in.',
+                    'You can explore the app without logging in.\nVision Rooms are only saved when you\'re signed in.',
                     style: GoogleFonts.outfit(
                       color: Colors.white.withValues(alpha: 0.4),
                       fontSize: 11,

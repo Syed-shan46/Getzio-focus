@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../domain/models/task_model.dart';
 import '../providers/tasks_provider.dart';
+import 'package:getzio_todo_app/core/theme/app_theme.dart';
 
 class TaskCard extends ConsumerStatefulWidget {
   final TaskModel task;
@@ -26,19 +27,28 @@ class TaskCard extends ConsumerStatefulWidget {
 class _TaskCardState extends ConsumerState<TaskCard> {
   bool _expanded = false;
 
-
   String _getCountdownText(SubtaskModel subtask) {
     if (subtask.dueDate == null) return '';
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final targetDate = DateTime(subtask.dueDate!.year, subtask.dueDate!.month, subtask.dueDate!.day);
-    
+    final targetDate = DateTime(
+      subtask.dueDate!.year,
+      subtask.dueDate!.month,
+      subtask.dueDate!.day,
+    );
+
     DateTime? targetDateTime;
     if (subtask.dueTime != null) {
       try {
         final timeFormat = DateFormat('h:mm a');
         final time = timeFormat.parse(subtask.dueTime!);
-        targetDateTime = DateTime(targetDate.year, targetDate.month, targetDate.day, time.hour, time.minute);
+        targetDateTime = DateTime(
+          targetDate.year,
+          targetDate.month,
+          targetDate.day,
+          time.hour,
+          time.minute,
+        );
       } catch (e) {
         targetDateTime = targetDate;
       }
@@ -53,17 +63,19 @@ class _TaskCardState extends ConsumerState<TaskCard> {
       return diff == 1 ? 'Overdue by 1 Day' : 'Overdue by $diff Days';
     } else if (targetDate.isAtSameMomentAs(today)) {
       if (targetDateTime != targetDate) {
-         final diff = targetDateTime.difference(now);
-         if (diff.isNegative) {
-            return 'Overdue by ${diff.inHours.abs()}h ${diff.inMinutes.abs() % 60}m';
-         } else if (diff.inHours > 0) {
-            return '${diff.inHours}h ${diff.inMinutes % 60}m left';
-         } else {
-            return '${diff.inMinutes} mins left';
-         }
+        final diff = targetDateTime.difference(now);
+        if (diff.isNegative) {
+          return 'Overdue by ${diff.inHours.abs()}h ${diff.inMinutes.abs() % 60}m';
+        } else if (diff.inHours > 0) {
+          return '${diff.inHours}h ${diff.inMinutes % 60}m left';
+        } else {
+          return '${diff.inMinutes} mins left';
+        }
       }
       return 'Today';
-    } else if (targetDate.isAtSameMomentAs(today.add(const Duration(days: 1)))) {
+    } else if (targetDate.isAtSameMomentAs(
+      today.add(const Duration(days: 1)),
+    )) {
       return 'Tomorrow';
     } else {
       final diff = targetDate.difference(today).inDays;
@@ -74,17 +86,27 @@ class _TaskCardState extends ConsumerState<TaskCard> {
   Color _getCountdownColor(SubtaskModel subtask) {
     if (subtask.completed) return Colors.grey;
     if (subtask.dueDate == null) return Colors.white54;
-    
+
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final targetDate = DateTime(subtask.dueDate!.year, subtask.dueDate!.month, subtask.dueDate!.day);
-    
+    final targetDate = DateTime(
+      subtask.dueDate!.year,
+      subtask.dueDate!.month,
+      subtask.dueDate!.day,
+    );
+
     DateTime? targetDateTime;
     if (subtask.dueTime != null) {
       try {
         final timeFormat = DateFormat('h:mm a');
         final time = timeFormat.parse(subtask.dueTime!);
-        targetDateTime = DateTime(targetDate.year, targetDate.month, targetDate.day, time.hour, time.minute);
+        targetDateTime = DateTime(
+          targetDate.year,
+          targetDate.month,
+          targetDate.day,
+          time.hour,
+          time.minute,
+        );
       } catch (e) {
         targetDateTime = targetDate;
       }
@@ -95,9 +117,9 @@ class _TaskCardState extends ConsumerState<TaskCard> {
     if (targetDate.isBefore(today)) return Colors.redAccent;
     if (targetDate.isAtSameMomentAs(today)) {
       if (targetDateTime != targetDate) {
-         final diff = targetDateTime.difference(now);
-         if (diff.isNegative) return Colors.redAccent;
-         if (diff.inHours < 3) return Colors.redAccent;
+        final diff = targetDateTime.difference(now);
+        if (diff.isNegative) return Colors.redAccent;
+        if (diff.inHours < 3) return Colors.redAccent;
       }
       return Colors.amber;
     }
@@ -139,7 +161,9 @@ class _TaskCardState extends ConsumerState<TaskCard> {
 
     return GestureDetector(
       onTap: () {
-        debugPrint("TaskCard: Outer card tapped! subtasks count: ${widget.task.subtasks.length}");
+        debugPrint(
+          "TaskCard: Outer card tapped! subtasks count: ${widget.task.subtasks.length}",
+        );
         if (widget.task.subtasks.isNotEmpty) {
           HapticFeedback.selectionClick();
           setState(() {
@@ -153,8 +177,12 @@ class _TaskCardState extends ConsumerState<TaskCard> {
         margin: const EdgeInsets.only(bottom: 8, left: 16, right: 16),
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: const Color(0xFF131722),
+          color: context.colors.bg2,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: context.colors.textPrimary.withValues(alpha: 0.04),
+            width: 1,
+          ),
         ),
         child: Stack(
           children: [
@@ -163,12 +191,9 @@ class _TaskCardState extends ConsumerState<TaskCard> {
               left: 0,
               top: 0,
               bottom: 0,
-              child: Container(
-                width: 4,
-                color: categoryColor,
-              ),
+              child: Container(width: 4, color: categoryColor),
             ),
-            
+
             // Content
             Padding(
               padding: const EdgeInsets.only(left: 4),
@@ -194,16 +219,22 @@ class _TaskCardState extends ConsumerState<TaskCard> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isCompleted ? Colors.amber : Colors.white24,
+                                color: isCompleted
+                                    ? Colors.amber
+                                    : Colors.white24,
                                 width: 1.5,
                               ),
                             ),
                             child: isCompleted
-                                ? const Icon(Icons.check, size: 12, color: Colors.amber)
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 12,
+                                    color: Colors.amber,
+                                  )
                                 : null,
                           ),
                         ),
-                        
+
                         // Text Info
                         Expanded(
                           child: Column(
@@ -215,19 +246,26 @@ class _TaskCardState extends ConsumerState<TaskCard> {
                                   color: Colors.white,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                  decoration: isCompleted
+                                      ? TextDecoration.lineThrough
+                                      : null,
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              
+
                               // Badges & Time Row
                               Row(
                                 children: [
                                   // Category Badge
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: categoryColor.withValues(alpha: 0.15),
+                                      color: categoryColor.withValues(
+                                        alpha: 0.15,
+                                      ),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
@@ -240,69 +278,99 @@ class _TaskCardState extends ConsumerState<TaskCard> {
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  
+
                                   // Due Date
                                   if (widget.task.dueDate != null) ...[
-                                    const Icon(Icons.calendar_today_rounded, size: 10, color: Colors.white54),
+                                    const Icon(
+                                      Icons.calendar_today_rounded,
+                                      size: 10,
+                                      color: Colors.white54,
+                                    ),
                                     const SizedBox(width: 4),
                                     Text(
                                       '${DateFormat('MMM d').format(widget.task.dueDate!)}${widget.task.dueTime != null ? ', ${widget.task.dueTime}' : ''}',
-                                      style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11),
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.white54,
+                                        fontSize: 11,
+                                      ),
                                     ),
                                     const SizedBox(width: 8),
                                   ],
-                                  
+
                                   // Estimated Duration
                                   if (widget.task.estimatedMinutes != null) ...[
-                                    const Icon(Icons.access_time_rounded, size: 10, color: Colors.white54),
+                                    const Icon(
+                                      Icons.access_time_rounded,
+                                      size: 10,
+                                      color: Colors.white54,
+                                    ),
                                     const SizedBox(width: 4),
                                     Text(
                                       '${widget.task.estimatedMinutes}m',
-                                      style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.white54,
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   ],
                                 ],
                               ),
-                              
+
                               const SizedBox(height: 10),
-                              
+
                               // Bottom Row (Checklist & Priority)
                               Row(
-                                  children: [
-                                    if (widget.task.subtasks.isNotEmpty) ...[
-                                      const Icon(Icons.check_box_outlined, size: 14, color: Colors.white54),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${widget.task.subtasks.where((c) => c.completed).length}/${widget.task.subtasks.length}',
-                                        style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+                                children: [
+                                  if (widget.task.subtasks.isNotEmpty) ...[
+                                    const Icon(
+                                      Icons.check_box_outlined,
+                                      size: 14,
+                                      color: Colors.white54,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${widget.task.subtasks.where((c) => c.completed).length}/${widget.task.subtasks.length}',
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.white54,
+                                        fontSize: 12,
                                       ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: 8),
-                                        child: Text('•', style: TextStyle(color: Colors.white24)),
+                                    ),
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 8,
                                       ),
-                                    ],
-                                    
-                                    if (widget.task.priority == TaskPriority.high) ...[
-                                      Container(
-                                        width: 4,
-                                        height: 4,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.redAccent,
-                                          shape: BoxShape.circle,
-                                        ),
+                                      child: Text(
+                                        '•',
+                                        style: TextStyle(color: Colors.white24),
                                       ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        'High Priority',
-                                        style: GoogleFonts.outfit(color: Colors.redAccent, fontSize: 12),
-                                      ),
-                                    ],
+                                    ),
                                   ],
-                                ),
+
+                                  if (widget.task.priority ==
+                                      TaskPriority.high) ...[
+                                    Container(
+                                      width: 4,
+                                      height: 4,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.redAccent,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'High Priority',
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.redAccent,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ],
                           ),
                         ),
-                        
+
                         // Right Icons Column
                         Column(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -314,13 +382,21 @@ class _TaskCardState extends ConsumerState<TaskCard> {
                                   onTap: () {
                                     debugPrint("TaskCard: Star icon tapped!");
                                     HapticFeedback.lightImpact();
-                                    ref.read(tasksProvider.notifier).updateTask(
-                                      widget.task.copyWith(pinned: !widget.task.pinned),
-                                    );
+                                    ref
+                                        .read(tasksProvider.notifier)
+                                        .updateTask(
+                                          widget.task.copyWith(
+                                            pinned: !widget.task.pinned,
+                                          ),
+                                        );
                                   },
                                   child: Icon(
-                                    widget.task.pinned ? Icons.star_rounded : Icons.star_border_rounded,
-                                    color: widget.task.pinned ? Colors.amber : Colors.white54,
+                                    widget.task.pinned
+                                        ? Icons.star_rounded
+                                        : Icons.star_border_rounded,
+                                    color: widget.task.pinned
+                                        ? Colors.amber
+                                        : Colors.white54,
                                     size: 20,
                                   ),
                                 ),
@@ -348,7 +424,9 @@ class _TaskCardState extends ConsumerState<TaskCard> {
                                     },
                                     child: AnimatedRotation(
                                       turns: _expanded ? 0.5 : 0,
-                                      duration: const Duration(milliseconds: 200),
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
                                       child: const Icon(
                                         Icons.keyboard_arrow_down_rounded,
                                         color: Colors.white70,
@@ -370,7 +448,7 @@ class _TaskCardState extends ConsumerState<TaskCard> {
                       ],
                     ),
                   ),
-                  
+
                   // Subtask Panel
                   AnimatedSize(
                     duration: const Duration(milliseconds: 250),
@@ -388,7 +466,6 @@ class _TaskCardState extends ConsumerState<TaskCard> {
     );
   }
 
-
   Widget _buildSubtaskPanel(BuildContext context, Color categoryColor) {
     return Container(
       width: double.infinity,
@@ -400,7 +477,7 @@ class _TaskCardState extends ConsumerState<TaskCard> {
           final isLast = idx == widget.task.subtasks.length - 1;
           final countdown = _getCountdownText(subtask);
           final color = _getCountdownColor(subtask);
-          
+
           return Column(
             children: [
               Padding(
@@ -413,11 +490,17 @@ class _TaskCardState extends ConsumerState<TaskCard> {
                       child: GestureDetector(
                         onTap: () {
                           HapticFeedback.mediumImpact();
-                          final updatedSubtasks = List<SubtaskModel>.from(widget.task.subtasks);
-                          updatedSubtasks[idx] = subtask.copyWith(completed: !subtask.completed);
-                          ref.read(tasksProvider.notifier).updateTask(
-                            widget.task.copyWith(subtasks: updatedSubtasks),
+                          final updatedSubtasks = List<SubtaskModel>.from(
+                            widget.task.subtasks,
                           );
+                          updatedSubtasks[idx] = subtask.copyWith(
+                            completed: !subtask.completed,
+                          );
+                          ref
+                              .read(tasksProvider.notifier)
+                              .updateTask(
+                                widget.task.copyWith(subtasks: updatedSubtasks),
+                              );
                         },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
@@ -425,11 +508,13 @@ class _TaskCardState extends ConsumerState<TaskCard> {
                           height: 16,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: subtask.completed 
-                                ? Colors.amber.withValues(alpha: 0.1) 
+                            color: subtask.completed
+                                ? Colors.amber.withValues(alpha: 0.1)
                                 : Colors.transparent,
                             border: Border.all(
-                              color: subtask.completed ? Colors.amber : Colors.white24,
+                              color: subtask.completed
+                                  ? Colors.amber
+                                  : Colors.white24,
                               width: 1.5,
                             ),
                           ),
@@ -447,33 +532,54 @@ class _TaskCardState extends ConsumerState<TaskCard> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 200),
-                            style: GoogleFonts.outfit(
-                              color: subtask.completed ? Colors.white30 : Colors.white70,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              decoration: subtask.completed ? TextDecoration.lineThrough : null,
-                              decorationColor: Colors.white24,
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          final updatedSubtasks = List<SubtaskModel>.from(
+                            widget.task.subtasks,
+                          );
+                          updatedSubtasks[idx] = subtask.copyWith(
+                            completed: !subtask.completed,
+                          );
+                          ref
+                              .read(tasksProvider.notifier)
+                              .updateTask(
+                                widget.task.copyWith(subtasks: updatedSubtasks),
+                              );
+                        },
+                        behavior: HitTestBehavior.opaque,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 200),
+                              style: GoogleFonts.outfit(
+                                color: subtask.completed
+                                    ? Colors.white30
+                                    : Colors.white70,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                decoration: subtask.completed
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                                decorationColor: Colors.white24,
+                              ),
+                              child: Text('• ${subtask.title}'),
                             ),
-                            child: Text('• ${subtask.title}'),
-                          ),
-                          if (countdown.isNotEmpty && !subtask.completed)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                countdown,
-                                style: GoogleFonts.outfit(
-                                  color: color,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                            if (countdown.isNotEmpty && !subtask.completed)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  countdown,
+                                  style: GoogleFonts.outfit(
+                                    color: color,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -491,5 +597,4 @@ class _TaskCardState extends ConsumerState<TaskCard> {
       ),
     );
   }
-
 }

@@ -24,12 +24,12 @@ class DisciplineInsights extends ConsumerWidget {
           padding: const EdgeInsets.only(left: 8, bottom: 12),
           child: Text(
             'Discipline Insights',
-            style: AppTypography.titleMedium(color: Colors.white).copyWith(fontSize: 20),
+            style: AppTypography.titleMedium(color: context.colors.textPrimary).copyWith(fontSize: 20),
           ),
         ),
         Container(
           padding: const EdgeInsets.all(24),
-          decoration: GlassDecoration.card(),
+          decoration: GlassDecoration.card(context: context),
           child: Column(
             children: [
               // Main Grid

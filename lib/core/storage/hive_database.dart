@@ -115,118 +115,11 @@ class HiveDatabase {
   }
 
   Future<void> migrateLegacyData() async {
-    final userId = getUserId() ?? 'guest';
-
-    // 1. Migrate tasks
-    final tasksBox = Hive.box('tasks');
-    if (tasksBox.isEmpty) {
-      final oldTasksBoxName = 'tasks_$userId';
-      if (Hive.isBoxOpen(oldTasksBoxName)) {
-        final oldTasksBox = Hive.box(oldTasksBoxName);
-        if (oldTasksBox.isNotEmpty) {
-          log('[Migration] Migrating tasks from $oldTasksBoxName to unified tasks box');
-          await tasksBox.putAll(oldTasksBox.toMap());
-        }
-      }
-    }
-
-    // 2. Migrate goals
-    final goalsBox = Hive.box('goals');
-    if (goalsBox.isEmpty) {
-      final oldGoalsBoxName = 'goals_$userId';
-      if (Hive.isBoxOpen(oldGoalsBoxName)) {
-        final oldGoalsBox = Hive.box(oldGoalsBoxName);
-        if (oldGoalsBox.isNotEmpty) {
-          log('[Migration] Migrating goals from $oldGoalsBoxName to unified goals box');
-          await goalsBox.putAll(oldGoalsBox.toMap());
-        }
-      }
-    }
-
-    // 3. Migrate vision items to vision_room
-    final visionRoomBox = Hive.box('vision_room');
-    if (visionRoomBox.isEmpty) {
-      final oldVisionBoxName = 'vision_items_$userId';
-      if (Hive.isBoxOpen(oldVisionBoxName)) {
-        final oldVisionBox = Hive.box(oldVisionBoxName);
-        if (oldVisionBox.isNotEmpty) {
-          log('[Migration] Migrating vision items from $oldVisionBoxName to unified vision_room box');
-          await visionRoomBox.putAll(oldVisionBox.toMap());
-        }
-      }
-    }
-
-    // 4. Migrate affirmations
-    final affirmationsBox = Hive.box('affirmations');
-    if (affirmationsBox.isEmpty) {
-      final oldAffirmationsBoxName = 'affirmations_$userId';
-      if (Hive.isBoxOpen(oldAffirmationsBoxName)) {
-        final oldAffirmationsBox = Hive.box(oldAffirmationsBoxName);
-        if (oldAffirmationsBox.isNotEmpty) {
-          log('[Migration] Migrating affirmations from $oldAffirmationsBoxName to unified affirmations box');
-          await affirmationsBox.putAll(oldAffirmationsBox.toMap());
-        }
-      }
-    }
-
-    // 5. Migrate sticky notes
-    final stickyNotesBox = Hive.box<StickyNote>('sticky_notes');
-    if (stickyNotesBox.isEmpty) {
-      final oldNotesBoxName = userId == 'guest' ? 'guest_sticky_notes' : 'sticky_notes_$userId';
-      if (Hive.isBoxOpen(oldNotesBoxName)) {
-        final oldNotesBox = Hive.box<StickyNote>(oldNotesBoxName);
-        if (oldNotesBox.isNotEmpty) {
-          log('[Migration] Migrating sticky notes from $oldNotesBoxName to unified sticky_notes box');
-          await stickyNotesBox.putAll(oldNotesBox.toMap());
-        }
-      }
-    }
-
-    // 6. Migrate settings
-    final settingsBox = Hive.box('settings');
-    if (settingsBox.isEmpty) {
-      log('[Migration] Copying settings from legacy settings box');
-      await settingsBox.putAll(_settingsBox.toMap());
-    }
-
-    // 7. Migrate theme
-    final themeBox = Hive.box('theme');
-    if (themeBox.isEmpty) {
-      final themeMode = _settingsBox.get('app_theme_mode');
-      if (themeMode != null) {
-        log('[Migration] Copying theme settings from legacy settings box');
-        await themeBox.put('app_theme_mode', themeMode);
-      }
-    }
-
-    // 8. Migrate profile preferences
-    final profileBox = Hive.box('profile_preferences');
-    if (profileBox.isEmpty) {
-      log('[Migration] Copying profile preferences from legacy settings box');
-      final prefKeys = [
-        'auth_token', 'user_id', 'user_name', 'user_phone',
-        'focus_selected_identity', 'focus_selected_goal', 'focus_wake_up_time',
-        'focus_selected_habits', 'focus_life_areas', 'focus_reading_prefs',
-        'focus_health_prefs', 'focus_finance_prefs', 'focus_vision_viewport',
-        'focus_vision_customization', 'focus_workspace_settings',
-        'onboarding_completed', 'focus_setup_completed'
-      ];
-      for (final key in prefKeys) {
-        final val = _settingsBox.get(key);
-        if (val != null) {
-          await profileBox.put(key, val);
-        }
-      }
-    }
+    // Preserve strict per-user box isolation: tasks_$userId, goals_$userId, vision_items_$userId, affirmations_$userId
+    log('[Migration] Strict user box isolation active.');
   }
 
   Future<Box> _getUserBox(String boxPrefix) async {
-    if (boxPrefix == 'tasks') return Hive.box('tasks');
-    if (boxPrefix == 'goals') return Hive.box('goals');
-    if (boxPrefix == 'vision_items') return Hive.box('vision_room');
-    if (boxPrefix == 'affirmations') return Hive.box('affirmations');
-    if (boxPrefix == 'pending_sync') return Hive.box('pending_sync');
-
     final userId = getUserId() ?? 'guest';
     final boxName = '${boxPrefix}_$userId';
     if (Hive.isBoxOpen(boxName)) {
@@ -236,12 +129,6 @@ class HiveDatabase {
   }
 
   Future<Box> _getUserBoxWithId(String boxPrefix, String userId) async {
-    if (boxPrefix == 'tasks') return Hive.box('tasks');
-    if (boxPrefix == 'goals') return Hive.box('goals');
-    if (boxPrefix == 'vision_items') return Hive.box('vision_room');
-    if (boxPrefix == 'affirmations') return Hive.box('affirmations');
-    if (boxPrefix == 'pending_sync') return Hive.box('pending_sync');
-
     final boxName = '${boxPrefix}_$userId';
     if (Hive.isBoxOpen(boxName)) {
       return Hive.box(boxName);
@@ -277,16 +164,21 @@ class HiveDatabase {
       await box.putAll(map);
     }
   }
-
   List<Map<String, dynamic>> getUserItems(String boxPrefix) {
     final userId = getUserId() ?? 'guest';
     final boxName = '${boxPrefix}_$userId';
+
     if (!Hive.isBoxOpen(boxName)) {
       log('[Hive] getUserItems: box $boxName is NOT open, returning []');
       return [];
     }
     final box = Hive.box(boxName);
-    log('[Hive] getUserItems($boxPrefix): box has ${box.length} items');
+    log('[Hive] getUserItems($boxPrefix, $userId): box has ${box.length} items');
+    return box.values.map((e) => _deepCast(e)).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getUserItemsForId(String boxPrefix, String userId) async {
+    final box = await _getUserBoxWithId(boxPrefix, userId);
     return box.values.map((e) => _deepCast(e)).toList();
   }
 
@@ -555,6 +447,9 @@ class HiveDatabase {
 
   Future<void> clearAll() async {
     final userId = getUserId() ?? 'guest';
+    final onboardingCompleted = _settingsBox.get('onboarding_completed');
+    final setupCompleted = _settingsBox.get('setup_completed');
+
     await _todosBox.clear();
     await _syncBox.clear();
     
@@ -566,11 +461,20 @@ class HiveDatabase {
     await (await _getUserBoxWithId('pending_sync', userId)).clear();
 
     await _settingsBox.clear();
+
+    if (onboardingCompleted != null) {
+      await _settingsBox.put('onboarding_completed', onboardingCompleted);
+    }
+    if (setupCompleted != null) {
+      await _settingsBox.put('setup_completed', setupCompleted);
+    }
   }
 
   Future<void> clearAllGuestData() async {
     final token = _settingsBox.get('auth_token');
     final userData = _settingsBox.get('user_data');
+    final onboardingCompleted = _settingsBox.get('onboarding_completed');
+    final setupCompleted = _settingsBox.get('setup_completed');
 
     await _todosBox.clear();
     await _syncBox.clear();
@@ -584,9 +488,15 @@ class HiveDatabase {
 
     await _settingsBox.clear();
 
-    // Restore auth info
+    // Restore auth info and onboarding/setup progress
     if (token != null) await _settingsBox.put('auth_token', token);
     if (userData != null) await _settingsBox.put('user_data', userData);
+    if (onboardingCompleted != null) {
+      await _settingsBox.put('onboarding_completed', onboardingCompleted);
+    }
+    if (setupCompleted != null) {
+      await _settingsBox.put('setup_completed', setupCompleted);
+    }
   }
 
   // ─── Getzio Focus Onboarding & Dashboard ──────────────────────────────
@@ -816,4 +726,6 @@ class HiveDatabase {
   dynamic getAffirmationMetadata(String key) {
     return _settingsBox.get('affirmation_meta_$key');
   }
+
+  Box getSettingsBox() => _settingsBox;
 }

@@ -8,6 +8,7 @@ import '../../domain/models/vision_item.dart';
 import '../providers/canvas_providers.dart';
 import 'premium_goal_overview_sheet.dart';
 import 'universal_smart_object_sheet.dart';
+import 'quote_builder_modal.dart';
 import 'package:getzio_todo_app/core/theme/app_theme.dart';
 
 /// Central Dispatcher: Launches the exact logical sheet based on object type.
@@ -1463,7 +1464,7 @@ class QuoteSmartSheet extends ConsumerWidget {
     final author = metadata['author'] as String? ?? 'Anonymous';
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.30,
+      height: MediaQuery.of(context).size.height * 0.40,
       decoration: BoxDecoration(
         color: context.colors.bg2.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -1515,6 +1516,38 @@ class QuoteSmartSheet extends ConsumerWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            QuoteBuilderModal.show(
+                              context,
+                              initialMetadata: metadata.cast<String, dynamic>(),
+                              onSubmit: (newMetadata) {
+                                ref.read(canvasStateProvider.notifier).updateItemDetails(
+                                  item.id,
+                                  content: newMetadata['quote'] as String,
+                                  secondaryContent: newMetadata['author'] as String,
+                                  metadata: newMetadata,
+                                );
+                              },
+                            );
+                          },
+                          icon: const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
+                          label: const Text('Edit Quote', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          style: TextButton.styleFrom(
+                            backgroundColor: context.colors.accentBlue,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),

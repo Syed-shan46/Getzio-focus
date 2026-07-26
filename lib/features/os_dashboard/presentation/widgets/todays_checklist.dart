@@ -198,7 +198,7 @@ class _TodaysChecklistState extends ConsumerState<TodaysChecklist> {
         if (filteredHabits.isEmpty)
           Container(
             padding: const EdgeInsets.all(28),
-            decoration: GlassDecoration.card(),
+            decoration: GlassDecoration.card(context: context),
             child: Column(
               children: [
                 Icon(

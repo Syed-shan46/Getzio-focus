@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/os_providers.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -231,99 +232,7 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  const SizedBox(height: 24),
 
-                  // 6. Cloud Sync & Backup
-                  _buildSectionHeader('Cloud Sync & Backup'),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.02),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white10),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user == null
-                                    ? 'Cloud Backup & Sync'
-                                    : 'Cloud Sync Connected',
-                                style:
-                                    AppTypography.bodyLarge(
-                                      color: Colors.white,
-                                    ).copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                user == null
-                                    ? 'Back up your habits, goals & settings online.'
-                                    : 'Your workspace is secured to ${user.mobile}',
-                                style: AppTypography.caption(
-                                  color: Colors.white30,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        if (user == null)
-                          ElevatedButton(
-                            onPressed: () {
-                              HapticFeedback.mediumImpact();
-                              // Close sheet first
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const PhoneLoginScreen(),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.accentBlue,
-                              foregroundColor: Colors.black,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              'Sign In',
-                              style: AppTypography.captionSmall(
-                                color: Colors.black,
-                              ).copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          )
-                        else
-                          TextButton(
-                            onPressed: () async {
-                              HapticFeedback.mediumImpact();
-                              await ref.read(authProvider.notifier).logout();
-                            },
-                            child: Text(
-                              'Log Out',
-                              style: TextStyle(
-                                color: context.colors.error,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -486,5 +395,103 @@ class WorkspaceCustomizationSheet extends ConsumerWidget {
       VisionWindowScene.space => 'Outer Space',
       VisionWindowScene.tropical => 'Tropical Beach',
     };
+  }
+
+  void _showSignOutDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
+
+        return Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(
+                  Icons.logout_rounded,
+                  color: Colors.redAccent,
+                  size: 40,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Sign Out',
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Are you sure you want to sign out? This will remove your account data from this device. (Your cloud database will not be affected).',
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    color: isDark ? Colors.white70 : const Color(0xFF475569),
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(dialogContext);
+                    Navigator.pop(context); // Close the customization bottom sheet
+                    await ref
+                        .read(authProvider.notifier)
+                        .logout(keepLocalData: false);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    fixedSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Yes, Sign Out',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: isDark ? Colors.white : const Color(0xFF1E293B),
+                    side: BorderSide(
+                      color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
+                      width: 1,
+                    ),
+                    fixedSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Text(
+                    'No, Go Back',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

@@ -8,6 +8,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../providers/os_providers.dart';
+import '../../../focus_mode/presentation/widgets/focus_timer_panel.dart';
+import '../../../focus_mode/presentation/widgets/focus_mode_selector.dart';
+import '../../../focus_mode/presentation/widgets/completion_success_card.dart';
+import '../../../focus_mode/presentation/providers/focus_timer_controller.dart';
 import '../widgets/living_plant.dart';
 import '../widgets/workspace_customization.dart';
 import '../widgets/todays_checklist.dart';
@@ -17,6 +21,8 @@ import '../widgets/premium_shelf_section.dart';
 import '../../../vision_room/presentation/screens/vision_room_screen.dart';
 import '../../../auth/presentation/widgets/premium_auth_sheet.dart';
 import '../../../affirmations/presentation/widgets/guest_affirmations_view.dart';
+import '../../../affirmations/presentation/widgets/hanging_daily_spark.dart';
+import '../../../affirmations/presentation/widgets/daily_spark_sheet.dart';
 import '../../../todo/presentation/widgets/left_floating_shelf.dart';
 import '../../../todo/presentation/widgets/floor_glass_panel.dart';
 import 'daily_motivation_screen.dart';
@@ -28,6 +34,7 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/domain/models/auth_user_model.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../widgets/setup_assistant_sheet.dart';
+import '../../../affirmations/presentation/painters/wooden_plank_painter.dart';
 
 // Helper model classes for background effects
 class DustParticle {
@@ -103,6 +110,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
 
   // Daily Motivation Overlay Screen
   bool _motivationOpen = false;
+  bool _isDailySparkOpen = false;
 
   // 1. Focus Timer Mode
   Timer? _focusTimer;
@@ -448,6 +456,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
   Widget build(BuildContext context) {
 
     final state = ref.watch(osStateProvider);
+    final isFocusModeActive = ref.watch(isFocusModeActiveProvider);
     final authState = ref.watch(authProvider);
     final isLoggedIn = authState.hasValue && authState.value != null;
     final customization = ref.watch(visionCustomizationProvider);
@@ -568,6 +577,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                             ),
                             floorHeight: 160,
                             sunlightIntensity: sunlightIntensity,
+                            isFocusModeActive: isFocusModeActive,
                           ),
                         ),
                       ),
@@ -583,17 +593,31 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                           ),
                         ),
 
-                      // 2. TOP ROW: Clock + Artboard (left)
+                      // 2. TOP RIGHT: Clock on right side
+                      Positioned(
+                        right: screenW * 0.05,
+                        top: screenH * 0.08,
+                        child: _buildClock(),
+                      ),
+
+                      // 2.1 TOP LEFT: Hanging Five Plank
                       Positioned(
                         left: screenW * 0.05,
                         top: screenH * 0.08,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildClock(),
-                            const SizedBox(height: 28),
-                            _buildWallArtFrame(screenW, screenH, state),
-                          ],
+                        child: const HangingFivePlank(),
+                      ),
+
+                      // 2.5. HANGING DAILY SPARK BUTTON (Living Workspace Room)
+                      Positioned.fill(
+                        child: HangingDailySpark(
+                          isSheetOpen: _isDailySparkOpen,
+                          onTap: () async {
+                            setState(() => _isDailySparkOpen = true);
+                            await DailySparkSheet.show(context);
+                            if (mounted) {
+                              setState(() => _isDailySparkOpen = false);
+                            }
+                          },
                         ),
                       ),
 
@@ -601,8 +625,17 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                       Positioned(
                         left: 16,
                         right: 16,
-                        top: screenH * 0.36 + 12,
-                        child: _buildLowerWindow(screenW - 32, screenH, state),
+                        top: screenH * 0.31 + 12,
+                        child: _buildLowerWindow(screenW - 32, screenH, state, isFocusModeActive),
+                      ),
+                      
+                      // 3.5. PREMIUM FOCUS TIMER PANEL (Nearest Plank Card)
+                      Positioned(
+                        top: screenH * 0.56,
+                        left: (screenW - (screenW * 0.44).clamp(160.0, 200.0)) / 2,
+                        child: FocusTimerPanel(
+                          customWidth: (screenW * 0.44).clamp(160.0, 200.0),
+                        ),
                       ),
 
                       // 4.7. Right Floating Shelf (no padding on right)
@@ -610,11 +643,29 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                         right: 0,
                         width: (screenW * 0.24).clamp(95.0, 135.0),
                         bottom: 155,
-                        child: LeftFloatingShelf(
-                          alignLeft: false,
-                          woodTexture: state.woodTexture,
-                          plantType: state.plantType,
-                          shelfWidth: (screenW * 0.24).clamp(95.0, 135.0),
+                        child: Stack(
+                          children: [
+                            if (isFocusModeActive)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFD4A017).withValues(alpha: 0.2), // Warm ambient glow
+                                        blurRadius: 40,
+                                        spreadRadius: 10,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            LeftFloatingShelf(
+                              alignLeft: false,
+                              woodTexture: state.woodTexture,
+                              plantType: state.plantType,
+                              shelfWidth: (screenW * 0.24).clamp(95.0, 135.0),
+                            ),
+                          ],
                         ),
                       ),
 
@@ -658,39 +709,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
                         ),
                       ),
 
-                      // 5. TOP RIGHT GLASS SHOWCASE CONTAINER (Ferrari)
-                      Positioned(
-                        right: 12,
-                        top: screenH * 0.04 + 46, // shifted up
-                        child: GlassDisplayCase(
-                          label: 'Ferrari 488 GTB',
-                          wallColor: state.wallColor,
-                          child: const MiniatureCarWidget(
-                            carType: 'lamborghini',
-                            carColor: Color(0xFFE11D48),
-                            label: 'Ferrari 488 GTB',
-                            width: 76,
-                            height: 38,
-                          ),
-                        ),
-                      ),
-
-                      // 5.5. BOTTOM RIGHT GLASS SHOWCASE CONTAINER (Below top showcase)
-                      Positioned(
-                        right: 12,
-                        top: screenH * 0.04 + 128, // shifted up, keeping gap
-                        child: GlassDisplayCase(
-                          label: 'Mercedes-Benz G-Wagon',
-                          wallColor: state.wallColor,
-                          child: const MiniatureCarWidget(
-                            carType: 'gwagon',
-                            carColor: Color(0xFF0F172A),
-                            label: 'Mercedes-Benz G-Wagon',
-                            width: 76,
-                            height: 38,
-                          ),
-                        ),
-                      ),
+                      // Removed right hanging five plank system (moved to left)
 
                       /*
                       // 5.6. PREMIUM 3D HORIZONTAL SHELF (Personalized Dashboard)
@@ -844,7 +863,7 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
   }
 
   // Panoramic slot window below the shelf stretching full width of the screen
-  Widget _buildLowerWindow(double screenW, double screenH, OSState state) {
+  Widget _buildLowerWindow(double screenW, double screenH, OSState state, bool isFocusModeActive) {
     String mode = state.ambientMode;
     if (mode == 'Auto') {
       final hour = _currentTime.hour;
@@ -1001,117 +1020,6 @@ class _OSDashboardScreenState extends ConsumerState<OSDashboardScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildWallArtFrame(double screenW, double screenH, OSState state) {
-    // Pendulum angle calculation (slow swing max 1.5 degrees, i.e., ~0.026 rad)
-    final double pendulumAngle =
-        math.sin(_currentTime.millisecondsSinceEpoch * (2 * math.pi / 10000)) *
-        0.022;
-
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.mediumImpact();
-        setState(() {
-          _motivationOpen = true;
-          _motivationController.forward();
-        });
-      },
-      child: SizedBox(
-        width: screenW * 0.24,
-        height: 115,
-        child: Transform(
-          alignment: Alignment.topCenter,
-          transform: Matrix4.identity()
-            ..translate(
-              0.0,
-              0.0,
-              0.1,
-            ) // Force GPU layer creation to resolve text glyph subpixel jitter
-            ..rotateZ(pendulumAngle),
-          filterQuality: FilterQuality.medium,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.topCenter,
-            children: [
-              // Ropes and nail painter
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 42,
-                child: CustomPaint(painter: FrameWirePainter()),
-              ),
-
-              // Frame Body
-              Positioned(
-                top: 38,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F1424), // dark canvas board
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: state.woodTexture == 'Oak'
-                          ? const Color(0xFFD7CCC8)
-                          : state.woodTexture == 'Mahogany'
-                          ? const Color(0xFF5D4037)
-                          : const Color(0xFF2E1912), // walnut
-                      width: 2.0,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.55),
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Opacity(
-                    opacity: (1.0 - _motivationController.value).clamp(
-                      0.0,
-                      1.0,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '"${state.dailyQuote}"',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 7.5,
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontWeight: FontWeight.bold,
-                            fontStyle: FontStyle.italic,
-                            height: 1.25,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '— ${state.dailyQuoteAuthor}',
-                          style: const TextStyle(
-                            fontSize: 6.0,
-                            color: Colors.white30,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -2216,11 +2124,13 @@ class RoomBackgroundPainter extends CustomPainter {
   final LinearGradient wallGradient;
   final double floorHeight;
   final double sunlightIntensity;
+  final bool isFocusModeActive;
 
   RoomBackgroundPainter({
     required this.wallGradient,
     required this.floorHeight,
     required this.sunlightIntensity,
+    required this.isFocusModeActive,
   });
 
   @override
@@ -2325,89 +2235,137 @@ class RoomBackgroundPainter extends CustomPainter {
   }
 
   void _paintWallArt(Canvas canvas, double w, double wallH) {
-    _paintFramedQuote(
+    // 3 small sticky notes in a row where the Focus card used to be (top right)
+    final double noteW = 42.0;
+    final double noteH = 42.0;
+    
+    final double cardWidth = (w * 0.52).clamp(200.0, 280.0);
+    final double rightEdge = w - (w * 0.09);
+    final double leftEdge = rightEdge - cardWidth;
+    final double centerOfSpace = leftEdge + (cardWidth / 2);
+    
+    final double spacing = 18.0;
+    final double totalW = (noteW * 3) + (spacing * 2);
+    final double startX = centerOfSpace - (totalW / 2);
+    final double y = wallH * 0.25; // Aligns with screenH * 0.19 vertically
+    
+    _paintStickyNote(
       canvas,
-      x: w * 0.03,
-      y: wallH * 0.55,
-      frameW: w * 0.22,
-      frameH: wallH * 0.30,
-      quote: '"Small steps\nevery day."',
-      author: '— Getzio Focus',
-      accentColor: const Color(0xFFD4A017),
+      x: startX,
+      y: y + 2, // Slight vertical jitter
+      w: noteW,
+      h: noteH,
+      color: const Color(0xFFFFF2A8), // Light yellow
+      quote: "Focus on\nnow",
+      angle: -0.06, // Slight tilt left
     );
-    _paintFramedQuote(
+
+    _paintStickyNote(
       canvas,
-      x: w * 0.75,
-      y: wallH * 0.52,
-      frameW: w * 0.22,
-      frameH: wallH * 0.30,
-      quote: '"Build the\nbest version."',
-      author: '— Daily Discipline',
-      accentColor: const Color(0xFF4A8FA8),
+      x: startX + noteW + spacing,
+      y: y,
+      w: noteW,
+      h: noteH,
+      color: const Color(0xFFFFCCDD), // Light pink
+      quote: "Breathe\ndeeply",
+      angle: 0.03, // Slight tilt right
+    );
+
+    _paintStickyNote(
+      canvas,
+      x: startX + (noteW + spacing) * 2,
+      y: y + 4,
+      w: noteW,
+      h: noteH,
+      color: const Color(0xFFC2F2D0), // Light mint green
+      quote: "One step\nat a time",
+      angle: 0.08, // More tilt right
     );
   }
 
-  void _paintFramedQuote(
+  void _paintStickyNote(
     Canvas canvas, {
     required double x,
     required double y,
-    required double frameW,
-    required double frameH,
+    required double w,
+    required double h,
+    required Color color,
     required String quote,
-    required String author,
-    required Color accentColor,
+    required double angle,
   }) {
-    // Wall quotes painted directly and faintly on the wall, no containers/frames
-    final qPainter = TextPainter(
+    canvas.save();
+    canvas.translate(x + w / 2, y + h / 2);
+    canvas.rotate(angle);
+    canvas.translate(-w / 2, -h / 2);
+
+    // 1. Drop shadow (simulates the bottom curling up off the wall)
+    final Path shadowPath = Path();
+    shadowPath.moveTo(4, h - 8);
+    // Quadratic bezier curve making the shadow bow outwards at the bottom
+    shadowPath.quadraticBezierTo(w / 2, h + 6, w - 4, h - 8);
+    shadowPath.lineTo(w - 2, h - 2);
+    shadowPath.lineTo(2, h - 2);
+    shadowPath.close();
+
+    canvas.drawPath(
+      shadowPath,
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.3)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0),
+    );
+    
+    // 2. Main paper body
+    final Path paperPath = Path();
+    paperPath.moveTo(0, 0); // Top-left (stuck to wall)
+    paperPath.lineTo(w, 0); // Top-right (stuck to wall)
+    paperPath.lineTo(w, h - 2); // Bottom-right
+    // Bottom edge curls up slightly in the middle
+    paperPath.quadraticBezierTo(w / 2, h - 6, 0, h - 2);
+    paperPath.close();
+
+    // 3. Paper gradient (top is flat, bottom catches a highlight where it curls up)
+    final Paint paperPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          color, // Normal color at top
+          Color.lerp(color, Colors.black, 0.04)!, // Slight shadow before curl
+          Color.lerp(color, Colors.white, 0.35)!, // Highlight on the curled bottom edge
+        ],
+        stops: const [0.0, 0.8, 1.0],
+      ).createShader(Rect.fromLTWH(0, 0, w, h));
+    
+    canvas.drawPath(paperPath, paperPaint);
+
+    // 4. Text on the note
+    final TextPainter tp = TextPainter(
       text: TextSpan(
         text: quote,
-        style: TextStyle(
-          fontSize: frameW * 0.065, // Small font size
-          color: Colors.white.withValues(alpha: 0.32),
-          fontWeight: FontWeight.w300,
-          fontStyle: FontStyle.italic,
-          letterSpacing: 0.6,
-          height: 1.3,
-          fontFamily: 'Outfit',
+        style: GoogleFonts.caveat(
+          color: const Color(0xFF2C3E50),
+          fontSize: 8.5,
+          fontWeight: FontWeight.w600,
+          height: 1.1,
         ),
       ),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
-    )..layout(maxWidth: frameW);
-    qPainter.paint(
+    )..layout(maxWidth: w - 8);
+
+    tp.paint(
       canvas,
-      Offset(
-        x + (frameW - qPainter.width) / 2,
-        y + (frameH - qPainter.height) / 2 - 8,
-      ),
+      Offset((w - tp.width) / 2, (h - tp.height) / 2),
     );
 
-    final aPainter = TextPainter(
-      text: TextSpan(
-        text: author,
-        style: TextStyle(
-          fontSize: frameW * 0.045, // Smaller font size
-          color: accentColor.withValues(alpha: 0.38),
-          fontWeight: FontWeight.w400,
-          letterSpacing: 0.8,
-          fontFamily: 'Outfit',
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: frameW);
-    aPainter.paint(
-      canvas,
-      Offset(
-        x + (frameW - aPainter.width) / 2,
-        y + (frameH - qPainter.height) / 2 + qPainter.height + 2,
-      ),
-    );
+    canvas.restore();
   }
 
   @override
   bool shouldRepaint(covariant RoomBackgroundPainter oldDelegate) =>
       oldDelegate.sunlightIntensity != sunlightIntensity ||
-      oldDelegate.wallGradient != wallGradient;
+      oldDelegate.wallGradient != wallGradient ||
+      oldDelegate.isFocusModeActive != isFocusModeActive;
 }
 
 // 2. Waving linen window curtain (curtain rod and fabric drapes)
@@ -2483,40 +2441,6 @@ class CurtainPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CurtainPainter oldDelegate) => true;
-}
-
-// 3. Wall hanging wire and nail painter
-class FrameWirePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final nailPaint = Paint()
-      ..color = const Color(0xFF37474F)
-      ..style = PaintingStyle.fill;
-
-    final ropePaint = Paint()
-      ..color =
-          const Color(0xFF8D6E63) // brown fiber rope
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-
-    // Draw nail in the wall
-    canvas.drawCircle(Offset(size.width / 2, 2), 2.0, nailPaint);
-
-    // Draw rope lines hanging down
-    canvas.drawLine(
-      Offset(size.width / 2, 2),
-      Offset(size.width * 0.15, 38),
-      ropePaint,
-    );
-    canvas.drawLine(
-      Offset(size.width / 2, 2),
-      Offset(size.width * 0.85, 38),
-      ropePaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant FrameWirePainter oldDelegate) => false;
 }
 
 // 4. Real-time analog clock painter
@@ -6147,4 +6071,222 @@ class _MiniatureCarWidgetState extends State<MiniatureCarWidget>
       ),
     );
   }
+}
+
+class HangingFivePlank extends StatefulWidget {
+  const HangingFivePlank({super.key});
+
+  @override
+  State<HangingFivePlank> createState() => _HangingFivePlankState();
+}
+
+class _HangingFivePlankState extends State<HangingFivePlank>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _swayController;
+  late Animation<double> _swayAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _swayController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5), // slightly slower sway for stability
+    )..repeat(reverse: true);
+
+    _swayAnimation = Tween<double>(begin: -0.025, end: 0.025).animate(
+      CurvedAnimation(parent: _swayController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _swayController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const double width = 72.0;
+    const double height = 185.0;
+    const double plankH = 24.0;
+    const double holeInset = 10.0;
+
+    final plankTops = [
+      22.0,
+      52.0,
+      82.0,
+      112.0,
+      142.0,
+    ];
+
+    final planks = [
+      (label: 'Focus', emoji: '🎯', color: const Color(0xFF8F9E8B), text: const Color(0xFF2D352B)),
+      (label: 'Grow', emoji: '🌱', color: const Color(0xFFE6C5B3), text: const Color(0xFF4D3126)),
+      (label: 'Peace', emoji: '🕊️', color: const Color(0xFF9EAFBE), text: const Color(0xFF26323D)),
+      (label: 'Love', emoji: '❤️', color: const Color(0xFFF5F2EB), text: const Color(0xFF3C3932)),
+      (label: 'Calm', emoji: '🧘', color: const Color(0xFFE4DDD3), text: const Color(0xFF3B362F)),
+    ];
+
+    final Widget staticPlanksStack = RepaintBoundary(
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // 1. Rope Painter (rope goes straight up off-screen)
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _HangingFiveRopesPainter(
+                holeInset: holeInset,
+                plankHeight: plankH,
+                plankTops: plankTops,
+              ),
+            ),
+          ),
+          // 2. Hanging Plank Cards
+          for (int i = 0; i < 5; i++)
+            Positioned(
+              left: 0,
+              top: plankTops[i],
+              width: width,
+              height: plankH,
+              child: CustomPaint(
+                painter: WoodenPlankPainter(
+                  plankColor: planks[i].color,
+                  textColor: planks[i].text,
+                  holeInset: holeInset,
+                  holeRadius: 1.8,
+                  cornerRadius: 5.0,
+                  bevelDepth: 2.0,
+                ),
+                child: Center(
+                  child: Text(
+                    '${planks[i].emoji} ${planks[i].label}',
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      color: planks[i].text,
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    return SizedBox(
+      width: width,
+      height: height,
+      child: AnimatedBuilder(
+        animation: _swayAnimation,
+        child: staticPlanksStack,
+        builder: (context, child) {
+          return Transform.rotate(
+            angle: _swayAnimation.value,
+            alignment: Alignment.topCenter,
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _HangingFiveRopesPainter extends CustomPainter {
+  final double holeInset;
+  final double plankHeight;
+  final List<double> plankTops;
+
+  _HangingFiveRopesPainter({
+    required this.holeInset,
+    required this.plankHeight,
+    required this.plankTops,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (plankTops.isEmpty) return;
+
+    final w = size.width;
+    final hookX = w / 2;
+    const hookY = 4.0; // Ropes start just below the nail head
+
+    final ropePaint = Paint()
+      ..color = const Color(0xFF7C5D4B) // Braided cotton rope color
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final leftHoleX = holeInset;
+    final rightHoleX = w - holeInset;
+
+    final holeYs = plankTops.map((top) => top + plankHeight / 2).toList();
+
+    // 1. Top ropes (V-shape from nail down to first plank holes)
+    canvas.drawLine(Offset(hookX, hookY), Offset(leftHoleX, holeYs.first), ropePaint);
+    canvas.drawLine(Offset(hookX, hookY), Offset(rightHoleX, holeYs.first), ropePaint);
+
+    // 2. Connecting ropes between adjacent planks
+    for (int i = 0; i < holeYs.length - 1; i++) {
+      canvas.drawLine(Offset(leftHoleX, holeYs[i]), Offset(leftHoleX, holeYs[i + 1]), ropePaint);
+      canvas.drawLine(Offset(rightHoleX, holeYs[i]), Offset(rightHoleX, holeYs[i + 1]), ropePaint);
+    }
+
+    // 3. Mini knots / tassels below the last plank
+    final endY = holeYs.last + 8.0;
+    canvas.drawLine(Offset(leftHoleX, holeYs.last), Offset(leftHoleX, endY), ropePaint);
+    canvas.drawLine(Offset(rightHoleX, holeYs.last), Offset(rightHoleX, endY), ropePaint);
+
+    // Draw little wood bead circles at the ends
+    final beadPaint = Paint()
+      ..color = const Color(0xFF8B7355)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(leftHoleX, endY), 1.5, beadPaint);
+    canvas.drawCircle(Offset(rightHoleX, endY), 1.5, beadPaint);
+
+    // 4. Wall nail/pin at top center where ropes converge
+    // Nail shaft (goes "into" the wall)
+    final shaftPaint = Paint()
+      ..color = const Color(0xFF5A5A5A)
+      ..strokeWidth = 1.8
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(hookX, hookY - 1.0), Offset(hookX, hookY + 4.0), shaftPaint);
+
+    // Nail head shadow
+    canvas.drawCircle(
+      Offset(hookX + 0.5, hookY + 1.0),
+      3.5,
+      Paint()
+        ..color = Colors.black.withOpacity(0.25)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5),
+    );
+
+    // Nail head (metallic dark grey)
+    final nailHeadPaint = Paint()
+      ..shader = const RadialGradient(
+        center: Alignment(-0.3, -0.3),
+        colors: [
+          Color(0xFF9E9E9E), // lighter metallic center
+          Color(0xFF5C5C5C), // darker rim
+          Color(0xFF3A3A3A), // edge shadow
+        ],
+        stops: [0.0, 0.6, 1.0],
+      ).createShader(Rect.fromCircle(center: Offset(hookX, hookY), radius: 3.0))
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(hookX, hookY), 3.0, nailHeadPaint);
+
+    // Nail head highlight (top-left light reflection)
+    canvas.drawCircle(
+      Offset(hookX - 0.8, hookY - 0.8),
+      1.0,
+      Paint()..color = Colors.white.withOpacity(0.45),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _HangingFiveRopesPainter oldDelegate) => false;
 }

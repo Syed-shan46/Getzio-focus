@@ -184,7 +184,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
     final Color color2 = const Color(0xFF8B5CF6).withValues(alpha: 0.06);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: context.colors.bg1,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -208,7 +208,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                 child: Column(
                   children: [
                     _buildHeader(osState, affState),
-  
+
                     Expanded(
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(
@@ -259,7 +259,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                 ),
               ),
             ),
-  
+
             Positioned(
               bottom: 90,
               right: 20,
@@ -497,14 +497,10 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
       },
       child: Container(
         decoration: BoxDecoration(
-          color: isDark
-              ? context.colors.bg2
-              : const Color(0xFFFAF6F0), // Matching mockup background
+          color: const Color(0xFFFAF6F0), // Matching mockup background for both themes
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isDark
-                ? context.colors.glassBorder
-                : const Color(0xFFE6DFD5),
+            color: const Color(0xFFE6DFD5),
             width: 1.0,
           ),
           boxShadow: [
@@ -539,12 +535,10 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.push_pin,
                         size: 8,
-                        color: isDark
-                            ? context.colors.accentBlue
-                            : const Color(0xFF6B4E3D),
+                        color: Color(0xFF6B4E3D),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -552,9 +546,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                         style: GoogleFonts.outfit(
                           fontSize: 8,
                           fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? context.colors.accentBlue
-                              : const Color(0xFF6B4E3D),
+                          color: const Color(0xFF6B4E3D),
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -565,9 +557,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                   'Theme: $theme ☀️',
                   style: GoogleFonts.outfit(
                     fontSize: 9,
-                    color: isDark
-                        ? context.colors.textSecondary
-                        : const Color(0xFF8B7355),
+                    color: const Color(0xFF8B7355),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -609,9 +599,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                           '“',
                           style: GoogleFonts.playfairDisplay(
                             fontSize: 22,
-                            color: isDark
-                                ? Colors.white24
-                                : const Color(0xFFE6DFD5),
+                            color: const Color(0xFFE6DFD5),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -628,9 +616,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                               text,
                               style: GoogleFonts.playfairDisplay(
                                 fontSize: 13,
-                                color: isDark
-                                    ? context.colors.textPrimary
-                                    : const Color(0xFF3C2E24),
+                                color: const Color(0xFF3C2E24),
                                 fontWeight: FontWeight.bold,
                                 height: 1.35,
                               ),
@@ -642,9 +628,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                               '— $author',
                               style: GoogleFonts.outfit(
                                 fontSize: 10,
-                                color: isDark
-                                    ? context.colors.textSecondary
-                                    : const Color(0xFF8B7355),
+                                color: const Color(0xFF8B7355),
                                 fontStyle: FontStyle.italic,
                               ),
                             ),
@@ -659,9 +643,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                           '”',
                           style: GoogleFonts.playfairDisplay(
                             fontSize: 22,
-                            color: isDark
-                                ? Colors.white24
-                                : const Color(0xFFE6DFD5),
+                            color: const Color(0xFFE6DFD5),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -1129,9 +1111,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
 
   Widget _buildVertical3DCard(DailyAffirmation aff, OSState osState) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark
-        ? context.colors.bg2
-        : _getCategoryCardBg(aff.category);
+    final cardBg = _getCategoryCardBg(aff.category);
     final themeCol = _getCategoryColor(aff.category);
     final iconData = _getCategoryIcon(aff.category);
     final catName = _getCategoryDisplayName(aff.category).toUpperCase();
@@ -1160,9 +1140,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
             color: cardBg,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isDark
-                  ? context.colors.glassBorder
-                  : const Color(0xFFE6DFD5).withOpacity(0.3),
+              color: const Color(0xFFE6DFD5).withOpacity(0.3),
               width: 0.8,
             ),
             boxShadow: [
@@ -1215,9 +1193,7 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                     Text(
                       aff.text,
                       style: GoogleFonts.outfit(
-                        color: isDark
-                            ? context.colors.textPrimary
-                            : const Color(0xFF3C2E24),
+                        color: const Color(0xFF3C2E24),
                         fontSize: 11.5,
                         fontWeight: FontWeight.w500,
                         height: 1.3,
@@ -1236,15 +1212,11 @@ class _DailyMotivationScreenState extends ConsumerState<DailyMotivationScreen>
                 height: 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isDark
-                      ? context.colors.glass
-                      : const Color(0xFFF3ECE4).withOpacity(0.5),
+                  color: const Color(0xFFF3ECE4).withOpacity(0.5),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.chevron_right_rounded,
-                  color: isDark
-                      ? context.colors.textSecondary
-                      : const Color(0xFF6B4E3D),
+                  color: Color(0xFF6B4E3D),
                   size: 16,
                 ),
               ),
