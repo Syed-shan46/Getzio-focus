@@ -871,7 +871,6 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                                   ),
                                   const SizedBox(height: 10),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       _buildStatItem(
                                         Icons.star_rounded,
@@ -879,6 +878,15 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                                         'Completed',
                                         labelColor,
                                       ),
+                                      const SizedBox(width: 20),
+                                      Container(
+                                        width: 1,
+                                        height: 20,
+                                        color: isDark
+                                            ? Colors.white.withValues(alpha: 0.1)
+                                            : Colors.black.withValues(alpha: 0.1),
+                                      ),
+                                      const SizedBox(width: 20),
                                       _buildStatItem(
                                         Icons.adjust_rounded,
                                         '$totalCount',
