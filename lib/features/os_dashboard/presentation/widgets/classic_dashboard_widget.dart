@@ -28,6 +28,7 @@ import '../screens/daily_motivation_screen.dart';
 import '../screens/os_dashboard_screen.dart';
 import '../../../vision_room/presentation/providers/canvas_providers.dart';
 import '../../../vision_room/domain/models/vision_item.dart';
+import '../../../routine/presentation/screens/daily_routine_screen.dart';
 import '../../../vision_room/domain/models/smart_object_models.dart';
 import '../../../vision_room/presentation/widgets/smart_object_sheets.dart';
 
@@ -54,7 +55,7 @@ class _ClassicDashboardWidgetState
           const TasksScreen(), // Tasks
           const DailyMotivationScreen(isTab: true), // Affirmations
           const OSDashboardScreen(isTab: true), // Room (Living Space)
-          _GoalsTab(), // Goals (Placeholder)
+          const DailyRoutineScreen(), // Routines
           _ProfileTab(), // Profile
         ],
       ),
@@ -101,7 +102,7 @@ class _ClassicDashboardWidgetState
                   _buildNavItem(0, Icons.check_circle_rounded, 'Tasks'),
                   _buildNavItem(1, Icons.auto_awesome_rounded, 'Affirm'),
                   _buildNavItem(2, Icons.door_sliding_rounded, 'Room'),
-                  _buildNavItem(3, Icons.flag_rounded, 'Goals'),
+                  _buildNavItem(3, Icons.repeat_rounded, 'Routines'),
                   _buildNavItem(4, Icons.person_rounded, 'Profile'),
                 ],
               ),

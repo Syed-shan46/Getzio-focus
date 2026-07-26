@@ -56,6 +56,7 @@ class HiveDatabase {
     final visionItemsBox = await Hive.openBox('vision_items_$userId');
     final affirmationsBox = await Hive.openBox('affirmations_$userId');
     await Hive.openBox('pending_sync_$userId');
+    await Hive.openBox('daily_routines_$userId');
 
     // Migrate legacy data if isolated boxes are empty
     if (goalsBox.isEmpty) {
