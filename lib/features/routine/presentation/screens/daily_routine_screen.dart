@@ -329,6 +329,98 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                               vertical: 8,
                             ),
                             children: [
+                              if (currentRoutines.isNotEmpty) ...[
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 12,
+                                    bottom: 8,
+                                    left: 4,
+                                  ),
+                                  child: Text(
+                                    'Your Custom & Active Routines',
+                                    style: GoogleFonts.outfit(
+                                      color: const Color(0xFFEAD2AC), // Soft Gold
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                                ...currentRoutines.map((routine) {
+                                  return Container(
+                                    margin: const EdgeInsets.symmetric(
+                                      vertical: 4,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(
+                                        0xFFEAD2AC,
+                                      ).withValues(alpha: 0.08),
+                                      borderRadius: BorderRadius.circular(18),
+                                      border: Border.all(
+                                        color: const Color(
+                                          0xFFEAD2AC,
+                                        ).withValues(alpha: 0.3),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                routine.title,
+                                                style: GoogleFonts.outfit(
+                                                  color: const Color(
+                                                    0xFFFBF7F0,
+                                                  ),
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              if (routine.subtitle != null &&
+                                                  routine.subtitle!
+                                                      .isNotEmpty) ...[
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  routine.subtitle!,
+                                                  style: GoogleFonts.outfit(
+                                                    color: Colors.white38,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete_outline_rounded,
+                                            color: Colors.redAccent,
+                                            size: 20,
+                                          ),
+                                          onPressed: () {
+                                            HapticFeedback.mediumImpact();
+                                            ref
+                                                .read(routineProvider.notifier)
+                                                .deleteRoutine(routine.id);
+                                            _showPremiumToast(
+                                              context,
+                                              '${routine.title} removed',
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                                const SizedBox(height: 12),
+                              ],
                               ..._suggestedCategories.entries.map((entry) {
                                 final categoryTitle = entry.key;
                                 final list = entry.value;
@@ -1244,21 +1336,6 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                                         ],
                                       ],
                                     ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  // Trash icon button for explicit removal option
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.delete_outline_rounded,
-                                      size: 16,
-                                      color: headerTextColor.withValues(
-                                        alpha: 0.25,
-                                      ),
-                                    ),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    onPressed: () =>
-                                        _showDeleteConfirmDialog(context, item),
                                   ),
                                   const SizedBox(width: 10),
                                   // Check Circle Outline or Checked Circle
