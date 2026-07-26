@@ -584,6 +584,15 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
     final progressVal = totalCount > 0 ? (completedCount / totalCount) : 0.0;
     final progressPercent = (progressVal * 100).toInt();
 
+    // Sort routines: active uncompleted routines first, completed routines at bottom
+    final sortedRoutines = [...routines]..sort((a, b) {
+      final aDone = a.completedDates.contains(todayStr);
+      final bDone = b.completedDates.contains(todayStr);
+      if (aDone && !bDone) return 1;
+      if (!aDone && bDone) return -1;
+      return 0;
+    });
+
     // Quick chips routines
     final List<Map<String, String>> quickChips = [
       {'emoji': '💧', 'title': 'Drink Water'},
@@ -1041,7 +1050,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                     ),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate((context, index) {
-                        final item = routines[index];
+                        final item = sortedRoutines[index];
                         final isCompleted = item.completedDates.contains(
                           todayStr,
                         );
@@ -1168,7 +1177,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                             ],
                           ),
                         );
-                      }, childCount: routines.length),
+                      }, childCount: sortedRoutines.length),
                     ),
                   ),
                 // Suggested Routines Section
