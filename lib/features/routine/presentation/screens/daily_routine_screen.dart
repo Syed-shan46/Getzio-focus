@@ -567,11 +567,47 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                       color: const Color(0xFFFBF7F0).withValues(alpha: 0.02), // Soft Cream
                       blurRadius: 120,
                       spreadRadius: 120,
-                    ),
+            ),
+          // Top Right Hero Room Overlay (routine_img.png)
+          Positioned(
+            top: 0,
+            right: 0,
+            width: MediaQuery.of(context).size.width * 0.55,
+            height: 250,
+            child: ShaderMask(
+              shaderCallback: (rect) {
+                return LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.95),
                   ],
+                  stops: const [0.0, 0.5],
+                ).createShader(rect);
+              },
+              blendMode: BlendMode.dstIn,
+              child: ShaderMask(
+                shaderCallback: (rect) {
+                  return const LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black,
+                    ],
+                    stops: [0.0, 0.45],
+                  ).createShader(rect);
+                },
+                blendMode: BlendMode.dstIn,
+                child: Image.asset(
+                  'assets/images/routine_img.png',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topRight,
                 ),
               ),
             ),
+          ),
           // Main Scrollable Area
           SafeArea(
             child: CustomScrollView(
@@ -619,68 +655,34 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 // Hero Header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                    child: Row(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Left Text Block
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Good morning, Syed ☀️',
-                                style: GoogleFonts.outfit(
-                                  color: labelColor,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                "Today is a\nnew opportunity.",
-                                style: GoogleFonts.gelasio(
-                                  color: headerTextColor,
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.15,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Small actions, big changes.',
-                                style: GoogleFonts.outfit(
-                                  color: headerTextColor.withValues(alpha: 0.5),
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
+                        Text(
+                          'Good morning, Syed ☀️',
+                          style: GoogleFonts.outfit(
+                            color: labelColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        // Right Side Artwork Card (routine_img.png)
-                        Container(
-                          width: 100,
-                          height: 145,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(22),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.35),
-                                blurRadius: 15,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.08),
-                            ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Today is a\nnew opportunity.",
+                          style: GoogleFonts.gelasio(
+                            color: headerTextColor,
+                            fontSize: 25,
+                            fontWeight: FontWeight.w600,
+                            height: 1.18,
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(21),
-                            child: Image.asset(
-                              'assets/images/routine_img.png',
-                              fit: BoxFit.cover,
-                            ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Small actions, big changes.',
+                          style: GoogleFonts.outfit(
+                            color: headerTextColor.withValues(alpha: 0.5),
+                            fontSize: 12,
                           ),
                         ),
                       ],
