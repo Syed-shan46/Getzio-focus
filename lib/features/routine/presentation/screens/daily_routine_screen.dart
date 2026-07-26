@@ -598,6 +598,10 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
       {'emoji': '🍎', 'title': 'Eat Healthy'},
     ];
 
+    // Responsive app screen padding
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = screenWidth > 600 ? 32.0 : 16.0;
+
     // Theme based checks
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenBgColor = isDark ? const Color(0xFF0F1115) : context.colors.bg1;
@@ -706,12 +710,17 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 // Hero Header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 24, right: 24, top: 20, bottom: 4),
+                    padding: EdgeInsets.only(
+                      left: horizontalPadding,
+                      right: horizontalPadding,
+                      top: 20,
+                      bottom: 4,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Good morning, Syed ☀️',
+                          'Good morning ☀️',
                           style: GoogleFonts.outfit(
                             color: labelColor,
                             fontSize: 13,
@@ -743,8 +752,8 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 // Today's Progress Card
                 SliverToBoxAdapter(
                   child: Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 24,
+                    margin: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
                       vertical: 10,
                     ),
                     padding: const EdgeInsets.all(14),
@@ -862,6 +871,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                                   ),
                                   const SizedBox(height: 10),
                                   Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       _buildStatItem(
                                         Icons.star_rounded,
@@ -869,7 +879,6 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                                         'Completed',
                                         labelColor,
                                       ),
-                                      const SizedBox(width: 24),
                                       _buildStatItem(
                                         Icons.adjust_rounded,
                                         '$totalCount',
@@ -890,8 +899,8 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 // Today's Routines Section Header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
                       vertical: 6,
                     ),
                     child: Row(
@@ -947,8 +956,8 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 if (routines.isEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
                         vertical: 40,
                       ),
                       child: Column(
@@ -1019,7 +1028,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                    ),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate((context, index) {
                         final item = routines[index];
@@ -1030,7 +1041,10 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
 
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: isCompleted
                                 ? cardBgColor.withValues(alpha: 0.4)
@@ -1152,17 +1166,17 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 // Suggested Routines Section
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.only(
-                      top: 24,
-                      left: 24,
-                      right: 24,
-                      bottom: 12,
+                    padding: EdgeInsets.only(
+                      top: 16,
+                      left: horizontalPadding,
+                      right: horizontalPadding,
+                      bottom: 8,
                     ),
                     child: Text(
                       'Suggested Routines',
                       style: GoogleFonts.outfit(
                         color: headerTextColor,
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1170,11 +1184,13 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 50,
+                    height: 48,
                     child: ListView.builder(
                       physics: const BouncingScrollPhysics(),
                       scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding - 4,
+                      ),
                       itemCount: quickChips.length,
                       itemBuilder: (context, index) {
                         final chip = quickChips[index];
@@ -1193,16 +1209,16 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                           },
                           child: Container(
                             margin: const EdgeInsets.symmetric(
-                              horizontal: 6,
+                              horizontal: 4,
                               vertical: 4,
                             ),
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
+                              horizontal: 14,
+                              vertical: 6,
                             ),
                             decoration: BoxDecoration(
                               color: cardBgColor.withValues(alpha: 0.4),
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(18),
                               border: Border.all(
                                 color: labelColor.withValues(alpha: 0.12),
                               ),
@@ -1211,16 +1227,16 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                               children: [
                                 Text(
                                   chip['emoji']!,
-                                  style: const TextStyle(fontSize: 15),
+                                  style: const TextStyle(fontSize: 14),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 6),
                                 Text(
                                   chip['title']!,
                                   style: GoogleFonts.outfit(
                                     color: headerTextColor.withValues(
                                       alpha: 0.9,
                                     ),
-                                    fontSize: 13,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -1235,11 +1251,14 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 // Premium Banner at the Bottom
                 SliverToBoxAdapter(
                   child: Container(
-                    margin: const EdgeInsets.all(24),
-                    padding: const EdgeInsets.all(18),
+                    margin: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: 16,
+                    ),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: cardBgColor,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.05)
