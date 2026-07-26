@@ -53,8 +53,14 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
     ],
     '🎯 Productivity': [
       {'title': 'Plan My Day', 'subtitle': 'Organize schedules'},
-      {'title': 'Complete My Most Important Task', 'subtitle': 'Beat procrastination'},
-      {'title': 'Deep Work Session', 'subtitle': 'Focused distraction-free time'},
+      {
+        'title': 'Complete My Most Important Task',
+        'subtitle': 'Beat procrastination',
+      },
+      {
+        'title': 'Deep Work Session',
+        'subtitle': 'Focused distraction-free time',
+      },
       {'title': 'Review Goals', 'subtitle': 'Stay on track'},
       {'title': 'Clean Workspace', 'subtitle': 'Clear desk, clear mind'},
       {'title': 'Organize Desk', 'subtitle': 'Tidy environment'},
@@ -90,7 +96,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
       {'title': 'Sleep on Time', 'subtitle': 'Consistent bedtime'},
       {'title': 'Digital Detox', 'subtitle': 'No screens 1 hour before sleep'},
       {'title': 'Organize Tomorrow\'s Tasks', 'subtitle': 'Ready for tomorrow'},
-    ]
+    ],
   };
 
   void _showCreateRoutineSheet(BuildContext context) {
@@ -112,7 +118,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
             ),
             decoration: BoxDecoration(
               color: const Color(0xFF12141C).withOpacity(0.95),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
               border: Border.all(color: Colors.white.withOpacity(0.08)),
             ),
             child: Column(
@@ -139,11 +147,15 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                     fillColor: Colors.white.withOpacity(0.04),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withOpacity(0.08),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFFEAD2AC)), // Soft Gold
+                      borderSide: const BorderSide(
+                        color: Color(0xFFEAD2AC),
+                      ), // Soft Gold
                     ),
                   ),
                 ),
@@ -172,7 +184,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                         onPressed: () {
                           final title = nameController.text.trim();
                           if (title.isNotEmpty) {
-                            ref.read(routineProvider.notifier).addRoutine(title);
+                            ref
+                                .read(routineProvider.notifier)
+                                .addRoutine(title);
                             Navigator.pop(context);
                             _showPremiumToast(context, 'Custom routine added');
                           }
@@ -222,7 +236,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
               return Container(
                 decoration: BoxDecoration(
                   color: const Color(0xFF12141C).withOpacity(0.95),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(32),
+                  ),
                   border: Border.all(color: Colors.white.withOpacity(0.08)),
                 ),
                 child: Column(
@@ -249,7 +265,10 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                     Expanded(
                       child: ListView(
                         controller: controller,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 8,
+                        ),
                         children: [
                           ..._suggestedCategories.entries.map((entry) {
                             final categoryTitle = entry.key;
@@ -258,11 +277,17 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Padding(
-                                  padding: const EdgeInsets.only(top: 20, bottom: 10, left: 4),
+                                  padding: const EdgeInsets.only(
+                                    top: 20,
+                                    bottom: 10,
+                                    left: 4,
+                                  ),
                                   child: Text(
                                     categoryTitle,
                                     style: GoogleFonts.outfit(
-                                      color: const Color(0xFFEAD2AC), // Soft Gold
+                                      color: const Color(
+                                        0xFFEAD2AC,
+                                      ), // Soft Gold
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 0.5,
@@ -273,36 +298,53 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                                   return GestureDetector(
                                     onTap: () {
                                       HapticFeedback.mediumImpact();
-                                      ref.read(routineProvider.notifier).addRoutine(
-                                        item['title']!,
-                                        item['subtitle'],
-                                      );
+                                      ref
+                                          .read(routineProvider.notifier)
+                                          .addRoutine(
+                                            item['title']!,
+                                            item['subtitle'],
+                                          );
                                       Navigator.pop(context);
-                                      _showPremiumToast(context, '${item['title']} added');
+                                      _showPremiumToast(
+                                        context,
+                                        '${item['title']} added',
+                                      );
                                     },
                                     child: Container(
-                                      margin: const EdgeInsets.symmetric(vertical: 6),
+                                      margin: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.02),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.02,
+                                        ),
                                         borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.05,
+                                          ),
+                                        ),
                                       ),
                                       child: Row(
                                         children: [
                                           Expanded(
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   item['title']!,
                                                   style: GoogleFonts.outfit(
-                                                    color: const Color(0xFFFBF7F0),
+                                                    color: const Color(
+                                                      0xFFFBF7F0,
+                                                    ),
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w600,
                                                   ),
                                                 ),
-                                                if (item['subtitle'] != null) ...[
+                                                if (item['subtitle'] !=
+                                                    null) ...[
                                                   const SizedBox(height: 4),
                                                   Text(
                                                     item['subtitle']!,
@@ -317,7 +359,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                                           ),
                                           Icon(
                                             Icons.add_circle_outline_rounded,
-                                            color: const Color(0xFFEAD2AC).withValues(alpha: 0.7),
+                                            color: const Color(
+                                              0xFFEAD2AC,
+                                            ).withValues(alpha: 0.7),
                                             size: 22,
                                           ),
                                         ],
@@ -337,15 +381,23 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                             icon: const Icon(Icons.add_rounded, size: 20),
                             label: Text(
                               'Create Custom Routine',
-                              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white.withValues(alpha: 0.04),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.04,
+                              ),
                               foregroundColor: const Color(0xFFEAD2AC),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
-                                side: BorderSide(color: const Color(0xFFEAD2AC).withValues(alpha: 0.2)),
+                                side: BorderSide(
+                                  color: const Color(
+                                    0xFFEAD2AC,
+                                  ).withValues(alpha: 0.2),
+                                ),
                               ),
                             ),
                           ),
@@ -384,7 +436,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: const Color(0xFFEAD2AC).withValues(alpha: 0.2)),
+          side: BorderSide(
+            color: const Color(0xFFEAD2AC).withValues(alpha: 0.2),
+          ),
         ),
         duration: const Duration(seconds: 2),
       ),
@@ -419,7 +473,10 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 onPressed: () => Navigator.pop(context),
                 child: Text(
                   'Cancel',
-                  style: GoogleFonts.outfit(color: Colors.white38, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.outfit(
+                    color: Colors.white38,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               TextButton(
@@ -430,7 +487,10 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 },
                 child: Text(
                   'Delete',
-                  style: GoogleFonts.outfit(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.outfit(
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -449,31 +509,49 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
         'bg': const Color(0xFFEAB308).withValues(alpha: 0.15),
         'fg': const Color(0xFFF59E0B),
       };
-    } else if (t.contains('water') || t.contains('hydration') || t.contains('drink')) {
+    } else if (t.contains('water') ||
+        t.contains('hydration') ||
+        t.contains('drink')) {
       return {
         'icon': Icons.water_drop_rounded,
         'bg': const Color(0xFF3B82F6).withValues(alpha: 0.15),
         'fg': const Color(0xFF60A5FA),
       };
-    } else if (t.contains('run') || t.contains('walk') || t.contains('exercise') || t.contains('gym') || t.contains('stretch') || t.contains('workout') || t.contains('yoga')) {
+    } else if (t.contains('run') ||
+        t.contains('walk') ||
+        t.contains('exercise') ||
+        t.contains('gym') ||
+        t.contains('stretch') ||
+        t.contains('workout') ||
+        t.contains('yoga')) {
       return {
         'icon': Icons.directions_run_rounded,
         'bg': const Color(0xFF8B5CF6).withValues(alpha: 0.15),
         'fg': const Color(0xFFA78BFA),
       };
-    } else if (t.contains('word') || t.contains('learn') || t.contains('skill') || t.contains('study') || t.contains('coding') || t.contains('flutter')) {
+    } else if (t.contains('word') ||
+        t.contains('learn') ||
+        t.contains('skill') ||
+        t.contains('study') ||
+        t.contains('coding') ||
+        t.contains('flutter')) {
       return {
         'icon': Icons.menu_book_rounded,
         'bg': const Color(0xFF10B981).withValues(alpha: 0.15),
         'fg': const Color(0xFF34D399),
       };
-    } else if (t.contains('speak') || t.contains('practice') || t.contains('talk')) {
+    } else if (t.contains('speak') ||
+        t.contains('practice') ||
+        t.contains('talk')) {
       return {
         'icon': Icons.mic_rounded,
         'bg': const Color(0xFFF97316).withValues(alpha: 0.15),
         'fg': const Color(0xFFFB923C),
       };
-    } else if (t.contains('sleep') || t.contains('bed') || t.contains('night') || t.contains('detox')) {
+    } else if (t.contains('sleep') ||
+        t.contains('bed') ||
+        t.contains('night') ||
+        t.contains('detox')) {
       return {
         'icon': Icons.dark_mode_rounded,
         'bg': const Color(0xFF6366F1).withValues(alpha: 0.15),
@@ -499,7 +577,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
     final routines = ref.watch(routineProvider);
     final todayStr = _dateFormat.format(DateTime.now());
 
-    final completedCount = routines.where((r) => r.completedDates.contains(todayStr)).length;
+    final completedCount = routines
+        .where((r) => r.completedDates.contains(todayStr))
+        .length;
     final totalCount = routines.length;
     final progressVal = totalCount > 0 ? (completedCount / totalCount) : 0.0;
     final progressPercent = (progressVal * 100).toInt();
@@ -521,10 +601,15 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
     // Theme based checks
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenBgColor = isDark ? const Color(0xFF0F1115) : context.colors.bg1;
-    final cardBgColor = isDark ? const Color(0xFF161A22).withValues(alpha: 0.6) : context.colors.bg2;
-    final headerTextColor = isDark ? const Color(0xFFFBF7F0) : context.colors.textPrimary;
-    final bodyTextColor = isDark ? const Color(0xFFF5EFEB) : context.colors.textPrimary;
-    final labelColor = isDark ? const Color(0xFFEAD2AC) : context.colors.accentBlue;
+    final cardBgColor = isDark
+        ? const Color(0xFF161A22).withValues(alpha: 0.6)
+        : context.colors.bg2;
+    final headerTextColor = isDark
+        ? const Color(0xFFFBF7F0)
+        : context.colors.textPrimary;
+    final labelColor = isDark
+        ? const Color(0xFFEAD2AC)
+        : context.colors.accentBlue;
 
     return Scaffold(
       backgroundColor: screenBgColor,
@@ -543,7 +628,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                   color: Colors.transparent,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFEAD2AC).withValues(alpha: 0.03), // Soft Gold
+                      color: const Color(
+                        0xFFEAD2AC,
+                      ).withValues(alpha: 0.03), // Soft Gold
                       blurRadius: 100,
                       spreadRadius: 100,
                     ),
@@ -564,7 +651,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                   color: Colors.transparent,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFBF7F0).withValues(alpha: 0.02), // Soft Cream
+                      color: const Color(
+                        0xFFFBF7F0,
+                      ).withValues(alpha: 0.02), // Soft Cream
                       blurRadius: 120,
                       spreadRadius: 120,
                     ),
@@ -596,10 +685,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                   return const LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black,
-                    ],
+                    colors: [Colors.transparent, Colors.black],
                     stops: [0.0, 0.45],
                   ).createShader(rect);
                 },
@@ -620,7 +706,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 // Hero Header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 24, right: 24, top: 20, bottom: 6),
+                    padding: const EdgeInsets.only(left: 24, right: 24, top: 20, bottom: 4),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -657,19 +743,24 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 // Today's Progress Card
                 SliverToBoxAdapter(
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 10,
+                    ),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: cardBgColor,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                        color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.05),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.06)
+                            : Colors.black.withValues(alpha: 0.05),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
@@ -684,57 +775,67 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                               "TODAY'S PROGRESS",
                               style: GoogleFonts.outfit(
                                 color: labelColor.withValues(alpha: 0.8),
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                letterSpacing: 1.0,
+                                letterSpacing: 0.8,
                               ),
                             ),
                             Text(
                               "Keep going! 🔥",
                               style: GoogleFonts.outfit(
                                 color: const Color(0xFFF97316),
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         // Inner Content Row
                         Row(
                           children: [
                             // Circular Progress Ring
                             SizedBox(
-                              width: 82,
-                              height: 82,
+                              width: 68,
+                              height: 68,
                               child: TweenAnimationBuilder<double>(
-                                tween: Tween<double>(begin: 0, end: progressVal),
+                                tween: Tween<double>(
+                                  begin: 0,
+                                  end: progressVal,
+                                ),
                                 duration: const Duration(milliseconds: 1000),
                                 curve: Curves.easeOutCubic,
                                 builder: (context, val, child) {
                                   return CustomPaint(
                                     painter: _ProgressRingPainter(
                                       progress: val,
-                                      baseColor: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.05),
+                                      baseColor: isDark
+                                          ? Colors.white.withValues(alpha: 0.06)
+                                          : Colors.black.withValues(
+                                              alpha: 0.05,
+                                            ),
                                       progressColor: labelColor,
                                     ),
                                     child: Center(
                                       child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           Text(
                                             '${(val * 100).toInt()}%',
                                             style: GoogleFonts.outfit(
                                               color: headerTextColor,
-                                              fontSize: 18,
+                                              fontSize: 15,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                           Text(
                                             'Completed',
                                             style: GoogleFonts.outfit(
-                                              color: headerTextColor.withValues(alpha: 0.4),
-                                              fontSize: 8,
+                                              color: headerTextColor.withValues(
+                                                alpha: 0.4,
+                                              ),
+                                              fontSize: 7,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
@@ -745,7 +846,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                                 },
                               ),
                             ),
-                            const SizedBox(width: 20),
+                            const SizedBox(width: 16),
                             // Stats Info Column
                             Expanded(
                               child: Column(
@@ -755,17 +856,26 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                                     '"Discipline today, freedom tomorrow."',
                                     style: GoogleFonts.gelasio(
                                       color: headerTextColor,
-                                      fontSize: 14,
+                                      fontSize: 12,
                                       fontStyle: FontStyle.italic,
                                     ),
                                   ),
-                                  const SizedBox(height: 14),
+                                  const SizedBox(height: 10),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      _buildStatItem(Icons.star_rounded, '$completedCount', 'Completed', labelColor),
-                                      _buildStatItem(Icons.adjust_rounded, '$totalCount', 'Total', labelColor),
-                                      _buildStatItem(Icons.local_fire_department_rounded, '12', 'Day Streak', const Color(0xFFF97316)),
+                                      _buildStatItem(
+                                        Icons.star_rounded,
+                                        '$completedCount',
+                                        'Completed',
+                                        labelColor,
+                                      ),
+                                      const SizedBox(width: 24),
+                                      _buildStatItem(
+                                        Icons.adjust_rounded,
+                                        '$totalCount',
+                                        'Total',
+                                        labelColor,
+                                      ),
                                     ],
                                   ),
                                 ],
@@ -780,19 +890,26 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 // Today's Routines Section Header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 6,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.assignment_outlined, color: labelColor, size: 20),
-                            const SizedBox(width: 10),
+                            Icon(
+                              Icons.assignment_outlined,
+                              color: labelColor,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
                             Text(
                               "TODAY'S ROUTINES",
                               style: GoogleFonts.outfit(
                                 color: headerTextColor,
-                                fontSize: 14,
+                                fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.8,
                               ),
@@ -802,23 +919,23 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                         GestureDetector(
                           onTap: () => _showSuggestedLibrarySheet(context),
                           child: Container(
-                            width: 32,
-                            height: 32,
+                            width: 26,
+                            height: 26,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: labelColor,
                               boxShadow: [
                                 BoxShadow(
                                   color: labelColor.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
                             child: const Icon(
                               Icons.add_rounded,
                               color: Color(0xFF0F1115),
-                              size: 20,
+                              size: 16,
                             ),
                           ),
                         ),
@@ -830,7 +947,10 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 if (routines.isEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 40,
+                      ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -839,7 +959,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: labelColor.withValues(alpha: 0.05),
-                              border: Border.all(color: labelColor.withValues(alpha: 0.15)),
+                              border: Border.all(
+                                color: labelColor.withValues(alpha: 0.15),
+                              ),
                             ),
                             child: Icon(
                               Icons.spa_rounded,
@@ -868,11 +990,15 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton(
-                            onPressed: () => _showSuggestedLibrarySheet(context),
+                            onPressed: () =>
+                                _showSuggestedLibrarySheet(context),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: labelColor,
                               foregroundColor: const Color(0xFF0F1115),
-                              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 28,
+                                vertical: 14,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
@@ -895,117 +1021,143 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final item = routines[index];
-                          final isCompleted = item.completedDates.contains(todayStr);
-                          final designStyle = _getRoutineIconAndColor(item.title);
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final item = routines[index];
+                        final isCompleted = item.completedDates.contains(
+                          todayStr,
+                        );
+                        final designStyle = _getRoutineIconAndColor(item.title);
 
-                          return Container(
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isCompleted ? cardBgColor.withValues(alpha: 0.4) : cardBgColor,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isCompleted
+                                ? cardBgColor.withValues(alpha: 0.4)
+                                : cardBgColor,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.05)
+                                  : Colors.black.withValues(alpha: 0.03),
                             ),
-                            child: Row(
-                              children: [
-                                // Icon Box Container
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: designStyle['bg'] as Color,
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  child: Icon(
-                                    designStyle['icon'] as IconData,
-                                    color: designStyle['fg'] as Color,
-                                    size: 20,
-                                  ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              // Icon Box Container
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: designStyle['bg'] as Color,
+                                  borderRadius: BorderRadius.circular(11),
                                 ),
-                                const SizedBox(width: 16),
-                                // Text Content block
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.title,
-                                        style: GoogleFonts.outfit(
-                                          color: isCompleted ? headerTextColor.withValues(alpha: 0.5) : headerTextColor,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          decoration: isCompleted ? TextDecoration.lineThrough : null,
-                                        ),
-                                      ),
-                                      if (item.subtitle != null && item.subtitle!.isNotEmpty) ...[
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          item.subtitle!,
-                                          style: GoogleFonts.outfit(
-                                            color: headerTextColor.withValues(alpha: 0.35),
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
+                                child: Icon(
+                                  designStyle['icon'] as IconData,
+                                  color: designStyle['fg'] as Color,
+                                  size: 17,
                                 ),
-                                const SizedBox(width: 12),
-                                // Check Circle Outline or Checked Circle
-                                GestureDetector(
-                                  onTap: () {
-                                    HapticFeedback.mediumImpact();
-                                    ref.read(routineProvider.notifier).toggleRoutineCompletion(
-                                      item.id,
-                                      todayStr,
-                                    );
-                                  },
-                                  onLongPress: () => _showDeleteConfirmDialog(context, item),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 250),
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: isCompleted ? labelColor : Colors.transparent,
-                                      border: Border.all(
-                                        color: isCompleted ? labelColor : headerTextColor.withValues(alpha: 0.2),
-                                        width: 2,
+                              ),
+                              const SizedBox(width: 12),
+                              // Text Content block
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.title,
+                                      style: GoogleFonts.outfit(
+                                        color: isCompleted
+                                            ? headerTextColor.withValues(
+                                                alpha: 0.5,
+                                              )
+                                            : headerTextColor,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        decoration: isCompleted
+                                            ? TextDecoration.lineThrough
+                                            : null,
                                       ),
                                     ),
-                                    child: isCompleted
-                                        ? const Icon(
-                                            Icons.check_rounded,
-                                            color: Color(0xFF0F1115),
-                                            size: 14,
-                                          )
-                                        : null,
-                                  ),
+                                    if (item.subtitle != null &&
+                                        item.subtitle!.isNotEmpty) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        item.subtitle!,
+                                        style: GoogleFonts.outfit(
+                                          color: headerTextColor.withValues(
+                                            alpha: 0.35,
+                                          ),
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
-                              ],
-                            ),
-                          );
-                        },
-                        childCount: routines.length,
-                      ),
+                              ),
+                              const SizedBox(width: 10),
+                              // Check Circle Outline or Checked Circle
+                              GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.mediumImpact();
+                                  ref
+                                      .read(routineProvider.notifier)
+                                      .toggleRoutineCompletion(
+                                        item.id,
+                                        todayStr,
+                                      );
+                                },
+                                onLongPress: () =>
+                                    _showDeleteConfirmDialog(context, item),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 250),
+                                  width: 20,
+                                  height: 20,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isCompleted
+                                        ? labelColor
+                                        : Colors.transparent,
+                                    border: Border.all(
+                                      color: isCompleted
+                                          ? labelColor
+                                          : headerTextColor.withValues(
+                                              alpha: 0.2,
+                                            ),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: isCompleted
+                                      ? const Icon(
+                                          Icons.check_rounded,
+                                          color: Color(0xFF0F1115),
+                                          size: 12,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }, childCount: routines.length),
                     ),
                   ),
                 // Suggested Routines Section
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 12),
+                    padding: const EdgeInsets.only(
+                      top: 24,
+                      left: 24,
+                      right: 24,
+                      bottom: 12,
+                    ),
                     child: Text(
                       'Suggested Routines',
                       style: GoogleFonts.outfit(
@@ -1019,54 +1171,67 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                 SliverToBoxAdapter(
                   child: SizedBox(
                     height: 50,
-                      child: ListView.builder(
-                        physics: const BouncingScrollPhysics(),
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: quickChips.length,
-                        itemBuilder: (context, index) {
-                          final chip = quickChips[index];
-                          return GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              ref.read(routineProvider.notifier).addRoutine(
-                                '${chip['emoji']} ${chip['title']}',
-                              );
-                              _showPremiumToast(context, '${chip['title']} added');
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: cardBgColor.withValues(alpha: 0.4),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: labelColor.withValues(alpha: 0.12),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    chip['emoji']!,
-                                    style: const TextStyle(fontSize: 15),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    chip['title']!,
-                                    style: GoogleFonts.outfit(
-                                      color: headerTextColor.withValues(alpha: 0.9),
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
+                    child: ListView.builder(
+                      physics: const BouncingScrollPhysics(),
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: quickChips.length,
+                      itemBuilder: (context, index) {
+                        final chip = quickChips[index];
+                        return GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            ref
+                                .read(routineProvider.notifier)
+                                .addRoutine(
+                                  '${chip['emoji']} ${chip['title']}',
+                                );
+                            _showPremiumToast(
+                              context,
+                              '${chip['title']} added',
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 4,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: cardBgColor.withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: labelColor.withValues(alpha: 0.12),
                               ),
                             ),
-                          );
-                        },
-                      ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  chip['emoji']!,
+                                  style: const TextStyle(fontSize: 15),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  chip['title']!,
+                                  style: GoogleFonts.outfit(
+                                    color: headerTextColor.withValues(
+                                      alpha: 0.9,
+                                    ),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
+                ),
                 // Premium Banner at the Bottom
                 SliverToBoxAdapter(
                   child: Container(
@@ -1076,7 +1241,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                       color: cardBgColor,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.black.withValues(alpha: 0.03),
                       ),
                     ),
                     child: Row(
@@ -1134,9 +1301,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 60),
-                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 60)),
               ],
             ),
           ),
@@ -1147,7 +1312,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
 
   Widget _buildStatItem(IconData icon, String val, String sub, Color accent) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final headerTextColor = isDark ? const Color(0xFFFBF7F0) : context.colors.textPrimary;
+    final headerTextColor = isDark
+        ? const Color(0xFFFBF7F0)
+        : context.colors.textPrimary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -1273,8 +1440,12 @@ class _SparkLinePainter extends CustomPainter {
     final starPaint = Paint()
       ..color = const Color(0xFFEAD2AC)
       ..style = PaintingStyle.fill;
-    
-    canvas.drawCircle(Offset(size.width * 0.95, size.height * 0.15), 4, starPaint);
+
+    canvas.drawCircle(
+      Offset(size.width * 0.95, size.height * 0.15),
+      4,
+      starPaint,
+    );
   }
 
   @override
