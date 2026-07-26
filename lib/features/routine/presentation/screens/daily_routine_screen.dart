@@ -117,11 +117,11 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
               right: 24,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFF12141C).withOpacity(0.95),
+              color: const Color(0xFF12141C).withValues(alpha: 0.95),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(28),
               ),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -144,11 +144,11 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                     hintText: 'Example: Learn Flutter',
                     hintStyle: GoogleFonts.outfit(color: Colors.white24),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.04),
+                    fillColor: Colors.white.withValues(alpha: 0.04),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
-                        color: Colors.white.withOpacity(0.08),
+                        color: Colors.white.withValues(alpha: 0.08),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -199,7 +199,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           elevation: 8,
-                          shadowColor: const Color(0xFFEAD2AC).withOpacity(0.3),
+                          shadowColor: const Color(0xFFEAD2AC).withValues(alpha: 0.3),
                         ),
                         child: Text(
                           'Save',
@@ -235,11 +235,11 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
             builder: (_, controller) {
               return Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF12141C).withOpacity(0.95),
+                  color: const Color(0xFF12141C).withValues(alpha: 0.95),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(32),
                   ),
-                  border: Border.all(color: Colors.white.withOpacity(0.08)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                 ),
                 child: Column(
                   children: [
@@ -625,7 +625,6 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
         .length;
     final totalCount = routines.length;
     final progressVal = totalCount > 0 ? (completedCount / totalCount) : 0.0;
-    final progressPercent = (progressVal * 100).toInt();
 
     // Sort routines: active uncompleted routines first, completed routines at bottom
     final sortedRoutines = [...routines]
@@ -1285,7 +1284,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                             if (isChipAdded) {
                               ref
                                   .read(routineProvider.notifier)
-                                  .deleteRoutine(existingChipRoutine.id);
+                                  .deleteRoutine(existingChipRoutine!.id);
                               _showPremiumToast(
                                 context,
                                 '${chip['title']} removed',
