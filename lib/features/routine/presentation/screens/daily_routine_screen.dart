@@ -99,6 +99,152 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
     ],
   };
 
+  void _showCreateRoutineSheet(BuildContext context) {
+    final titleController = TextEditingController();
+    final subtitleController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              top: 24,
+              left: 24,
+              right: 24,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF12141C).withValues(alpha: 0.95),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Create Custom Routine',
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFFFBF7F0), // Warm Cream
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white38,
+                        size: 20,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: titleController,
+                  autofocus: true,
+                  style: GoogleFonts.outfit(color: const Color(0xFFF5EFEB)),
+                  decoration: InputDecoration(
+                    labelText: 'Routine Title',
+                    labelStyle: GoogleFonts.outfit(
+                      color: const Color(0xFFEAD2AC),
+                    ),
+                    hintText: 'e.g. 🧘 Morning Meditation',
+                    hintStyle: GoogleFonts.outfit(color: Colors.white24),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.04),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFEAD2AC),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: subtitleController,
+                  style: GoogleFonts.outfit(color: const Color(0xFFF5EFEB)),
+                  decoration: InputDecoration(
+                    labelText: 'Subtitle / Time (Optional)',
+                    labelStyle: GoogleFonts.outfit(color: Colors.white54),
+                    hintText: 'e.g. 15 mins at 7:00 AM',
+                    hintStyle: GoogleFonts.outfit(color: Colors.white24),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.04),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFEAD2AC),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    final title = titleController.text.trim();
+                    final subtitle = subtitleController.text.trim();
+                    if (title.isNotEmpty) {
+                      ref
+                          .read(routineProvider.notifier)
+                          .addRoutine(
+                            title,
+                            subtitle.isNotEmpty ? subtitle : null,
+                          );
+                      Navigator.pop(context);
+                      _showPremiumToast(context, '$title added');
+                    }
+                  },
+                  icon: const Icon(Icons.check_rounded, size: 20),
+                  label: Text(
+                    'Add Custom Routine',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEAD2AC), // Soft Gold
+                    foregroundColor: const Color(0xFF0F1115),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 8,
+                    shadowColor: const Color(0xFFEAD2AC).withValues(alpha: 0.3),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showSuggestedLibrarySheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -293,6 +439,35 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                                 );
                               }),
                               const SizedBox(height: 24),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _showCreateRoutineSheet(context);
+                                },
+                                icon: const Icon(Icons.add_rounded, size: 20),
+                                label: Text(
+                                  'Create Custom Routine',
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white.withValues(
+                                    alpha: 0.04,
+                                  ),
+                                  foregroundColor: const Color(0xFFEAD2AC),
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    side: BorderSide(
+                                      color: const Color(
+                                        0xFFEAD2AC,
+                                      ).withValues(alpha: 0.2),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 32),
                             ],
                           );
                         },
@@ -488,6 +663,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
 
     // Quick chips routines
     final List<Map<String, String>> quickChips = [
+      {'emoji': '✏️', 'title': '+ Custom Routine'},
       {'emoji': '💧', 'title': 'Drink Water'},
       {'emoji': '🏃', 'title': 'Exercise'},
       {'emoji': '📚', 'title': 'Read Books'},
@@ -839,28 +1015,67 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                             ),
                           ],
                         ),
-                        GestureDetector(
-                          onTap: () => _showSuggestedLibrarySheet(context),
-                          child: Container(
-                            width: 26,
-                            height: 26,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: labelColor,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: labelColor.withValues(alpha: 0.3),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => _showCreateRoutineSheet(context),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
                                 ),
-                              ],
+                                decoration: BoxDecoration(
+                                  color: labelColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: labelColor.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.add_rounded,
+                                      color: labelColor,
+                                      size: 14,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Custom',
+                                      style: GoogleFonts.outfit(
+                                        color: labelColor,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.add_rounded,
-                              color: Color(0xFF0F1115),
-                              size: 16,
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () => _showSuggestedLibrarySheet(context),
+                              child: Container(
+                                width: 26,
+                                height: 26,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: labelColor,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: labelColor.withValues(alpha: 0.3),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.grid_view_rounded,
+                                  color: Color(0xFF0F1115),
+                                  size: 14,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
@@ -1108,6 +1323,51 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                       itemCount: quickChips.length,
                       itemBuilder: (context, index) {
                         final chip = quickChips[index];
+                        final isCustomChip = chip['title'] == '+ Custom Routine';
+
+                        if (isCustomChip) {
+                          return GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              _showCreateRoutineSheet(context);
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 4,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: labelColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: labelColor.withValues(alpha: 0.4),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    chip['emoji']!,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    chip['title']!,
+                                    style: GoogleFonts.outfit(
+                                      color: labelColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+
                         final chipTitleClean = chip['title']!
                             .replaceAll(RegExp(r'^[^\w\s]+'), '')
                             .trim()
