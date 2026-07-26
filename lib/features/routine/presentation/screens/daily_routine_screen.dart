@@ -286,7 +286,37 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _showCreateRoutineSheet(context);
+                        },
+                        icon: const Icon(Icons.edit_note_rounded, size: 20),
+                        label: Text(
+                          'Create Custom Routine',
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEAD2AC),
+                          foregroundColor: const Color(0xFF0F1115),
+                          minimumSize: const Size(double.infinity, 44),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 4,
+                          shadowColor: const Color(
+                            0xFFEAD2AC,
+                          ).withValues(alpha: 0.3),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Expanded(
                       child: Consumer(
                         builder: (context, ref, child) {
@@ -438,35 +468,6 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                                   ],
                                 );
                               }),
-                              const SizedBox(height: 24),
-                              ElevatedButton.icon(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  _showCreateRoutineSheet(context);
-                                },
-                                icon: const Icon(Icons.add_rounded, size: 20),
-                                label: Text(
-                                  'Create Custom Routine',
-                                  style: GoogleFonts.outfit(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white.withValues(
-                                    alpha: 0.04,
-                                  ),
-                                  foregroundColor: const Color(0xFFEAD2AC),
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                    side: BorderSide(
-                                      color: const Color(
-                                        0xFFEAD2AC,
-                                      ).withValues(alpha: 0.2),
-                                    ),
-                                  ),
-                                ),
-                              ),
                               const SizedBox(height: 32),
                             ],
                           );
@@ -513,8 +514,9 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
     );
   }
 
-  void _showDeleteConfirmDialog(BuildContext context, RoutineItem routine) {
-    showDialog(
+  Future<bool?> _showDeleteConfirmDialog(
+      BuildContext context, RoutineItem routine) {
+    return showDialog<bool>(
       context: context,
       builder: (context) {
         return BackdropFilter(
@@ -538,7 +540,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(context, false),
                 child: Text(
                   'Cancel',
                   style: GoogleFonts.outfit(
@@ -549,8 +551,10 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
               ),
               TextButton(
                 onPressed: () {
-                  ref.read(routineProvider.notifier).deleteRoutine(routine.id);
-                  Navigator.pop(context);
+                  ref
+                      .read(routineProvider.notifier)
+                      .deleteRoutine(routine.id);
+                  Navigator.pop(context, true);
                   _showPremiumToast(context, 'Routine deleted');
                 },
                 child: Text(
@@ -651,19 +655,12 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
     final totalCount = routines.length;
     final progressVal = totalCount > 0 ? (completedCount / totalCount) : 0.0;
 
-    // Sort routines: active uncompleted routines first, completed routines at bottom
+    // Keep stable routines order (by creation time) to prevent layout jumps on tap
     final sortedRoutines = [...routines]
-      ..sort((a, b) {
-        final aDone = a.completedDates.contains(todayStr);
-        final bDone = b.completedDates.contains(todayStr);
-        if (aDone && !bDone) return 1;
-        if (!aDone && bDone) return -1;
-        return 0;
-      });
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     // Quick chips routines
     final List<Map<String, String>> quickChips = [
-      {'emoji': '✏️', 'title': '+ Custom Routine'},
       {'emoji': '💧', 'title': 'Drink Water'},
       {'emoji': '🏃', 'title': 'Exercise'},
       {'emoji': '📚', 'title': 'Read Books'},
@@ -1015,67 +1012,28 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                             ),
                           ],
                         ),
-                        Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () => _showCreateRoutineSheet(context),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
+                        GestureDetector(
+                          onTap: () => _showSuggestedLibrarySheet(context),
+                          child: Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: labelColor,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: labelColor.withValues(alpha: 0.3),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
                                 ),
-                                decoration: BoxDecoration(
-                                  color: labelColor.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: labelColor.withValues(alpha: 0.3),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.add_rounded,
-                                      color: labelColor,
-                                      size: 14,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Custom',
-                                      style: GoogleFonts.outfit(
-                                        color: labelColor,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: () => _showSuggestedLibrarySheet(context),
-                              child: Container(
-                                width: 26,
-                                height: 26,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: labelColor,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: labelColor.withValues(alpha: 0.3),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.grid_view_rounded,
-                                  color: Color(0xFF0F1115),
-                                  size: 14,
-                                ),
-                              ),
+                            child: const Icon(
+                              Icons.add_rounded,
+                              color: Color(0xFF0F1115),
+                              size: 16,
                             ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
@@ -1168,125 +1126,171 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                         );
                         final designStyle = _getRoutineIconAndColor(item.title);
 
-                        return Container(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isCompleted
-                                ? cardBgColor.withValues(alpha: 0.4)
-                                : cardBgColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.05)
-                                  : Colors.black.withValues(alpha: 0.03),
+                        return Dismissible(
+                          key: Key(item.id),
+                          direction: DismissDirection.endToStart,
+                          confirmDismiss: (direction) async {
+                            return await _showDeleteConfirmDialog(context, item) ??
+                                false;
+                          },
+                          onDismissed: (direction) {
+                            ref
+                                .read(routineProvider.notifier)
+                                .deleteRoutine(item.id);
+                            _showPremiumToast(context, '${item.title} deleted');
+                          },
+                          background: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.redAccent.withValues(alpha: 0.3),
+                              ),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                            child: const Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.redAccent,
+                              size: 20,
+                            ),
                           ),
-                          child: Row(
-                            children: [
-                              // Icon Box Container
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: designStyle['bg'] as Color,
-                                  borderRadius: BorderRadius.circular(11),
-                                ),
-                                child: Icon(
-                                  designStyle['icon'] as IconData,
-                                  color: designStyle['fg'] as Color,
-                                  size: 17,
-                                ),
+                          child: GestureDetector(
+                            key: ValueKey(item.id),
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              ref
+                                  .read(routineProvider.notifier)
+                                  .toggleRoutineCompletion(item.id, todayStr);
+                            },
+                            onLongPress: () =>
+                                _showDeleteConfirmDialog(context, item),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
                               ),
-                              const SizedBox(width: 12),
-                              // Text Content block
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item.title,
-                                      style: GoogleFonts.outfit(
-                                        color: isCompleted
-                                            ? headerTextColor.withValues(
-                                                alpha: 0.5,
-                                              )
-                                            : headerTextColor,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        decoration: isCompleted
-                                            ? TextDecoration.lineThrough
-                                            : null,
-                                      ),
+                              decoration: BoxDecoration(
+                                color: isCompleted
+                                    ? cardBgColor.withValues(alpha: 0.4)
+                                    : cardBgColor,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.05)
+                                      : Colors.black.withValues(alpha: 0.03),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  // Icon Box Container
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: designStyle['bg'] as Color,
+                                      borderRadius: BorderRadius.circular(11),
                                     ),
-                                    if (item.subtitle != null &&
-                                        item.subtitle!.isNotEmpty) ...[
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        item.subtitle!,
-                                        style: GoogleFonts.outfit(
-                                          color: headerTextColor.withValues(
-                                            alpha: 0.35,
-                                          ),
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              // Check Circle Outline or Checked Circle
-                              GestureDetector(
-                                onTap: () {
-                                  HapticFeedback.mediumImpact();
-                                  ref
-                                      .read(routineProvider.notifier)
-                                      .toggleRoutineCompletion(
-                                        item.id,
-                                        todayStr,
-                                      );
-                                },
-                                onLongPress: () =>
-                                    _showDeleteConfirmDialog(context, item),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 250),
-                                  width: 20,
-                                  height: 20,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isCompleted
-                                        ? labelColor
-                                        : Colors.transparent,
-                                    border: Border.all(
-                                      color: isCompleted
-                                          ? labelColor
-                                          : headerTextColor.withValues(
-                                              alpha: 0.2,
-                                            ),
-                                      width: 1.5,
+                                    child: Icon(
+                                      designStyle['icon'] as IconData,
+                                      color: designStyle['fg'] as Color,
+                                      size: 17,
                                     ),
                                   ),
-                                  child: isCompleted
-                                      ? const Icon(
-                                          Icons.check_rounded,
-                                          color: Color(0xFF0F1115),
-                                          size: 12,
-                                        )
-                                      : null,
-                                ),
+                                  const SizedBox(width: 12),
+                                  // Text Content block
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.title,
+                                          style: GoogleFonts.outfit(
+                                            color: isCompleted
+                                                ? headerTextColor.withValues(
+                                                    alpha: 0.5,
+                                                  )
+                                                : headerTextColor,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            decoration: isCompleted
+                                                ? TextDecoration.lineThrough
+                                                : null,
+                                          ),
+                                        ),
+                                        if (item.subtitle != null &&
+                                            item.subtitle!.isNotEmpty) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            item.subtitle!,
+                                            style: GoogleFonts.outfit(
+                                              color: headerTextColor.withValues(
+                                                alpha: 0.35,
+                                              ),
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  // Trash icon button for explicit removal option
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.delete_outline_rounded,
+                                      size: 16,
+                                      color: headerTextColor.withValues(
+                                        alpha: 0.25,
+                                      ),
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    onPressed: () =>
+                                        _showDeleteConfirmDialog(context, item),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  // Check Circle Outline or Checked Circle
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 250),
+                                    width: 20,
+                                    height: 20,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isCompleted
+                                          ? labelColor
+                                          : Colors.transparent,
+                                      border: Border.all(
+                                        color: isCompleted
+                                            ? labelColor
+                                            : headerTextColor.withValues(
+                                                alpha: 0.2,
+                                              ),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: isCompleted
+                                        ? const Icon(
+                                            Icons.check_rounded,
+                                            color: Color(0xFF0F1115),
+                                            size: 12,
+                                          )
+                                        : null,
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         );
                       }, childCount: sortedRoutines.length),
@@ -1323,51 +1327,6 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> {
                       itemCount: quickChips.length,
                       itemBuilder: (context, index) {
                         final chip = quickChips[index];
-                        final isCustomChip = chip['title'] == '+ Custom Routine';
-
-                        if (isCustomChip) {
-                          return GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              _showCreateRoutineSheet(context);
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 4,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: labelColor.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(
-                                  color: labelColor.withValues(alpha: 0.4),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    chip['emoji']!,
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    chip['title']!,
-                                    style: GoogleFonts.outfit(
-                                      color: labelColor,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-
                         final chipTitleClean = chip['title']!
                             .replaceAll(RegExp(r'^[^\w\s]+'), '')
                             .trim()
