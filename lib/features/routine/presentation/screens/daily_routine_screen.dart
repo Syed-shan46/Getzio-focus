@@ -480,8 +480,14 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
               height: 350,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFEAD2AC).withOpacity(0.03), // Soft Gold
-                blurRadius: 100,
+                color: Colors.transparent,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFEAD2AC).withOpacity(0.03), // Soft Gold
+                    blurRadius: 100,
+                    spreadRadius: 100,
+                  ),
+                ],
               ),
             ),
           ),
@@ -494,8 +500,14 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
               height: 400,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFFBF7F0).withOpacity(0.02), // Soft Cream
-                blurRadius: 120,
+                color: Colors.transparent,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFBF7F0).withOpacity(0.02), // Soft Cream
+                    blurRadius: 120,
+                    spreadRadius: 120,
+                  ),
+                ],
               ),
             ),
           ),
@@ -704,7 +716,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
                 else ...[
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: SliverList(
+                    sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           final item = routines[index];
@@ -724,7 +736,7 @@ class _DailyRoutineScreenState extends ConsumerState<DailyRoutineScreen> with Ti
                                   border: Border.all(
                                     color: Colors.white.withOpacity(isCompleted ? 0.04 : 0.08),
                                   ),
-                                  shadows: [
+                                  boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withOpacity(0.1),
                                       blurRadius: 10,

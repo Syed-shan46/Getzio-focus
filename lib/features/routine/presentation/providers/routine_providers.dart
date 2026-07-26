@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getzio_todo_app/shared/providers/app_providers.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/storage/hive_database.dart';
@@ -118,7 +119,8 @@ class RoutineNotifier extends StateNotifier<List<RoutineItem>> {
   }
 }
 
-final routineProvider = StateNotifierProvider<RoutineNotifier, List<RoutineItem>>((ref) {
-  final hiveDb = ref.watch(hiveDatabaseProvider);
-  return RoutineNotifier(hiveDb);
-});
+final routineProvider =
+    StateNotifierProvider<RoutineNotifier, List<RoutineItem>>((ref) {
+      final hiveDb = ref.watch(hiveDatabaseProvider);
+      return RoutineNotifier(hiveDb);
+    });
