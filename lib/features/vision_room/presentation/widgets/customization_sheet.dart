@@ -302,7 +302,7 @@ class _CustomizationSheetContentState
       VisionTheme.japaneseZen => 'Japanese Zen',
       VisionTheme.coastalHouse => 'Coastal House',
       VisionTheme.minimalScandinavian => 'Minimal Scandinavian',
-      VisionTheme.darkPremium => 'Dark Premium',
+      VisionTheme.darkPremium => 'Midnight Gold',
       VisionTheme.coffeeWorkspace => 'Coffee Workspace',
       VisionTheme.mountainCabin => 'Mountain Cabin',
       VisionTheme.natureRetreat => 'Nature Retreat',
@@ -698,7 +698,7 @@ class _CustomizationSheetContentState
       VisionBoardStyle.walnutWooden => 'Luxury walnut finish, warm lighting, brass pins',
       VisionBoardStyle.magneticMetal => 'Minimal matte metal, magnetic cards, industrial',
       VisionBoardStyle.canvasWall => 'Dream images pinned on soft canvas texture',
-      VisionBoardStyle.floatingGallery => 'Cards float on blurred premium wall, museum aesthetic',
+      VisionBoardStyle.floatingGallery => 'Cards float on blurred gallery wall, museum aesthetic',
       VisionBoardStyle.scrapbook => 'Layered papers, polaroids, tape, handcrafted feeling',
       VisionBoardStyle.custom => 'Design your own board style',
     };
@@ -1482,7 +1482,7 @@ class _CustomizationSheetContentState
       StickyNoteStyle.neon => 'Neon',
       StickyNoteStyle.handwritten => 'Handwritten',
       StickyNoteStyle.luxuryPaper => 'Luxury Paper',
-      StickyNoteStyle.premiumKraft => 'Premium Kraft',
+      StickyNoteStyle.premiumKraft => 'Classic Kraft',
       StickyNoteStyle.gradientNotes => 'Gradient Notes',
     };
   }

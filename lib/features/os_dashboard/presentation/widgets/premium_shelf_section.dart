@@ -199,7 +199,7 @@ class _PremiumShelfSectionState extends ConsumerState<PremiumShelfSection> {
       progressText: 'Visualize',
       nextAction: 'Open Room',
       progressValue: 0.8,
-      metricLabel: 'Unlock dreams',
+      metricLabel: 'Build dreams',
       isGold: isVisionGold,
     ));
 

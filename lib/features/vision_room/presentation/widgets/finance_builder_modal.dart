@@ -130,7 +130,7 @@ class _FinanceBuilderModalState extends ConsumerState<FinanceBuilderModal> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Premium Finance Goal', style: AppTypography.displayMedium(color: Colors.white).copyWith(fontSize: 24), textAlign: TextAlign.center),
+              Text('Finance Goal', style: AppTypography.displayMedium(color: Colors.white).copyWith(fontSize: 24), textAlign: TextAlign.center),
               const SizedBox(height: 24),
               
               _buildTextField(_titleController, 'Goal (e.g. Bmw s100rr)'),

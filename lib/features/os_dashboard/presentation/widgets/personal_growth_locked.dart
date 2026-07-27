@@ -85,7 +85,7 @@ class PersonalGrowthLockedCard extends ConsumerWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Complete 15 daily habits to unlock advanced self-reflection, journaling, and metrics.',
+                          'Complete 15 daily habits to enable advanced self-reflection, journaling, and metrics.',
                           style: AppTypography.bodyMedium(color: Colors.white54),
                         ),
                       ],

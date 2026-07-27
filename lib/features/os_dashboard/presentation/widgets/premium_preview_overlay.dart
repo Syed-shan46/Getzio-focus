@@ -64,7 +64,7 @@ class PremiumPreviewOverlay extends ConsumerWidget {
       case 'achievements':
         return 'Achievements Wall';
       default:
-        return 'Premium Feature';
+        return 'Upcoming Feature';
     }
   }
 
@@ -87,7 +87,7 @@ class PremiumPreviewOverlay extends ConsumerWidget {
       case 'health':
         return 'Monitor water intake, sleep quality, and daily exercise. Stay physically primed for high performance.';
       case 'achievements':
-        return 'Unlock achievements, earn experience points (XP), and track consistency streaks as you level up your life.';
+        return 'Earn achievements, experience points (XP), and track consistency streaks as you level up your life.';
       default:
         return 'Elevate your daily routine with curated personal growth features.';
     }
@@ -581,7 +581,7 @@ class PremiumPreviewOverlay extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    isComingSoon ? 'COMING SOON' : 'PREMIUM PREVIEW',
+                    isComingSoon ? 'COMING SOON' : 'FEATURE PREVIEW',
                     style: const TextStyle(
                       fontSize: 8.5,
                       fontWeight: FontWeight.w900,

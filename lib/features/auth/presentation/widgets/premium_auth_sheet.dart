@@ -134,7 +134,7 @@ class _PremiumAuthSheetState extends State<PremiumAuthSheet> {
                           ),
                           child: const Center(
                             child: Icon(
-                              Icons.workspace_premium_rounded,
+                              Icons.cloud_done_rounded,
                               color: Color(0xFFF59E0B),
                               size: 32,
                             ),
@@ -145,7 +145,7 @@ class _PremiumAuthSheetState extends State<PremiumAuthSheet> {
 
                       // Title
                       Text(
-                        widget.customTitle ?? '✨ Unlock Your Personal Workspace',
+                        widget.customTitle ?? '✨ Create Your Free Workspace Account',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.outfit(
                           color: Colors.white,
@@ -158,7 +158,7 @@ class _PremiumAuthSheetState extends State<PremiumAuthSheet> {
 
                       // Subtitle
                       Text(
-                        widget.customDescription ?? 'You\'re currently exploring Getzio Focus in Guest Mode. Create a free account to unlock unlimited Vision Room items, cloud backup and cross-device sync.',
+                        widget.customDescription ?? 'You\'re currently exploring Getzio Focus in Guest Mode. Create a free account to save your progress, enable cloud backup, and sync across devices.',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.outfit(
                           color: Colors.white70,
@@ -180,13 +180,13 @@ class _PremiumAuthSheetState extends State<PremiumAuthSheet> {
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Column(
                           children: [
-                            _buildBenefit('✓ Unlimited Sticky Notes'),
-                            _buildBenefit('✓ Unlimited Vision Images'),
-                            _buildBenefit('✓ Unlimited Quotes'),
-                            _buildBenefit('✓ Unlimited Daily Affirmations'),
-                            _buildBenefit('✓ Secure Cloud Backup'),
-                            _buildBenefit('✓ Sync Across Devices'),
-                            _buildBenefit('✓ Future Premium Features'),
+                            _buildBenefit('✓ Full Access to Sticky Notes'),
+                            _buildBenefit('✓ Full Access to Vision Board'),
+                            _buildBenefit('✓ Full Access to Custom Quotes'),
+                            _buildBenefit('✓ Full Access to Daily Affirmations'),
+                            _buildBenefit('✓ Free Cloud Backup'),
+                            _buildBenefit('✓ Free Sync Across Devices'),
+                            _buildBenefit('✓ 100% Free Forever'),
                           ],
                         ),
                       ),

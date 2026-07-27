@@ -1989,7 +1989,7 @@ class _PremiumGoalOverviewSheetState
           ),
           const SizedBox(height: 8),
           Text(
-            'Break down your goal into premium milestones\nand execute step-by-step subtasks.',
+            'Break down your goal into actionable milestones\nand execute step-by-step subtasks.',
             textAlign: TextAlign.center,
             style: TextStyle(color: context.colors.textMuted, fontSize: 12, height: 1.4),
           ),

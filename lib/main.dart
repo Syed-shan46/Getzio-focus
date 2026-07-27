@@ -26,7 +26,7 @@ final setupCompletedProvider = StateProvider<bool>((ref) {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Transparent status bar — premium look
+  // Transparent status bar — modern dark look
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
